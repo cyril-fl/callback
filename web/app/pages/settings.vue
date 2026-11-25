@@ -5,6 +5,8 @@ const { t } = useI18n();
 const api = useApi();
 const toast = useToast();
 const theme = useTheme();
+const plan = usePlan();
+const planItems = plans.map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 const colorMode = useColorMode();
 const mode = computed({
   get: () => colorMode.preference as 'light' | 'dark' | 'system',
@@ -67,6 +69,19 @@ async function revoke() {
 <template>
   <div class="mx-auto max-w-3xl space-y-10">
     <h1 class="text-xl font-semibold">{{ t('settings.title') }}</h1>
+
+    <section>
+      <h2 class="mb-3 text-sm font-semibold">{{ t('settings.general') }}</h2>
+      <ul class="divide-y divide-default rounded-lg border border-default">
+        <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <div class="flex-1 basis-48">
+            <p class="text-sm">{{ t('settings.plan') }}</p>
+            <p class="text-xs text-muted">{{ t(`settings.planHelp.${plan}`) }}</p>
+          </div>
+          <UTabs v-model="plan" :items="planItems" :content="false" size="sm" :aria-label="t('settings.plan')" />
+        </li>
+      </ul>
+    </section>
 
     <section>
       <h2 class="mb-3 text-sm font-semibold">{{ t('settings.appearance') }}</h2>

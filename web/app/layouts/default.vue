@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const logout = useLogout();
+const plan = usePlan();
 </script>
 
 <template>
@@ -10,11 +11,21 @@ const logout = useLogout();
         <NuxtLink to="/" class="font-semibold">{{ t('app.name') }}</NuxtLink>
         <nav class="flex items-center gap-1">
           <UButton
-            to="/"
+            :to="plan === 'pro' ? '/dashboard' : '/'"
             variant="ghost"
             color="neutral"
             icon="i-lucide-layout-dashboard"
             :label="t('nav.dashboard')"
+            :ui="{ label: 'max-sm:sr-only' }"
+          />
+          <UButton
+            v-if="plan === 'pro'"
+            to="/"
+            variant="ghost"
+            color="neutral"
+            icon="i-lucide-list"
+            :label="t('nav.applications')"
+            :ui="{ label: 'max-sm:sr-only' }"
           />
           <UButton
             to="/settings"

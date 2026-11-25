@@ -19,7 +19,8 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "settings": "Réglages",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "applications": "Candidatures"
   },
   "login": {
     "title": "Connexion",
@@ -40,7 +41,8 @@
   },
   "stats": {
     "responseRate": "Taux de réponse",
-    "total": "Total"
+    "total": "Total",
+    "bySource": "Par source"
   },
   "table": {
     "company": "Entreprise",
@@ -101,6 +103,16 @@
   },
   "settings": {
     "title": "Réglages",
+    "general": "Général",
+    "plan": "Formule",
+    "plans": {
+      "base": "Base",
+      "pro": "Pro"
+    },
+    "planHelp": {
+      "base": "Les statistiques au-dessus de la liste.",
+      "pro": "Un tableau de bord à part de la liste."
+    },
     "appearance": "Apparence",
     "colorMode": "Mode",
     "theme": "Thème",

@@ -6,6 +6,7 @@ import { STATUSES } from '~/types/items';
 const { t } = useI18n();
 const api = useApi();
 const sources = useSources();
+const plan = usePlan();
 
 const q = ref('');
 const qDebounced = refDebounced(q, 300);
@@ -210,16 +211,7 @@ async function doDelete() {
 
 <template>
   <div class="flex flex-col gap-6" :class="view === 'kanban' ? 'h-[calc(100dvh-3.5rem-1px-3rem)]' : ''">
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      <UCard v-for="s in STATUSES" :key="s">
-        <p class="text-sm text-muted">{{ t(`status.${s}`) }}</p>
-        <p class="text-2xl font-semibold">{{ stats?.by_status[s] ?? 0 }}</p>
-      </UCard>
-      <UCard>
-        <p class="text-sm text-muted">{{ t('stats.responseRate') }}</p>
-        <p class="text-2xl font-semibold">{{ Math.round((stats?.response_rate ?? 0) * 100) }} %</p>
-      </UCard>
-    </div>
+    <StatsCards v-if="plan === 'base'" :stats="stats" />
 
     <div class="flex flex-wrap items-center gap-2">
       <UInput v-model="q" icon="i-lucide-search" :placeholder="t('table.search')" :aria-label="t('table.search')" />
