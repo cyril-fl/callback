@@ -5,7 +5,7 @@ const { t } = useI18n();
 const api = useApi();
 const toast = useToast();
 const theme = useTheme();
-const { preferences, save } = usePreferences();
+const { preferences, pro, save } = usePreferences();
 const places = usePlaces();
 const planItems = (['base', 'pro'] as const).map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 const colorMode = useColorMode();
@@ -113,6 +113,21 @@ async function revoke() {
               @update:model-value="(v: string) => save({ default_country: v })"
             />
           </div>
+        </li>
+        <li v-if="pro" class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <div class="flex-1 basis-48">
+            <p class="text-sm">{{ t('settings.followUp') }}</p>
+            <p class="text-xs text-muted">{{ t('settings.followUpHelp') }}</p>
+          </div>
+          <UInputNumber
+            :model-value="preferences?.follow_up_days"
+            :min="1"
+            :max="90"
+            :format-options="{ style: 'unit', unit: 'day', unitDisplay: 'long' }"
+            :aria-label="t('settings.followUp')"
+            class="w-40"
+            @update:model-value="(v) => v && v !== preferences?.follow_up_days && save({ follow_up_days: v })"
+          />
         </li>
       </ul>
     </section>

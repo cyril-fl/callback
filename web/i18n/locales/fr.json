@@ -167,6 +167,8 @@
     "revokeMessage": "Révoquer « {name} » ?",
     "noTokens": "Aucun jeton",
     "defaultPlace": "Lieu par défaut",
-    "defaultPlaceHelp": "Pour une nouvelle candidature."
+    "defaultPlaceHelp": "Pour une nouvelle candidature.",
+    "followUp": "Délai de relance",
+    "followUpHelp": "Sans nouvelles depuis ce délai, une candidature est à relancer."
   }
 }
