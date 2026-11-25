@@ -58,8 +58,8 @@ The session is kept in `~/.config/callback/session.json`; `CALLBACK_URL` and `CA
 
 ## AI agents (MCP)
 
-Six tools, all batch: `list_applications`, `read_applications`, `add_applications`, `update_applications`,
-`delete_applications`, `application_stats`. A read-only token gets the read tools only.
+Seven tools, all batch: `list_applications`, `read_applications`, `application_stats`, `status_history`,
+`add_applications`, `update_applications`, `delete_applications`. A read-only token gets the read tools only.
 
 - Local: `claude mcp add callback -- callback mcp` (uses the CLI's session).
 - Remote: `claude mcp add --transport http callback https://<your MCP address>/mcp`, signed in through OAuth, or with

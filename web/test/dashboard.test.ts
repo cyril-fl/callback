@@ -75,6 +75,7 @@ test('the stats count every status and the share past applied', () => {
   assert.deepEqual(statsOf(apps), {
     total: 3,
     by_status: { applied: 1, responded: 1, interview: 1, offer: 0, rejected: 0 },
+    by_source: { job_post: 2, spontaneous: 1 },
     response_rate: 2 / 3,
   });
   assert.equal(statsOf([]).response_rate, 0);

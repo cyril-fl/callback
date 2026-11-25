@@ -12,11 +12,11 @@ import (
 )
 
 // The ceiling of the tool list, paid by the model at every request: 6 tools of 4.1 KB at first, 4.8 KB with the
-// interview and the contact. Complete tools that save round trips are worth bytes; optimise what exists before adding.
+// interview and the contact, 7 of 5.2 KB with the status history. Complete tools that save round trips are worth bytes; optimise what exists before adding.
 const maxTools, maxToolBytes = 8, 6000
 
 var (
-	readTools  = []string{"list_applications", "read_applications", "application_stats"}
+	readTools  = []string{"list_applications", "read_applications", "application_stats", "status_history"}
 	writeTools = []string{"add_applications", "update_applications", "delete_applications"}
 )
 

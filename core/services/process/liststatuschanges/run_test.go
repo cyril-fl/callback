@@ -2,8 +2,10 @@ package liststatuschanges_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/process/deleteapplications"
@@ -35,17 +37,36 @@ func TestHistory(t *testing.T) {
 		t.Fatal(update.GetErr(), remove.GetErr())
 	}
 
-	process := liststatuschanges.Process(ctx, db)
-	process.Run()
-	if process.HasErr() {
-		t.Fatal(process.GetErr())
-	}
-	var got []string
-	for _, change := range process.GetResult() {
-		got = append(got, change.ApplicationID+" "+string(change.Status))
+	history := func(input liststatuschanges.Input) []string {
+		t.Helper()
+		process := liststatuschanges.Process(ctx, db, input)
+		process.Run()
+		if process.HasErr() {
+			t.Fatal(process.GetErr())
+		}
+		var got []string
+		for _, change := range process.GetResult() {
+			got = append(got, change.ApplicationID+" "+string(change.Status))
+		}
+		return got
 	}
 	want := []string{ids[0] + " applied", ids[1] + " interview", ids[0] + " responded"}
-	if fmt.Sprint(got) != fmt.Sprint(want) {
+	if got := history(liststatuschanges.Input{}); fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Errorf("history = %v, want %v", got, want)
+	}
+	if got := history(liststatuschanges.Input{IDs: []string{ids[0]}}); fmt.Sprint(got) != fmt.Sprint([]string{want[0], want[2]}) {
+		t.Errorf("history of %s = %v", ids[0], got)
+	}
+	tomorrow := time.Now().UTC().AddDate(0, 0, 1).Format(domain.DateLayout)
+	if got := history(liststatuschanges.Input{Since: tomorrow}); len(got) != 0 {
+		t.Errorf("history since %s = %v, want none", tomorrow, got)
+	}
+}
+
+func TestInvalidSince(t *testing.T) {
+	process := liststatuschanges.Process(context.Background(), testdb.New(t), liststatuschanges.Input{Since: "yesterday"})
+	process.Run()
+	if !errors.Is(process.GetErr(), liststatuschanges.ErrInvalidSince) {
+		t.Errorf("err = %v, want ErrInvalidSince", process.GetErr())
 	}
 }

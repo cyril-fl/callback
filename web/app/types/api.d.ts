@@ -596,7 +596,12 @@ export interface paths {
         /** List the status history */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Of these applications, comma separated or repeated */
+                    ids?: string[];
+                    /** @description Reached on this day or after (2026-01-31) */
+                    since?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -610,6 +615,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["domain.StatusChange"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
                     };
                 };
                 /** @description Unauthorized */
@@ -986,6 +1000,10 @@ export interface components {
             version: string;
         };
         "readstats.Stats": {
+            /** @description BySource has the sources in use: an agent reuses their names rather than make a near double. */
+            by_source: {
+                [key: string]: number;
+            };
             /** @description ByStatus has every status, 0 included. */
             by_status: {
                 [key: string]: number;

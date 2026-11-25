@@ -371,6 +371,9 @@ type LoginMeResult struct {
 
 // ReadstatsStats defines model for readstats.Stats.
 type ReadstatsStats struct {
+	// BySource BySource has the sources in use: an agent reuses their names rather than make a near double.
+	BySource map[string]int `json:"by_source"`
+
 	// ByStatus ByStatus has every status, 0 included.
 	ByStatus map[string]int `json:"by_status"`
 
@@ -463,6 +466,15 @@ type GetApiApplicationsParamsStatus string
 
 // PostApiApplicationsJSONBody defines parameters for PostApiApplications.
 type PostApiApplicationsJSONBody = []DomainNewApplication
+
+// GetApiStatusChangesParams defines parameters for GetApiStatusChanges.
+type GetApiStatusChangesParams struct {
+	// Ids Of these applications, comma separated or repeated
+	Ids *[]string `form:"ids,omitempty" json:"ids,omitempty"`
+
+	// Since Reached on this day or after (2026-01-31)
+	Since *string `form:"since,omitempty" json:"since,omitempty"`
+}
 
 // DeleteApiApplicationsJSONRequestBody defines body for DeleteApiApplications for application/json ContentType.
 type DeleteApiApplicationsJSONRequestBody = DeleteapplicationsInput
@@ -659,7 +671,7 @@ type ClientInterface interface {
 	// GetApiStatusChanges List the status history
 	//
 	// Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
-	GetApiStatusChanges(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetApiStatusChanges(ctx context.Context, params *GetApiStatusChangesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiTokens List the tokens
 	//
@@ -949,8 +961,8 @@ func (c *Client) GetApiStats(ctx context.Context, reqEditors ...RequestEditorFn)
 // GetApiStatusChanges List the status history
 //
 // Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
-func (c *Client) GetApiStatusChanges(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiStatusChangesRequest(c.Server)
+func (c *Client) GetApiStatusChanges(ctx context.Context, params *GetApiStatusChangesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiStatusChangesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1559,7 +1571,7 @@ func NewGetApiStatsRequest(server string) (*http.Request, error) {
 }
 
 // NewGetApiStatusChangesRequest constructs an http.Request for the GetApiStatusChanges method
-func NewGetApiStatusChangesRequest(server string) (*http.Request, error) {
+func NewGetApiStatusChangesRequest(server string, params *GetApiStatusChangesParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1575,6 +1587,45 @@ func NewGetApiStatusChangesRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Ids != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ids", *params.Ids, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Since != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "since", *params.Since, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -1847,7 +1898,7 @@ type ClientWithResponsesInterface interface {
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
-	GetApiStatusChangesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStatusChangesResponse, error)
+	GetApiStatusChangesWithResponse(ctx context.Context, params *GetApiStatusChangesParams, reqEditors ...RequestEditorFn) (*GetApiStatusChangesResponse, error)
 
 	// GetApiTokensWithResponse List the tokens
 	//
@@ -2488,6 +2539,8 @@ type GetApiStatusChangesResponse struct {
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
 	JSON200 *[]DomainStatusChange
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *RespondFailure
 	// JSON401 the response for an HTTP 401 `application/json` response
 	JSON401 *RespondFailure
 }
@@ -2495,6 +2548,11 @@ type GetApiStatusChangesResponse struct {
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
 func (r GetApiStatusChangesResponse) GetJSON200() *[]DomainStatusChange {
 	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetApiStatusChangesResponse) GetJSON400() *RespondFailure {
+	return r.JSON400
 }
 
 // GetJSON401 returns the response for an HTTP 401 `application/json` response
@@ -2916,8 +2974,8 @@ func (c *ClientWithResponses) GetApiStatsWithResponse(ctx context.Context, reqEd
 // Returns a wrapper object for the known response body format(s).
 //
 // Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
-func (c *ClientWithResponses) GetApiStatusChangesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStatusChangesResponse, error) {
-	rsp, err := c.GetApiStatusChanges(ctx, reqEditors...)
+func (c *ClientWithResponses) GetApiStatusChangesWithResponse(ctx context.Context, params *GetApiStatusChangesParams, reqEditors ...RequestEditorFn) (*GetApiStatusChangesResponse, error) {
+	rsp, err := c.GetApiStatusChanges(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -3445,6 +3503,13 @@ func ParseGetApiStatusChangesResponse(rsp *http.Response) (*GetApiStatusChangesR
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest RespondFailure

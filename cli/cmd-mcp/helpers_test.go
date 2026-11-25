@@ -149,6 +149,15 @@ func TestTools(t *testing.T) {
 	if stats.Total != 3 || stats.ByStatus["rejected"] != 2 || stats.ByStatus["interview"] != 1 {
 		t.Errorf("application_stats = %+v", stats)
 	}
+	if stats.BySource["recruiter"] != 1 || stats.BySource["spontaneous"] != 2 {
+		t.Errorf("application_stats by_source = %+v", stats.BySource)
+	}
+
+	var history historyResult
+	one("status_history", map[string]any{"ids": []string{ids[1]}}, &history)
+	if len(history.Changes) != 2 || history.Changes[0].Status != "applied" || history.Changes[1].Status != "interview" {
+		t.Errorf("status_history = %+v", history)
+	}
 
 	var deleted apiclient.DomainBatchResult
 	one("delete_applications", map[string]any{"status": []string{"rejected"}}, &deleted)

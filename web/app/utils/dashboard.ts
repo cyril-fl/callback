@@ -12,9 +12,14 @@ export function inPeriod(applications: Application[], since: string, city: strin
 /** The counts of /api/stats, on these applications only. */
 export function statsOf(applications: Application[]): Stats {
   const by_status = Object.fromEntries(STATUSES.map((s) => [s, 0])) as Record<Status, number>;
-  for (const a of applications) by_status[a.status ?? 'applied']++;
+  const by_source: Record<string, number> = {};
+  for (const a of applications) {
+    by_status[a.status ?? 'applied']++;
+    const source = a.source ?? 'spontaneous';
+    by_source[source] = (by_source[source] ?? 0) + 1;
+  }
   const total = applications.length;
-  return { total, by_status, response_rate: total ? (total - by_status.applied) / total : 0 };
+  return { total, by_status, by_source, response_rate: total ? (total - by_status.applied) / total : 0 };
 }
 
 /** The values and how many times each comes, the most first, top of them. */

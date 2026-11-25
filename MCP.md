@@ -80,7 +80,8 @@ Tous en lot : **un appel d'outil = une requête à l'API = une transaction**, ja
 |---|---|---|
 | `list_applications` | Les candidatures des filtres (`status` liste, `source`, `q`, `applied_before`, `applied_after`, `untouched_since`), **compactes** : `id`, `company`, `status`, `applied_at`, et `total`. `fields` ajoute des colonnes, `count_only` ne rend que le total, `sort`, `limit` (50 par défaut, 0 pour toutes), `offset` | lecture |
 | `read_applications` | Les candidatures entières de `ids` (50 au plus), dans l'ordre demandé ; `max_chars` coupe les commentaires (`truncated`). Les champs identiques sur toutes sont dits une fois dans `common`, les ids introuvables dans `missing` | lecture |
-| `application_stats` | Le total, le nombre par statut et le taux de réponse | lecture |
+| `application_stats` | Le total, le nombre par statut et par source (`by_source`, pour réutiliser les noms existants) et le taux de réponse | lecture |
+| `status_history` | Les statuts atteints et quand, du plus ancien au plus récent (`changes`), des candidatures de `ids` et/ou depuis `since` (ce jour inclus) : délais de réponse, ce qui a bougé récemment | lecture |
 | `add_applications` | Crée `items` (500 au plus) ; rend seulement les `ids` créés et les éléments en échec (`failed`, avec leur `index`) : les valides sont écrits quand même | écriture |
 | `update_applications` | `ops`, chacun choisit des candidatures par `ids` ou par filtres et donne `set` (`status`, `rating`, `comment`…) ; `dry_run` n'écrit rien et rend ce qui changerait, `summary` retire les ids | écriture, idempotent |
 | `delete_applications` | Supprime **définitivement** les candidatures de `ids` ou des filtres ; `dry_run`, `summary`. Un filtre vide est refusé | destructif, idempotent |
@@ -98,7 +99,7 @@ les lance sans demander ; `destructiveHint` sur `delete_applications` : le clien
 
 **Peu d'outils, des descriptions d'une phrase.** Chaque outil annoncé coûte du contexte à chaque requête.
 `TestToolListSize` (`cli/cmd-mcp/cmd_test.go`) mesure le nom, la description et le schéma d'entrée de chaque outil, et
-échoue au-delà de 8 outils ou 6 000 octets (6 outils et 4,1 Ko au départ, 4,8 Ko avec l'entretien et le contact) :
+échoue au-delà de 8 outils ou 6 000 octets (6 outils et 4,1 Ko au départ, 4,8 Ko avec l'entretien et le contact, 7 outils et 5,2 Ko avec l'historique) :
 des outils complets qui évitent des allers-retours valent quelques octets, mais optimiser l'existant avant d'ajouter.
 `go test -v -run Size ./cli/cmd-mcp/` affiche les chiffres.
 
@@ -111,6 +112,8 @@ recettes tiennent là, une fois, plutôt que dans les descriptions.
 - **Filtrer sur le serveur** plutôt que tout lire, et ne demander en `fields` que les colonnes utiles ; paginer avec
   `limit` et `offset`.
 - **Lire par lots** : `read_applications` prend 50 ids, avec `max_chars` pour les longs commentaires.
+- **L'historique filtré** : `status_history` avec `ids` ou `since`, pas tout l'historique.
+- **Réutiliser les sources** de `by_source` (`application_stats`) plutôt que créer un quasi-doublon.
 - **Écrire par lots** : un `add_applications` pour toutes les nouvelles, un `update_applications` par lot, un groupe
   par élément de `ops`.
 - **`dry_run` d'abord** sur des filtres, puis le vrai appel ; `summary` quand les compteurs suffisent. Les écritures

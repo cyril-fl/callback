@@ -377,6 +377,12 @@ components:
       type: object
     readstats.Stats:
       properties:
+        by_source:
+          additionalProperties:
+            type: integer
+          description: 'BySource has the sources in use: an agent reuses their names
+            rather than make a near double.'
+          type: object
         by_status:
           additionalProperties:
             type: integer
@@ -389,6 +395,7 @@ components:
         total:
           type: integer
       required:
+      - by_source
       - by_status
       - response_rate
       - total
@@ -859,6 +866,20 @@ paths:
       - applications
   /api/status-changes:
     get:
+      parameters:
+      - description: Of these applications, comma separated or repeated
+        in: query
+        name: ids
+        schema:
+          items:
+            type: string
+          type: array
+        style: form
+      - description: Reached on this day or after (2026-01-31)
+        in: query
+        name: since
+        schema:
+          type: string
       responses:
         "200":
           content:
@@ -868,6 +889,12 @@ paths:
                   $ref: '#/components/schemas/domain.StatusChange'
                 type: array
           description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
         "401":
           content:
             application/json:

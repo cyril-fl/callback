@@ -150,6 +150,16 @@ func factor(applications []apiclient.DomainApplication) (map[string]any, []map[s
 	return common, items
 }
 
+type historyArgs struct {
+	IDs   []string `json:"ids,omitempty" jsonschema:"of these applications"`
+	Since *string  `json:"since,omitempty" jsonschema:"reached on this day or after"`
+}
+
+// historyResult wraps the changes: a tool answers an object.
+type historyResult struct {
+	Changes []apiclient.DomainStatusChange `json:"changes"`
+}
+
 type addArgs struct {
 	Items []apiclient.DomainNewApplication `json:"items" jsonschema:"500 at most"`
 }

@@ -1,4 +1,4 @@
-// Package readstats counts the applications by status, without reading them.
+// Package readstats counts the applications by status and by source, without reading them.
 package readstats
 
 import (
@@ -14,6 +14,8 @@ type Stats struct {
 	Total int `json:"total"`
 	// ByStatus has every status, 0 included.
 	ByStatus map[domain.Status]int `json:"by_status"`
+	// BySource has the sources in use: an agent reuses their names rather than make a near double.
+	BySource map[domain.Source]int `json:"by_source"`
 	// ResponseRate is the share of applications that got past applied, 0 to 1.
 	ResponseRate float64 `json:"response_rate"`
 }
@@ -38,7 +40,7 @@ func Process(ctx context.Context, db bun.IDB) *run {
 }
 
 func (p *run) Run() {
-	p.countStatuses()
+	p.count()
 }
 
 // Getters & Setters
@@ -47,22 +49,24 @@ func (p *run) GetResult() Stats {
 }
 
 // Methods
-func (p *run) countStatuses() {
+func (p *run) count() {
 	var rows []struct {
 		Status domain.Status
+		Source domain.Source
 		Count  int
 	}
-	err := p.db.NewSelect().Model((*domain.Application)(nil)).Column("status").ColumnExpr("count(*) AS count").Group("status").Scan(p.ctx, &rows)
+	err := p.db.NewSelect().Model((*domain.Application)(nil)).Column("status", "source").ColumnExpr("count(*) AS count").Group("status", "source").Scan(p.ctx, &rows)
 	if err != nil {
 		p.SetErr(err)
 		return
 	}
-	stats := Stats{ByStatus: map[domain.Status]int{}}
+	stats := Stats{ByStatus: map[domain.Status]int{}, BySource: map[domain.Source]int{}}
 	for _, status := range domain.Statuses {
 		stats.ByStatus[status] = 0
 	}
 	for _, row := range rows {
-		stats.ByStatus[row.Status] = row.Count
+		stats.ByStatus[row.Status] += row.Count
+		stats.BySource[row.Source] += row.Count
 		stats.Total += row.Count
 	}
 	if stats.Total > 0 {
