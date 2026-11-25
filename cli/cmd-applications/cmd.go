@@ -21,7 +21,7 @@ import (
 var defaultColumns = []string{"company", "status", "applied_at"}
 
 // showColumns is the order of show, every field.
-var showColumns = []string{"company", "location", "website", "source", "source_detail", "status", "rating", "applied_at", "comment", "truncated", "created_at", "updated_at"}
+var showColumns = []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "applied_at", "comment", "truncated", "created_at", "updated_at"}
 
 // Add creates the application of the flags, or the batch of --file, in one request.
 func Add(cobra *cobra.Command, _ []string) error {
@@ -39,6 +39,7 @@ func Add(cobra *cobra.Command, _ []string) error {
 		item.Company, _ = cobra.Flags().GetString("company")
 		item.Location, _ = cobra.Flags().GetString("location")
 		set := changes(cobra)
+		item.Street, item.PostalCode, item.Country = set.Street, set.PostalCode, set.Country
 		item.Website, item.Source, item.SourceDetail, item.Status, item.Rating, item.Comment, item.AppliedAt =
 			set.Website, set.Source, set.SourceDetail, set.Status, set.Rating, set.Comment, set.AppliedAt
 		items = append(items, item)
@@ -83,7 +84,7 @@ func List(cobra *cobra.Command, _ []string) error {
 	count, _ := flags.GetBool("count")
 	asJSON, _ := flags.GetBool("json")
 	params := &apiclient.GetApiApplicationsParams{
-		Source: (*apiclient.GetApiApplicationsParamsSource)(f.Source), Q: f.Q, AppliedBefore: f.AppliedBefore, AppliedAfter: f.AppliedAfter,
+		Source: (*string)(f.Source), Q: f.Q, AppliedBefore: f.AppliedBefore, AppliedAfter: f.AppliedAfter,
 		UntouchedSince: f.UntouchedSince, Sort: opt(flags.GetString("sort")), Limit: &limit, Offset: &offset, CountOnly: &count,
 	}
 	if f.Status != nil {
@@ -313,7 +314,7 @@ func changes(cobra *cobra.Command) apiclient.DomainChanges {
 		return &value
 	}
 	set := apiclient.DomainChanges{
-		Website: text("website"), Source: (*apiclient.DomainSource)(text("source")), SourceDetail: text("source-detail"),
+		Website: text("website"), Street: text("street"), PostalCode: text("postal-code"), Country: text("country"), Source: (*apiclient.DomainSource)(text("source")), SourceDetail: text("source-detail"),
 		Status: (*apiclient.DomainStatus)(text("status")), Comment: text("comment"), AppliedAt: text("applied-at"),
 	}
 	if flags.Changed("rating") {

@@ -7,9 +7,9 @@ Track job applications from a web app, a CLI and an MCP server for AI agents. Si
 - **`web/`**: Nuxt 4 + Nuxt UI: a dashboard with a sortable, filterable table or a kanban by status, the add/edit
   form, API tokens, four themes and dark mode.
 
-Each application has a company, a location, a website, a source (spontaneous, job post with its URL, recruiter with
-their e-mail), a status (applied → responded → interview → offer / rejected), a rating out of 5, a comment and the
-day it was sent. Every write is a batch: one request adds, changes or deletes many applications in one transaction.
+Each application has a company, an address (location is the city, plus an optional street, postal code and country),
+a website, a source (spontaneous, job post with its URL, recruiter with their e-mail, or any name you give), a status
+(applied → responded → interview → offer / rejected), a rating out of 5, a comment and the day it was sent. Every write is a batch: one request adds, changes or deletes many applications in one transaction.
 
 The previous Vue/Express/Mongo app is at the `deprecated` tag.
 
@@ -44,7 +44,7 @@ docker cp callback:/data/backup-$(date +%F).db .
 ```sh
 go install github.com/cyril-fl/callback/cmd/callback@latest
 callback login https://callback.<tailnet>.ts.net        # asks the password (or CALLBACK_PASSWORD)
-callback add --company Acme --location Paris --source job_post --source-detail https://jobs.acme.example/42
+callback add --company Acme --location Paris --country France --source job_post --source-detail https://jobs.acme.example/42
 callback add --file applications.json             # a JSON array, or - for stdin
 callback ls --status interview,offer -q acme      # --json for scripts
 callback edit <id> --status interview             # or by filters: --where-status applied --untouched-since 2026-01-01 --dry-run

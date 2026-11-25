@@ -75,6 +75,20 @@ func TestApplications(t *testing.T) {
 	}
 }
 
+// TestCustomSourceAndAddress adds an application with a source of the user's own and a full address, and reads them back.
+func TestCustomSourceAndAddress(t *testing.T) {
+	apitest.Serve(t)
+	must(t, "add", "--company", "Adecco", "--location", "Lyon", "--street", "1 rue X", "--postal-code", "69001", "--country", "France",
+		"--source", "Agence intérim Adecco", "--source-detail", "Marie")
+	var rows []map[string]any
+	if err := json.Unmarshal([]byte(must(t, "ls", "--fields", "source,country", "--json", "--source", "Agence intérim Adecco")), &rows); err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0]["source"] != "Agence intérim Adecco" || rows[0]["country"] != "France" {
+		t.Errorf("ls --fields source,country = %v", rows)
+	}
+}
+
 // TestAccount logs in, makes a token, and logs out.
 func TestAccount(t *testing.T) {
 	server := apitest.Serve(t)

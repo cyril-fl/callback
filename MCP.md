@@ -85,8 +85,10 @@ Tous en lot : **un appel d'outil = une requête à l'API = une transaction**, ja
 | `update_applications` | `ops`, chacun choisit des candidatures par `ids` ou par filtres et donne `set` (`status`, `rating`, `comment`…) ; `dry_run` n'écrit rien et rend ce qui changerait, `summary` retire les ids | écriture, idempotent |
 | `delete_applications` | Supprime **définitivement** les candidatures de `ids` ou des filtres ; `dry_run`, `summary`. Un filtre vide est refusé | destructif, idempotent |
 
-Les valeurs : `status` parmi `applied`, `responded`, `interview`, `offer`, `rejected` ; `source` parmi `spontaneous`
-(par défaut), `job_post` (avec l'URL de l'annonce en `source_detail`) et `recruiter` (avec son e-mail) ; `rating` de
+Les valeurs : `status` parmi `applied`, `responded`, `interview`, `offer`, `rejected` ; `source` : `spontaneous`
+(par défaut), `job_post` (avec l'URL de l'annonce en `source_detail`), `recruiter` (avec son e-mail) ou un nom libre
+(60 caractères au plus, `source_detail` libre) ; l'adresse : `location` est la ville, `street`, `postal_code` et
+`country` la complètent (aussi dans `fields` et `q`) ; `rating` de
 0 à 5 ; les jours en `2026-01-31`, `applied_before` et `applied_after` stricts.
 
 Les réponses sont du JSON compact (sans indentation, champs vides omis). `readOnlyHint` sur les lectures : le client

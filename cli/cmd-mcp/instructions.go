@@ -4,7 +4,7 @@ package cmdmcp
 // It holds the recipes once, so the tool descriptions stay one sentence. The writing recipes are left out when
 // readOnly, whose tools cannot write.
 func Instructions(readOnly bool) string {
-	text := "The user's job applications. status: applied, responded, interview, offer, rejected; source: spontaneous (default), job_post with source_detail its URL, recruiter with source_detail their e-mail; " +
+	text := "The user's job applications. status: applied, responded, interview, offer, rejected; source: spontaneous (default), job_post with source_detail its URL, recruiter with source_detail their e-mail, or any name the user gives (60 characters at most) with a free source_detail; " +
 		"rating 0 to 5; days look like 2026-01-31, applied_before and applied_after are strict.\n" +
 		"Read as little as possible:\n" +
 		"- Count before reading: application_stats, or list_applications with count_only.\n" +
