@@ -13,6 +13,8 @@ const q = ref('');
 const qDebounced = refDebounced(q, 300);
 const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
+// Pro: the applications without news for the follow-up delay, applied or responded.
+const followUp = ref(false);
 const defaultSorting = [{ id: 'applied_at', desc: true }];
 const sorting = ref<{ id: string; desc: boolean }[]>([...defaultSorting]);
 // On the kanban the page is the window's height (less the layout's header, h-14 and its border, and its padding,
@@ -22,12 +24,14 @@ const view = useLocalStorage<'table' | 'kanban'>('callback-view', 'table');
 const filtered = computed(
   () =>
     q.value !== '' ||
+    followUp.value ||
     statusFilter.value.length > 0 ||
     sourceFilter.value !== 'all' ||
     JSON.stringify(sorting.value) !== JSON.stringify(defaultSorting),
 );
 function reset() {
   q.value = '';
+  followUp.value = false;
   statusFilter.value = [];
   sourceFilter.value = 'all';
   sorting.value = [...defaultSorting];
@@ -55,12 +59,17 @@ const {
     api<Application[]>('/api/applications', {
       query: {
         q: qDebounced.value || undefined,
-        status: statusFilter.value.length ? statusFilter.value.join(',') : undefined,
+        status: followUp.value
+          ? 'applied,responded'
+          : statusFilter.value.length
+            ? statusFilter.value.join(',')
+            : undefined,
+        untouched_since: followUp.value ? followUpSince.value : undefined,
         source: sourceFilter.value === 'all' ? undefined : sourceFilter.value,
         sort: sort.value,
       },
     }),
-  { watch: [qDebounced, statusFilter, sourceFilter, sort] },
+  { watch: [qDebounced, followUp, statusFilter, sourceFilter, sort] },
 );
 const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh()]);
 
@@ -151,6 +160,37 @@ const header =
     ]);
   };
 
+// The actions column filters on its follow-up button: all rows, or those that show it.
+const followUpFilterMenu = computed<DropdownMenuItem[][]>(() => [
+  [
+    { label: t('common.all'), type: 'checkbox', checked: !followUp.value, onSelect: () => (followUp.value = false) },
+    {
+      label: t('table.followUp'),
+      icon: 'i-lucide-bell-ring',
+      type: 'checkbox',
+      checked: followUp.value,
+      onSelect: () => (followUp.value = true),
+    },
+  ],
+]);
+const actionsHeader = () =>
+  h('div', { class: 'flex justify-end' }, [
+    h(
+      UDropdownMenu,
+      { items: followUpFilterMenu.value, content: { align: 'end' } },
+      {
+        default: () =>
+          h(UButton, {
+            icon: 'i-lucide-list-filter',
+            color: followUp.value ? 'primary' : 'neutral',
+            variant: followUp.value ? 'soft' : 'ghost',
+            size: 'xs',
+            'aria-label': `${t('table.filterBy')} ${t('table.followUp')}`,
+          }),
+      },
+    ),
+  ]);
+
 // Pro: rows are picked by id for the batch bar.
 const selection = ref<Record<string, boolean>>({});
 const selected = computed(() => Object.keys(selection.value).filter((id) => selection.value[id]));
@@ -185,7 +225,7 @@ const columns = computed<TableColumn<Application>[]>(() => [
   },
   { accessorKey: 'rating', header: header(t('table.rating')) },
   { accessorKey: 'applied_at', header: header(t('table.appliedAt')) },
-  { id: 'actions', header: () => h('span', { class: 'sr-only' }, t('table.actions')) },
+  { id: 'actions', header: actionsHeader },
 ]);
 
 // "2026-01-31" is a day, not an instant: no timezone shift.
