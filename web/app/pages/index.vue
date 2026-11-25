@@ -375,7 +375,6 @@ function exportCsv() {
         />
         <UButton icon="i-lucide-plus" :label="t('common.add')" :ui="{ label: 'max-sm:sr-only' }" @click="openForm()" />
       </div>
-      <USeparator orientation="vertical" class="mx-1 h-5" />
     </Teleport>
 
     <ApplicationKanban

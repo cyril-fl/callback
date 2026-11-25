@@ -14,10 +14,8 @@ const links = computed(() => [
   <div class="min-h-dvh">
     <header class="border-b border-default">
       <UContainer class="flex h-14 items-center justify-between">
-        <NuxtLink to="/" class="font-semibold">{{ t('app.name') }}</NuxtLink>
         <nav class="flex items-center gap-1">
-          <!-- A page's own actions, teleported here (the list's view, export and add). -->
-          <div id="header-actions" class="contents" />
+          <NuxtLink to="/" class="mr-3 font-semibold">{{ t('app.name') }}</NuxtLink>
           <UButton
             v-for="link in links"
             :key="link.to"
@@ -40,6 +38,8 @@ const links = computed(() => [
             />
           </UTooltip>
         </nav>
+        <!-- A page's own actions, teleported here (the list's view, export and add). -->
+        <div id="header-actions" class="flex items-center gap-2" />
       </UContainer>
     </header>
     <UContainer class="py-6">
