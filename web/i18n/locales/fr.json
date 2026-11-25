@@ -197,6 +197,7 @@
     "defaultPlaceHelp": "Pour une nouvelle candidature.",
     "followUp": "Délai de relance",
     "followUpHelp": "Sans nouvelles depuis ce délai, une candidature est à relancer.",
+    "version": "Version",
     "danger": "Zone de danger",
     "purge": "Repartir de zéro",
     "purgeHelp": "Supprime toutes les candidatures et leur historique, pour une nouvelle recherche. Les réglages et les jetons restent.",

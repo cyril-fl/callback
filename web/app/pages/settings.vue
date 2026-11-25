@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PurgeResult, Token, TokenInput, TokenResult } from '~/types/items';
+import type { Me, PurgeResult, Token, TokenInput, TokenResult } from '~/types/items';
 
 const { t } = useI18n();
 const api = useApi();
@@ -7,6 +7,7 @@ const toast = useToast();
 const theme = useTheme();
 const { preferences, pro, save } = usePreferences();
 const places = usePlaces();
+const me = useNuxtData<Me>('me').data;
 const planItems = (['base', 'pro'] as const).map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 const colorMode = useColorMode();
 const mode = computed({
@@ -140,6 +141,10 @@ async function revoke() {
             class="w-40"
             @update:model-value="(v) => v && v !== preferences?.follow_up_days && save({ follow_up_days: v })"
           />
+        </li>
+        <li v-if="me?.version" class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.version') }}</p>
+          <span class="font-mono text-xs text-muted">{{ me.version }}</span>
         </li>
       </ul>
     </section>
