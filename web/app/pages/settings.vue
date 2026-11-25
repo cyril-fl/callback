@@ -65,7 +65,7 @@ async function revoke() {
 </script>
 
 <template>
-  <div class="max-w-3xl space-y-10">
+  <div class="mx-auto max-w-3xl space-y-10">
     <h1 class="text-xl font-semibold">{{ t('settings.title') }}</h1>
 
     <section>
