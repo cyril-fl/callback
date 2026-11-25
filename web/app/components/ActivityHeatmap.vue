@@ -16,12 +16,13 @@ const weeks = computed(() => {
   today.setHours(12, 0, 0, 0);
   const first = props.since || props.days.reduce((a, d) => (a && a < d ? a : d.slice(0, 10)), '');
   const start = first ? new Date(`${first}T12:00:00`) : new Date(today.getTime() - 52 * 7 * 864e5);
+  const from = iso(start);
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  const out: { key: string; date: Date; count: number; future: boolean }[][] = [];
+  const out: { key: string; date: Date; count: number; hidden: boolean }[][] = [];
   for (const d = new Date(start); d <= today || out.at(-1)!.length < 7; d.setDate(d.getDate() + 1)) {
     if (!out.length || out.at(-1)!.length === 7) out.push([]);
     const key = iso(d);
-    out.at(-1)!.push({ key, date: new Date(d), count: counts.value.get(key) ?? 0, future: d > today });
+    out.at(-1)!.push({ key, date: new Date(d), count: counts.value.get(key) ?? 0, hidden: d > today || key < from });
   }
   return out;
 });
@@ -51,7 +52,7 @@ onMounted(() => scroller.value && (scroller.value.scrollLeft = scroller.value.sc
             v-for="day in week"
             :key="day.key"
             class="size-3 rounded-sm"
-            :class="day.future ? 'invisible' : level(day.count)"
+            :class="day.hidden ? 'invisible' : level(day.count)"
             :title="t('stats.dayCount', { date: day.date.toLocaleDateString('fr-FR') }, day.count)"
           />
         </div>

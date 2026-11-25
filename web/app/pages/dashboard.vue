@@ -38,7 +38,8 @@ const cityItems = computed(() => [
 const today = todayDate(getLocalTimeZone());
 const since = computed(() => {
   const duration = periods[period.value];
-  return duration ? today.subtract(duration).toString() : '';
+  // The day after: a week is the last 7 days, today included.
+  return duration ? today.subtract(duration).add({ days: 1 }).toString() : '';
 });
 const filtered = computed(() => inPeriod(applications.value, since.value, city.value));
 const stats = computed(() => statsOf(filtered.value));
