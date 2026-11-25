@@ -251,6 +251,16 @@ type DomainApplication struct {
 	Website *string `json:"website,omitempty"`
 }
 
+// DomainBackup defines model for domain.Backup.
+type DomainBackup struct {
+	Applications  []DomainApplication        `json:"applications"`
+	Deleted       []DomainDeletedApplication `json:"deleted"`
+	ExportedAt    string                     `json:"exported_at"`
+	FollowUps     []DomainFollowUp           `json:"follow_ups"`
+	StatusChanges []DomainStatusChange       `json:"status_changes"`
+	Version       int                        `json:"version"`
+}
+
 // DomainBatchFailure defines model for domain.BatchFailure.
 type DomainBatchFailure struct {
 	Error string  `json:"error"`
@@ -304,6 +314,12 @@ type DomainDeletedApplication struct {
 	Application DomainApplication `json:"application"`
 	DeletedAt   string            `json:"deleted_at"`
 	Id          string            `json:"id"`
+}
+
+// DomainFollowUp defines model for domain.FollowUp.
+type DomainFollowUp struct {
+	ApplicationId string `json:"application_id"`
+	At            string `json:"at"`
 }
 
 // DomainNewApplication defines model for domain.NewApplication.
@@ -394,6 +410,14 @@ type ForgetapplicationsInput struct {
 	// All All empties the trash; without it, ids are required.
 	All *bool     `json:"all,omitempty"`
 	Ids *[]string `json:"ids,omitempty"`
+}
+
+// ImportdataResult defines model for importdata.Result.
+type ImportdataResult struct {
+	Added   int                   `json:"added"`
+	Deleted int                   `json:"deleted"`
+	Failed  *[]DomainBatchFailure `json:"failed,omitempty"`
+	Skipped int                   `json:"skipped"`
 }
 
 // ListsourcesSource defines model for listsources.Source.
@@ -563,6 +587,9 @@ type DeleteApiApplicationsDeletedJSONRequestBody = ForgetapplicationsInput
 // PostApiApplicationsRestoreJSONRequestBody defines body for PostApiApplicationsRestore for application/json ContentType.
 type PostApiApplicationsRestoreJSONRequestBody = RestoreapplicationsInput
 
+// PostApiImportJSONRequestBody defines body for PostApiImport for application/json ContentType.
+type PostApiImportJSONRequestBody = DomainBackup
+
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = CreatesessionInput
 
@@ -730,6 +757,25 @@ type ClientInterface interface {
 	//
 	// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
 	DeleteApiData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiExport Export all the data as JSON
+	//
+	// Corresponds with GET /api/export (the `GetApiExport` operationId).
+	GetApiExport(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiImportWithBody Restore an export
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/import (the `PostApiImport` operationId).
+	PostApiImportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiImport Restore an export
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/import (the `PostApiImport` operationId).
+	PostApiImport(ctx context.Context, body PostApiImportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiLoginWithBody Log in
 	//
@@ -1019,6 +1065,55 @@ func (c *Client) PostApiApplicationsRestore(ctx context.Context, body PostApiApp
 // Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
 func (c *Client) DeleteApiData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteApiDataRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetApiExport Export all the data as JSON
+//
+// Corresponds with GET /api/export (the `GetApiExport` operationId).
+func (c *Client) GetApiExport(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiExportRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostApiImportWithBody Restore an export
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/import (the `PostApiImport` operationId).
+func (c *Client) PostApiImportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiImportRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostApiImport Restore an export
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/import (the `PostApiImport` operationId).
+func (c *Client) PostApiImport(ctx context.Context, body PostApiImportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiImportRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1715,6 +1810,73 @@ func NewDeleteApiDataRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetApiExportRequest constructs an http.Request for the GetApiExport method
+func NewGetApiExportRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/export")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostApiImportRequest calls the generic PostApiImport builder with application/json body
+func NewPostApiImportRequest(server string, body PostApiImportJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiImportRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiImportRequestWithBody constructs an http.Request for the PostApiImport method, with any body, and a specified content type
+func NewPostApiImportRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/import")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiLoginRequest calls the generic PostApiLogin builder with application/json body
 func NewPostApiLoginRequest(server string, body PostApiLoginJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -2282,6 +2444,27 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
 	DeleteApiDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteApiDataResponse, error)
+
+	// GetApiExportWithResponse Export all the data as JSON
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/export (the `GetApiExport` operationId).
+	GetApiExportWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiExportResponse, error)
+
+	// PostApiImportWithBodyWithResponse Restore an export
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/import (the `PostApiImport` operationId).
+	PostApiImportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiImportResponse, error)
+
+	// PostApiImportWithResponse Restore an export
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/import (the `PostApiImport` operationId).
+	PostApiImportWithResponse(ctx context.Context, body PostApiImportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiImportResponse, error)
 
 	// PostApiLoginWithBodyWithResponse Log in
 	//
@@ -2858,6 +3041,109 @@ func (r DeleteApiDataResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DeleteApiDataResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetApiExportResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DomainBackup
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetApiExportResponse) GetJSON200() *DomainBackup {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetApiExportResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetApiExportResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiExportResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiExportResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetApiExportResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostApiImportResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImportdataResult
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *RespondFailure
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostApiImportResponse) GetJSON200() *ImportdataResult {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PostApiImportResponse) GetJSON400() *RespondFailure {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r PostApiImportResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r PostApiImportResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiImportResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiImportResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostApiImportResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -3617,6 +3903,45 @@ func (c *ClientWithResponses) DeleteApiDataWithResponse(ctx context.Context, req
 	return ParseDeleteApiDataResponse(rsp)
 }
 
+// GetApiExportWithResponse Export all the data as JSON
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/export (the `GetApiExport` operationId).
+func (c *ClientWithResponses) GetApiExportWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiExportResponse, error) {
+	rsp, err := c.GetApiExport(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiExportResponse(rsp)
+}
+
+// PostApiImportWithBodyWithResponse Restore an export
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/import (the `PostApiImport` operationId).
+func (c *ClientWithResponses) PostApiImportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiImportResponse, error) {
+	rsp, err := c.PostApiImportWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiImportResponse(rsp)
+}
+
+// PostApiImportWithResponse Restore an export
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/import (the `PostApiImport` operationId).
+func (c *ClientWithResponses) PostApiImportWithResponse(ctx context.Context, body PostApiImportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiImportResponse, error) {
+	rsp, err := c.PostApiImport(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiImportResponse(rsp)
+}
+
 // PostApiLoginWithBodyWithResponse Log in
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -4161,6 +4486,79 @@ func ParseDeleteApiDataResponse(rsp *http.Response) (*DeleteApiDataResponse, err
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiExportResponse parses an HTTP response from a GetApiExportWithResponse call
+func ParseGetApiExportResponse(rsp *http.Response) (*GetApiExportResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiExportResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DomainBackup
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiImportResponse parses an HTTP response from a PostApiImportWithResponse call
+func ParsePostApiImportResponse(rsp *http.Response) (*PostApiImportResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiImportResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImportdataResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 

@@ -151,6 +151,41 @@ components:
       required:
       - id
       type: object
+    domain.Backup:
+      properties:
+        applications:
+          items:
+            $ref: '#/components/schemas/domain.Application'
+          type: array
+          uniqueItems: false
+        deleted:
+          items:
+            $ref: '#/components/schemas/domain.DeletedApplication'
+          type: array
+          uniqueItems: false
+        exported_at:
+          type: string
+        follow_ups:
+          items:
+            $ref: '#/components/schemas/domain.FollowUp'
+          type: array
+          uniqueItems: false
+        status_changes:
+          items:
+            $ref: '#/components/schemas/domain.StatusChange'
+          type: array
+          uniqueItems: false
+        version:
+          example: 1
+          type: integer
+      required:
+      - applications
+      - deleted
+      - exported_at
+      - follow_ups
+      - status_changes
+      - version
+      type: object
     domain.BatchFailure:
       properties:
         error:
@@ -247,6 +282,16 @@ components:
       - application
       - deleted_at
       - id
+      type: object
+    domain.FollowUp:
+      properties:
+        application_id:
+          type: string
+        at:
+          type: string
+      required:
+      - application_id
+      - at
       type: object
     domain.NewApplication:
       properties:
@@ -412,6 +457,24 @@ components:
             type: string
           type: array
           uniqueItems: false
+      type: object
+    importdata.Result:
+      properties:
+        added:
+          type: integer
+        deleted:
+          type: integer
+        failed:
+          items:
+            $ref: '#/components/schemas/domain.BatchFailure'
+          type: array
+          uniqueItems: false
+        skipped:
+          type: integer
+      required:
+      - added
+      - deleted
+      - skipped
       type: object
     listsources.Source:
       properties:
@@ -921,6 +984,57 @@ paths:
       summary: Delete every application
       tags:
       - applications
+  /api/export:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Backup'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: Export all the data as JSON
+      tags:
+      - data
+  /api/import:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/domain.Backup'
+              description: The file GET /api/export gave
+              summary: backup
+        description: The file GET /api/export gave
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/importdata.Result'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: Restore an export
+      tags:
+      - data
   /api/login:
     post:
       requestBody:

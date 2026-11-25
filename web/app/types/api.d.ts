@@ -473,6 +473,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export all the data as JSON */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.Backup"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an export */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The file GET /api/export gave */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["domain.Backup"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["importdata.Result"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/login": {
         parameters: {
             query?: never;
@@ -1142,6 +1246,15 @@ export interface components {
             /** @description Website is the company's site, or an e-mail to write to when it has none. */
             website?: string;
         };
+        "domain.Backup": {
+            applications: components["schemas"]["domain.Application"][];
+            deleted: components["schemas"]["domain.DeletedApplication"][];
+            exported_at: string;
+            follow_ups: components["schemas"]["domain.FollowUp"][];
+            status_changes: components["schemas"]["domain.StatusChange"][];
+            /** @example 1 */
+            version: number;
+        };
         "domain.BatchFailure": {
             error: string;
             id?: string;
@@ -1191,6 +1304,10 @@ export interface components {
             application: components["schemas"]["domain.Application"];
             deleted_at: string;
             id: string;
+        };
+        "domain.FollowUp": {
+            application_id: string;
+            at: string;
         };
         "domain.NewApplication": {
             /** @example 2026-01-31 */
@@ -1259,6 +1376,12 @@ export interface components {
             /** @description All empties the trash; without it, ids are required. */
             all?: boolean;
             ids?: string[];
+        };
+        "importdata.Result": {
+            added: number;
+            deleted: number;
+            failed?: components["schemas"]["domain.BatchFailure"][];
+            skipped: number;
         };
         "listsources.Source": {
             count: number;

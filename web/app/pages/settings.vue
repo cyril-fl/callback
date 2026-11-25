@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import type { DeletedApplication, Me, PurgeResult, Token, TokenInput, TokenResult } from '~/types/items';
+import type {
+  Backup,
+  DeletedApplication,
+  ImportResult,
+  Me,
+  PurgeResult,
+  Token,
+  TokenInput,
+  TokenResult,
+} from '~/types/items';
 
 const { t } = useI18n();
 const api = useApi();
@@ -95,6 +104,43 @@ function askRevoke(token: Token) {
   revoking.value = token;
   confirmOpen.value = true;
 }
+async function exportJson() {
+  try {
+    const backup = await api<Backup>('/api/export');
+    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+    Object.assign(document.createElement('a'), {
+      href: url,
+      download: `callback-${backup.exported_at.slice(0, 10)}.json`,
+    }).click();
+    URL.revokeObjectURL(url);
+  } catch {
+    // useApi already toasted.
+  }
+}
+const importInput = ref<HTMLInputElement>();
+async function importJson(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = ''; // The same file can be picked again.
+  if (!file) return;
+  try {
+    const result = await api<ImportResult>('/api/import', { method: 'POST', body: JSON.parse(await file.text()) });
+    toast.add({
+      title: t('settings.imported', {
+        added: result.added + result.deleted,
+        skipped: result.skipped,
+        failed: result.failed?.length ?? 0,
+      }),
+      color: result.failed?.length ? 'warning' : 'success',
+    });
+    clearNuxtData(); // Every page read applications that are not all there.
+    await refreshTrash();
+  } catch (error) {
+    if (error instanceof SyntaxError) toast.add({ title: t('settings.importInvalid'), color: 'error' });
+    // Otherwise useApi already toasted.
+  }
+}
+
 const purgeOpen = ref(false);
 async function purge() {
   try {
@@ -364,6 +410,28 @@ async function revoke() {
         </li>
       </ul>
       <p v-else-if="tokens" class="mt-3 text-xs text-muted">{{ t('settings.noTokens') }}</p>
+    </section>
+
+    <section>
+      <h2 class="mb-3 text-sm font-semibold">{{ t('settings.backup') }}</h2>
+      <div class="flex flex-wrap items-center gap-4 rounded-lg border border-default px-4 py-3">
+        <p class="flex-1 basis-48 text-xs text-muted">{{ t('settings.backupHelp') }}</p>
+        <UButton
+          icon="i-lucide-download"
+          :label="t('settings.export')"
+          color="neutral"
+          variant="outline"
+          @click="exportJson"
+        />
+        <UButton
+          icon="i-lucide-upload"
+          :label="t('settings.import')"
+          color="neutral"
+          variant="outline"
+          @click="importInput?.click()"
+        />
+        <input ref="importInput" type="file" accept="application/json,.json" class="hidden" @change="importJson" />
+      </div>
     </section>
 
     <section>
