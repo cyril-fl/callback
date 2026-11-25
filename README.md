@@ -28,7 +28,7 @@ volume. Pushing a `v*` tag builds and publishes it (`:<version>` and `:latest`, 
 
 Or copy `Makefile.server` as `Makefile` next to them: `make up`, `make serve` (the app on the tailnet), `make mcp`
 (the MCP on the Internet with Tailscale Funnel, on port 8443), `make check`, `make update` (a backup, then the latest
-image), `make backup`, `make logs`. The steps to connect Claude, in French: [MCP.md](MCP.md#marche-à-suivre--le-serveur-tailscale-puis-claude).
+image), `make backup`, `make logs`. The steps to connect Claude, in French: [docs/deploy.md](docs/deploy.md).
 
 Both ports listen on 127.0.0.1 only (`CALLBACK_LISTEN`, `CALLBACK_MCP_LISTEN` change them):
 
