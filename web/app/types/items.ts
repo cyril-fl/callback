@@ -13,6 +13,7 @@ export type TokenResult = S['createapitoken.Result'];
 export type TokenInput = S['createapitoken.Input'];
 export type Stats = S['readstats.Stats'];
 export type SourceCount = S['listsources.Source'];
+export type StatusChange = S['domain.StatusChange'];
 export type Me = S['login.MeResult'];
 
 export const STATUSES: Status[] = ['applied', 'responded', 'interview', 'offer', 'rejected'];

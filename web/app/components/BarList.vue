@@ -1,6 +1,7 @@
 <script setup lang="ts">
-const props = defineProps<{ items: { label: string; count: number }[] }>();
-const most = computed(() => Math.max(1, ...props.items.map((i) => i.count)));
+// Horizontal bars, the longest the most, or max when given (100 for percents); unit follows each count.
+const props = defineProps<{ items: { label: string; count: number }[]; max?: number; unit?: string }>();
+const most = computed(() => props.max ?? Math.max(1, ...props.items.map((i) => i.count)));
 </script>
 
 <template>
@@ -10,7 +11,7 @@ const most = computed(() => Math.max(1, ...props.items.map((i) => i.count)));
       <div class="h-2 flex-1 overflow-hidden rounded-full bg-elevated">
         <div class="h-full rounded-full bg-primary" :style="{ width: `${(item.count / most) * 100}%` }" />
       </div>
-      <span class="w-8 shrink-0 text-right text-sm text-muted">{{ item.count }}</span>
+      <span class="w-12 shrink-0 text-right text-sm text-muted">{{ item.count }}{{ unit }}</span>
     </li>
   </ul>
 </template>

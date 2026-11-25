@@ -48,7 +48,24 @@
     "less": "Moins",
     "more": "Plus",
     "activityTotal": "Aucune candidature en un an | {count} candidature en un an | {count} candidatures en un an",
-    "dayCount": "Aucune candidature le {date} | {count} candidature le {date} | {count} candidatures le {date}"
+    "dayCount": "Aucune candidature le {date} | {count} candidature le {date} | {count} candidatures le {date}",
+    "period": "Période",
+    "periods": {
+      "3m": "3 mois",
+      "6m": "6 mois",
+      "1y": "1 an",
+      "all": "Tout"
+    },
+    "allCities": "Toutes les villes",
+    "perWeek": "Par semaine",
+    "weekCount": "Aucune candidature la semaine du {date} | {count} candidature la semaine du {date} | {count} candidatures la semaine du {date}",
+    "rateBySource": "Taux de réponse par source",
+    "toFollowUp": "À relancer",
+    "untouchedSince": "sans nouvelles depuis le {date}",
+    "upcoming": "Prochains entretiens",
+    "funnel": "Étapes atteintes",
+    "daysToResponse": "Première réponse en {days} jours en moyenne.",
+    "noResponseYet": "Aucune réponse encore."
   },
   "table": {
     "company": "Entreprise",
