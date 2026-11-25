@@ -299,7 +299,10 @@ function exportCsv() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6" :class="view === 'kanban' ? 'h-[calc(100dvh-3.5rem-1px-3rem)]' : ''">
+  <div
+    class="flex flex-col gap-6"
+    :class="view === 'kanban' ? 'h-[calc(100dvh-3.5rem-1px-3rem)]' : selected.length ? 'pb-16' : ''"
+  >
     <StatsCards v-if="!pro" :stats="stats" />
 
     <div class="flex flex-wrap items-center gap-2">
@@ -457,37 +460,37 @@ function exportCsv() {
         </div>
       </template>
     </UTable>
-    <div
-      v-if="view === 'table' && selected.length"
-      class="sticky bottom-4 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-default bg-elevated px-3 py-2 shadow-lg"
-    >
-      <span class="text-sm">{{ t('table.selected', selected.length) }}</span>
-      <UDropdownMenu :items="selectedStatusMenu">
+    <!-- Fixed to the viewport so a short table does not lift it; the page's pb-16 keeps the last rows visible. -->
+    <UContainer v-if="view === 'table' && selected.length" class="fixed inset-x-0 bottom-4 z-10">
+      <div class="flex flex-wrap items-center gap-2 rounded-lg border border-default bg-elevated px-3 py-2 shadow-lg">
+        <span class="text-sm">{{ t('table.selected', selected.length) }}</span>
+        <UDropdownMenu :items="selectedStatusMenu">
+          <UButton
+            color="neutral"
+            variant="outline"
+            size="sm"
+            trailing-icon="i-lucide-chevron-down"
+            :label="t('table.batchStatus')"
+          />
+        </UDropdownMenu>
+        <UButton
+          color="error"
+          variant="soft"
+          size="sm"
+          icon="i-lucide-trash-2"
+          :label="t('common.delete')"
+          @click="askDeleteSelected"
+        />
         <UButton
           color="neutral"
-          variant="outline"
+          variant="ghost"
           size="sm"
-          trailing-icon="i-lucide-chevron-down"
-          :label="t('table.batchStatus')"
+          class="ml-auto"
+          :label="t('common.cancel')"
+          @click="selection = {}"
         />
-      </UDropdownMenu>
-      <UButton
-        color="error"
-        variant="soft"
-        size="sm"
-        icon="i-lucide-trash-2"
-        :label="t('common.delete')"
-        @click="askDeleteSelected"
-      />
-      <UButton
-        color="neutral"
-        variant="ghost"
-        size="sm"
-        class="ml-auto"
-        :label="t('common.cancel')"
-        @click="selection = {}"
-      />
-    </div>
+      </div>
+    </UContainer>
 
     <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="refresh" />
     <ConfirmModal
