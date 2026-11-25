@@ -5,8 +5,13 @@ import { STATUSES } from '~/types/items';
 const props = defineProps<{
   applications: Application[];
   statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | 'error'>;
+  followUpSince: string;
 }>();
-const emit = defineEmits<{ move: [app: Application, status: Status]; edit: [app: Application] }>();
+const emit = defineEmits<{
+  move: [app: Application, status: Status];
+  edit: [app: Application];
+  followUp: [app: Application];
+}>();
 
 const { t } = useI18n();
 
@@ -98,6 +103,18 @@ const day = (v?: string) =>
               readonly
               size="xs"
             />
+            <UTooltip v-if="canFollowUp(app, followUpSince)" :text="t('table.markFollowedUp')">
+              <UButton
+                icon="i-lucide-bell-ring"
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                class="-my-1"
+                :aria-label="t('table.markFollowedUp')"
+                @click.stop="emit('followUp', app)"
+                @keydown.enter.stop
+              />
+            </UTooltip>
             <span class="ml-auto tabular-nums">{{ day(app.applied_at) }}</span>
           </div>
         </div>

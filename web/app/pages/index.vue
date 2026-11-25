@@ -373,7 +373,9 @@ function exportCsv() {
       v-if="view === 'kanban'"
       :applications="applications ?? []"
       :status-color="statusColor"
+      :follow-up-since="followUpSince"
       @move="setStatus"
+      @follow-up="markFollowedUp"
       @edit="openForm"
     />
     <UTable
@@ -457,7 +459,7 @@ function exportCsv() {
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
           <UTooltip
-            v-if="row.original.status === 'applied' || row.original.status === 'responded'"
+            v-if="canFollowUp(row.original, followUpSince)"
             :text="
               row.original.followed_up_at
                 ? t('table.followedUpOn', { date: day(row.original.followed_up_at) })
@@ -466,7 +468,7 @@ function exportCsv() {
           >
             <UButton
               icon="i-lucide-bell-ring"
-              :color="row.original.followed_up_at ? 'primary' : 'neutral'"
+              color="neutral"
               variant="ghost"
               :aria-label="t('table.markFollowedUp')"
               @click="markFollowedUp(row.original)"
