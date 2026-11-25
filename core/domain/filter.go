@@ -21,8 +21,8 @@ type Filter struct {
 	IDs []string `json:"ids,omitempty" binding:"optional"`
 	// Status is any of these statuses.
 	Status []Status `json:"status,omitempty" binding:"optional"`
-	Source Source   `json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
-	// Q is text found in the company, location, website, source_detail or comment, case-insensitive.
+	Source Source   `json:"source,omitempty" binding:"optional" example:"job_post"`
+	// Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
 	Q string `json:"q,omitempty" binding:"optional"`
 	// AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
 	AppliedBefore string `json:"applied_before,omitempty" binding:"optional" example:"2026-01-31"`
@@ -45,9 +45,6 @@ func (f Filter) Validate() error {
 		if !slices.Contains(Statuses, status) {
 			return ErrInvalidStatus
 		}
-	}
-	if f.Source != "" && !slices.Contains(Sources, f.Source) {
-		return ErrInvalidSource
 	}
 	for _, date := range []string{f.AppliedBefore, f.AppliedAfter, f.UntouchedSince} {
 		if date != "" && !IsDate(date) {

@@ -139,27 +139,6 @@ func (e GetApiApplicationsParamsStatus) Valid() bool {
 	}
 }
 
-// Defines values for GetApiApplicationsParamsSource.
-const (
-	JobPost     GetApiApplicationsParamsSource = "job_post"
-	Recruiter   GetApiApplicationsParamsSource = "recruiter"
-	Spontaneous GetApiApplicationsParamsSource = "spontaneous"
-)
-
-// Valid indicates whether the value is a known member of the GetApiApplicationsParamsSource enum.
-func (e GetApiApplicationsParamsSource) Valid() bool {
-	switch e {
-	case JobPost:
-		return true
-	case Recruiter:
-		return true
-	case Spontaneous:
-		return true
-	default:
-		return false
-	}
-}
-
 // CreateapitokenInput defines model for createapitoken.Input.
 type CreateapitokenInput struct {
 	// ExpiresIn ExpiresIn is how long the token works, 90d when left out.
@@ -206,7 +185,7 @@ type DeleteapplicationsInput struct {
 	// Ids IDs are the applications by id.
 	Ids *[]string `json:"ids,omitempty"`
 
-	// Q Q is text found in the company, location, website, source_detail or comment, case-insensitive.
+	// Q Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
 	Q      *string       `json:"q,omitempty"`
 	Source *DomainSource `json:"source,omitempty"`
 
@@ -222,16 +201,21 @@ type DeleteapplicationsInput struct {
 
 // DomainApplication defines model for domain.Application.
 type DomainApplication struct {
-	AppliedAt    *string       `json:"applied_at,omitempty"`
-	Comment      *string       `json:"comment,omitempty"`
-	Company      *string       `json:"company,omitempty"`
-	CreatedAt    *string       `json:"created_at,omitempty"`
-	Id           string        `json:"id"`
+	AppliedAt *string `json:"applied_at,omitempty"`
+	Comment   *string `json:"comment,omitempty"`
+	Company   *string `json:"company,omitempty"`
+	Country   *string `json:"country,omitempty"`
+	CreatedAt *string `json:"created_at,omitempty"`
+	Id        string  `json:"id"`
+
+	// Location Location is the city; Street, PostalCode and Country complete the address when known.
 	Location     *string       `json:"location,omitempty"`
+	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
 	Source       *DomainSource `json:"source,omitempty"`
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
+	Street       *string       `json:"street,omitempty"`
 
 	// Truncated Truncated tells that comment was cut at max_chars.
 	Truncated *bool   `json:"truncated,omitempty"`
@@ -260,11 +244,14 @@ type DomainChanges struct {
 	AppliedAt    *string       `json:"applied_at,omitempty"`
 	Comment      *string       `json:"comment,omitempty"`
 	Company      *string       `json:"company,omitempty"`
+	Country      *string       `json:"country,omitempty"`
 	Location     *string       `json:"location,omitempty"`
+	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
 	Source       *DomainSource `json:"source,omitempty"`
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
+	Street       *string       `json:"street,omitempty"`
 	Website      *string       `json:"website,omitempty"`
 }
 
@@ -273,11 +260,14 @@ type DomainNewApplication struct {
 	AppliedAt    *string       `json:"applied_at,omitempty"`
 	Comment      *string       `json:"comment,omitempty"`
 	Company      string        `json:"company"`
+	Country      *string       `json:"country,omitempty"`
 	Location     string        `json:"location"`
+	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
 	Source       *DomainSource `json:"source,omitempty"`
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
+	Street       *string       `json:"street,omitempty"`
 	Website      *string       `json:"website,omitempty"`
 }
 
@@ -304,6 +294,12 @@ type DomainToken struct {
 
 // DomainTokenKind defines model for domain.TokenKind.
 type DomainTokenKind string
+
+// ListsourcesSource defines model for listsources.Source.
+type ListsourcesSource struct {
+	Count  int          `json:"count"`
+	Source DomainSource `json:"source"`
+}
 
 // LoginMeResult defines model for login.MeResult.
 type LoginMeResult struct {
@@ -348,7 +344,7 @@ type UpdateapplicationsOp struct {
 	// Ids IDs are the applications by id.
 	Ids *[]string `json:"ids,omitempty"`
 
-	// Q Q is text found in the company, location, website, source_detail or comment, case-insensitive.
+	// Q Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
 	Q      *string       `json:"q,omitempty"`
 	Set    DomainChanges `json:"set"`
 	Source *DomainSource `json:"source,omitempty"`
@@ -368,10 +364,10 @@ type GetApiApplicationsParams struct {
 	// Status Any of these statuses
 	Status *[]GetApiApplicationsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 
-	// Source Source
-	Source *GetApiApplicationsParamsSource `form:"source,omitempty" json:"source,omitempty"`
+	// Source Source: spontaneous, job_post, recruiter or a name given by the user
+	Source *string `form:"source,omitempty" json:"source,omitempty"`
 
-	// Q Text in company, location, website, source_detail or comment
+	// Q Text in company, address, website, source or comment
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
 	// AppliedBefore applied_at < this day (2026-01-31)
@@ -404,9 +400,6 @@ type GetApiApplicationsParams struct {
 
 // GetApiApplicationsParamsStatus defines parameters for GetApiApplications.
 type GetApiApplicationsParamsStatus string
-
-// GetApiApplicationsParamsSource defines parameters for GetApiApplications.
-type GetApiApplicationsParamsSource string
 
 // PostApiApplicationsJSONBody defines parameters for PostApiApplications.
 type PostApiApplicationsJSONBody = []DomainNewApplication
@@ -570,6 +563,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/me (the `GetApiMe` operationId).
 	GetApiMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiSources List the sources in use
+	//
+	// Corresponds with GET /api/sources (the `GetApiSources` operationId).
+	GetApiSources(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiStats Count the applications
 	//
@@ -772,6 +770,21 @@ func (c *Client) PostApiLogout(ctx context.Context, reqEditors ...RequestEditorF
 // Corresponds with GET /api/me (the `GetApiMe` operationId).
 func (c *Client) GetApiMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiMeRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetApiSources List the sources in use
+//
+// Corresponds with GET /api/sources (the `GetApiSources` operationId).
+func (c *Client) GetApiSources(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiSourcesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1273,6 +1286,33 @@ func NewGetApiMeRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetApiSourcesRequest constructs an http.Request for the GetApiSources method
+func NewGetApiSourcesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/sources")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetApiStatsRequest constructs an http.Request for the GetApiStats method
 func NewGetApiStatsRequest(server string) (*http.Request, error) {
 	var err error
@@ -1521,6 +1561,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/me (the `GetApiMe` operationId).
 	GetApiMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeResponse, error)
+
+	// GetApiSourcesWithResponse List the sources in use
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/sources (the `GetApiSources` operationId).
+	GetApiSourcesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiSourcesResponse, error)
 
 	// GetApiStatsWithResponse Count the applications
 	//
@@ -1964,6 +2011,54 @@ func (r GetApiMeResponse) ContentType() string {
 	return ""
 }
 
+type GetApiSourcesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]ListsourcesSource
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetApiSourcesResponse) GetJSON200() *[]ListsourcesSource {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetApiSourcesResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetApiSourcesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiSourcesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiSourcesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetApiSourcesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetApiStatsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -2327,6 +2422,19 @@ func (c *ClientWithResponses) GetApiMeWithResponse(ctx context.Context, reqEdito
 	return ParseGetApiMeResponse(rsp)
 }
 
+// GetApiSourcesWithResponse List the sources in use
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/sources (the `GetApiSources` operationId).
+func (c *ClientWithResponses) GetApiSourcesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiSourcesResponse, error) {
+	rsp, err := c.GetApiSources(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiSourcesResponse(rsp)
+}
+
 // GetApiStatsWithResponse Count the applications
 //
 // Returns a wrapper object for the known response body format(s).
@@ -2685,6 +2793,39 @@ func ParseGetApiMeResponse(rsp *http.Response) (*GetApiMeResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest LoginMeResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiSourcesResponse parses an HTTP response from a GetApiSourcesWithResponse call
+func ParseGetApiSourcesResponse(rsp *http.Response) (*GetApiSourcesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiSourcesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ListsourcesSource
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

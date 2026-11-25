@@ -70,11 +70,12 @@ components:
           type: array
           uniqueItems: false
         q:
-          description: Q is text found in the company, location, website, source_detail
+          description: Q is text found in the company, the address, website, source_detail
             or comment, case-insensitive.
           type: string
         source:
           $ref: '#/components/schemas/domain.Source'
+          example: job_post
         status:
           description: Status is any of these statuses.
           items:
@@ -99,20 +100,29 @@ components:
           type: string
         company:
           type: string
+        country:
+          type: string
         created_at:
           type: string
         id:
           type: string
         location:
+          description: Location is the city; Street, PostalCode and Country complete
+            the address when known.
+          type: string
+        postal_code:
           type: string
         rating:
           type: integer
         source:
           $ref: '#/components/schemas/domain.Source'
+          example: job_post
         source_detail:
           type: string
         status:
           $ref: '#/components/schemas/domain.Status'
+        street:
+          type: string
         truncated:
           description: Truncated tells that comment was cut at max_chars.
           type: boolean
@@ -164,16 +174,23 @@ components:
           type: string
         company:
           type: string
+        country:
+          type: string
         location:
+          type: string
+        postal_code:
           type: string
         rating:
           type: integer
         source:
           $ref: '#/components/schemas/domain.Source'
+          example: job_post
         source_detail:
           type: string
         status:
           $ref: '#/components/schemas/domain.Status'
+        street:
+          type: string
         website:
           type: string
       type: object
@@ -186,16 +203,23 @@ components:
           type: string
         company:
           type: string
+        country:
+          type: string
         location:
+          type: string
+        postal_code:
           type: string
         rating:
           type: integer
         source:
           $ref: '#/components/schemas/domain.Source'
+          example: job_post
         source_detail:
           type: string
         status:
           $ref: '#/components/schemas/domain.Status'
+        street:
+          type: string
         website:
           type: string
       required:
@@ -261,6 +285,16 @@ components:
       - TokenSession
       - TokenAPI
       - TokenOAuth
+    listsources.Source:
+      properties:
+        count:
+          type: integer
+        source:
+          $ref: '#/components/schemas/domain.Source'
+      required:
+      - count
+      - source
+      type: object
     login.MeResult:
       properties:
         kind:
@@ -335,13 +369,14 @@ components:
           type: array
           uniqueItems: false
         q:
-          description: Q is text found in the company, location, website, source_detail
+          description: Q is text found in the company, the address, website, source_detail
             or comment, case-insensitive.
           type: string
         set:
           $ref: '#/components/schemas/domain.Changes'
         source:
           $ref: '#/components/schemas/domain.Source'
+          example: job_post
         status:
           description: Status is any of these statuses.
           items:
@@ -426,16 +461,13 @@ paths:
             type: string
           type: array
         style: form
-      - description: Source
+      - description: 'Source: spontaneous, job_post, recruiter or a name given by
+          the user'
         in: query
         name: source
         schema:
-          enum:
-          - spontaneous
-          - job_post
-          - recruiter
           type: string
-      - description: Text in company, location, website, source_detail or comment
+      - description: Text in company, address, website, source or comment
         in: query
         name: q
         schema:
@@ -672,6 +704,26 @@ paths:
       summary: Who is asking
       tags:
       - session
+  /api/sources:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/listsources.Source'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: List the sources in use
+      tags:
+      - applications
   /api/stats:
     get:
       responses:

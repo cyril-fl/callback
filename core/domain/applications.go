@@ -12,9 +12,11 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Source is how the application started.
+// Source is how the application started: one of the known sources below, or any name the user gives (Facebook,
+// a temp agency...).
 type Source string
 
+// The known sources, whose source_detail is checked: a job post's URL, a recruiter's e-mail, nothing when spontaneous.
 const (
 	SourceSpontaneous Source = "spontaneous"
 	SourceJobPost     Source = "job_post"
@@ -22,6 +24,9 @@ const (
 )
 
 var Sources = []Source{SourceSpontaneous, SourceJobPost, SourceRecruiter}
+
+// MaxSource is the most characters of a source's name.
+const MaxSource = 60
 
 // Status is where the application stands in the pipeline.
 type Status string
@@ -47,11 +52,11 @@ const (
 
 var (
 	ErrNoCompany      = Invalid("company is required")
-	ErrNoLocation     = Invalid("location is required")
-	ErrLong           = Invalid("company, location, website and source_detail have at most 200 characters, comment 10000")
+	ErrNoLocation     = Invalid("location (the city) is required")
+	ErrLong           = Invalid("company, location, street, postal_code, country, website and source_detail have at most 200 characters, comment 10000")
 	ErrInvalidWebsite = Invalid("website must be an http(s) URL")
-	ErrInvalidSource  = Invalid("source must be one of spontaneous, job_post, recruiter")
-	ErrInvalidDetail  = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous")
+	ErrInvalidSource  = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
+	ErrInvalidDetail  = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
 	ErrInvalidStatus  = Invalid("status must be one of applied, responded, interview, offer, rejected")
 	ErrInvalidRating  = Invalid("rating must be between 0 and 5")
 	ErrInvalidDate    = Invalid("dates must look like 2026-01-31")
@@ -63,11 +68,15 @@ var (
 type Application struct {
 	bun.BaseModel `bun:"table:applications,alias:a" json:"-"`
 
-	ID           string    `bun:",pk" json:"id"`
-	Company      string    `bun:",notnull" json:"company,omitempty" binding:"optional"`
+	ID      string `bun:",pk" json:"id"`
+	Company string `bun:",notnull" json:"company,omitempty" binding:"optional"`
+	// Location is the city; Street, PostalCode and Country complete the address when known.
 	Location     string    `bun:",notnull" json:"location,omitempty" binding:"optional"`
+	Street       string    `bun:",nullzero" json:"street,omitempty" binding:"optional"`
+	PostalCode   string    `bun:",nullzero" json:"postal_code,omitempty" binding:"optional"`
+	Country      string    `bun:",nullzero" json:"country,omitempty" binding:"optional"`
 	Website      string    `bun:",notnull" json:"website,omitempty" binding:"optional"`
-	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
+	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post"`
 	SourceDetail string    `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
 	Status       Status    `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
 	Rating       int       `bun:",notnull" json:"rating,omitempty" binding:"optional"`
@@ -80,12 +89,16 @@ type Application struct {
 }
 
 // Columns are the columns ?fields= may ask for.
-var Columns = []string{"id", "company", "location", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "created_at", "updated_at"}
+var Columns = []string{"id", "company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "created_at", "updated_at"}
 
 // Normalize trims the text and fills the defaults: status applied, applied today.
 func (a *Application) Normalize() {
 	a.Company = strings.TrimSpace(a.Company)
 	a.Location = strings.TrimSpace(a.Location)
+	a.Street = strings.TrimSpace(a.Street)
+	a.PostalCode = strings.TrimSpace(a.PostalCode)
+	a.Country = strings.TrimSpace(a.Country)
+	a.Source = Source(strings.TrimSpace(string(a.Source)))
 	a.Website = strings.TrimSpace(a.Website)
 	a.SourceDetail = strings.TrimSpace(a.SourceDetail)
 	if a.Source == "" {
@@ -106,11 +119,11 @@ func (a *Application) Validate() error {
 		return ErrNoCompany
 	case a.Location == "":
 		return ErrNoLocation
-	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.Comment) > MaxComment:
+	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.Comment) > MaxComment:
 		return ErrLong
 	case a.Website != "" && !isURL(a.Website):
 		return ErrInvalidWebsite
-	case !slices.Contains(Sources, a.Source):
+	case runes(string(a.Source)) > MaxSource:
 		return ErrInvalidSource
 	case !validDetail(a.Source, a.SourceDetail):
 		return ErrInvalidDetail
@@ -137,8 +150,10 @@ func validDetail(source Source, detail string) bool {
 	case SourceRecruiter:
 		address, err := mail.ParseAddress(detail)
 		return err == nil && address.Address == detail
-	default:
+	case SourceSpontaneous:
 		return detail == ""
+	default:
+		return true
 	}
 }
 
@@ -155,8 +170,11 @@ func runes(value string) int {
 type NewApplication struct {
 	Company      string `json:"company"`
 	Location     string `json:"location"`
+	Street       string `json:"street,omitempty" binding:"optional"`
+	PostalCode   string `json:"postal_code,omitempty" binding:"optional"`
+	Country      string `json:"country,omitempty" binding:"optional"`
 	Website      string `json:"website,omitempty" binding:"optional"`
-	Source       Source `json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
+	Source       Source `json:"source,omitempty" binding:"optional" example:"job_post"`
 	SourceDetail string `json:"source_detail,omitempty" binding:"optional"`
 	Status       Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
 	Rating       int    `json:"rating,omitempty" binding:"optional"`
@@ -166,15 +184,18 @@ type NewApplication struct {
 
 // Application is the new application, not yet stored: no id nor timestamps.
 func (n NewApplication) Application() Application {
-	return Application{Company: n.Company, Location: n.Location, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt}
+	return Application{Company: n.Company, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt}
 }
 
 // Changes are the fields an update sets; a field left out keeps its value.
 type Changes struct {
 	Company      *string `json:"company,omitempty" binding:"optional"`
 	Location     *string `json:"location,omitempty" binding:"optional"`
+	Street       *string `json:"street,omitempty" binding:"optional"`
+	PostalCode   *string `json:"postal_code,omitempty" binding:"optional"`
+	Country      *string `json:"country,omitempty" binding:"optional"`
 	Website      *string `json:"website,omitempty" binding:"optional"`
-	Source       *Source `json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
+	Source       *Source `json:"source,omitempty" binding:"optional" example:"job_post"`
 	SourceDetail *string `json:"source_detail,omitempty" binding:"optional"`
 	Status       *Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
 	Rating       *int    `json:"rating,omitempty" binding:"optional"`
@@ -193,6 +214,9 @@ func (c Changes) Empty() bool {
 func (c Changes) Apply(a *Application) {
 	set(&a.Company, c.Company)
 	set(&a.Location, c.Location)
+	set(&a.Street, c.Street)
+	set(&a.PostalCode, c.PostalCode)
+	set(&a.Country, c.Country)
 	set(&a.Website, c.Website)
 	set(&a.Source, c.Source)
 	set(&a.SourceDetail, c.SourceDetail)

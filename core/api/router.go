@@ -9,6 +9,7 @@ import (
 	apieditapplications "github.com/cyril-fl/callback/core/api/edit-applications"
 	apilogin "github.com/cyril-fl/callback/core/api/login"
 	apireadapplications "github.com/cyril-fl/callback/core/api/read-applications"
+	apireadsources "github.com/cyril-fl/callback/core/api/read-sources"
 	apireadstats "github.com/cyril-fl/callback/core/api/read-stats"
 	"github.com/cyril-fl/callback/core/api/services/auth"
 	"github.com/cyril-fl/callback/core/api/services/guard"
@@ -32,6 +33,7 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("PATCH /api/applications", apieditapplications.Handler(db))
 	mux.Handle("DELETE /api/applications", apideleteapplications.Handler(db))
 	mux.Handle("GET /api/stats", apireadstats.Handler(db))
+	mux.Handle("GET /api/sources", apireadsources.Handler(db))
 
 	mux.Handle("GET /api/tokens", apitokens.List(db))
 	mux.Handle("POST /api/tokens", apitokens.Create(db))

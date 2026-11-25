@@ -19,9 +19,9 @@ export interface paths {
                     ids?: string[];
                     /** @description Any of these statuses */
                     status?: ("applied" | "responded" | "interview" | "offer" | "rejected")[];
-                    /** @description Source */
-                    source?: "spontaneous" | "job_post" | "recruiter";
-                    /** @description Text in company, location, website, source_detail or comment */
+                    /** @description Source: spontaneous, job_post, recruiter or a name given by the user */
+                    source?: string;
+                    /** @description Text in company, address, website, source or comment */
                     q?: string;
                     /** @description applied_at < this day (2026-01-31) */
                     applied_before?: string;
@@ -408,6 +408,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the sources in use */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["listsources.Source"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stats": {
         parameters: {
             query?: never;
@@ -662,8 +707,9 @@ export interface components {
             dry_run?: boolean;
             /** @description IDs are the applications by id. */
             ids?: string[];
-            /** @description Q is text found in the company, location, website, source_detail or comment, case-insensitive. */
+            /** @description Q is text found in the company, the address, website, source_detail or comment, case-insensitive. */
             q?: string;
+            /** @example job_post */
             source?: components["schemas"]["domain.Source"];
             /** @description Status is any of these statuses. */
             status?: components["schemas"]["domain.Status"][];
@@ -680,13 +726,18 @@ export interface components {
             applied_at?: string;
             comment?: string;
             company?: string;
+            country?: string;
             created_at?: string;
             id: string;
+            /** @description Location is the city; Street, PostalCode and Country complete the address when known. */
             location?: string;
+            postal_code?: string;
             rating?: number;
+            /** @example job_post */
             source?: components["schemas"]["domain.Source"];
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
+            street?: string;
             /** @description Truncated tells that comment was cut at max_chars. */
             truncated?: boolean;
             updated_at?: string;
@@ -709,11 +760,15 @@ export interface components {
             applied_at?: string;
             comment?: string;
             company?: string;
+            country?: string;
             location?: string;
+            postal_code?: string;
             rating?: number;
+            /** @example job_post */
             source?: components["schemas"]["domain.Source"];
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
+            street?: string;
             website?: string;
         };
         "domain.NewApplication": {
@@ -721,11 +776,15 @@ export interface components {
             applied_at?: string;
             comment?: string;
             company: string;
+            country?: string;
             location: string;
+            postal_code?: string;
             rating?: number;
+            /** @example job_post */
             source?: components["schemas"]["domain.Source"];
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
+            street?: string;
             website?: string;
         };
         /** @enum {string} */
@@ -745,6 +804,10 @@ export interface components {
         };
         /** @enum {string} */
         "domain.TokenKind": "session" | "api" | "oauth";
+        "listsources.Source": {
+            count: number;
+            source: components["schemas"]["domain.Source"];
+        };
         "login.MeResult": {
             kind: components["schemas"]["domain.TokenKind"];
             name?: string;
@@ -780,9 +843,10 @@ export interface components {
             applied_before?: string;
             /** @description IDs are the applications by id. */
             ids?: string[];
-            /** @description Q is text found in the company, location, website, source_detail or comment, case-insensitive. */
+            /** @description Q is text found in the company, the address, website, source_detail or comment, case-insensitive. */
             q?: string;
             set: components["schemas"]["domain.Changes"];
+            /** @example job_post */
             source?: components["schemas"]["domain.Source"];
             /** @description Status is any of these statuses. */
             status?: components["schemas"]["domain.Status"][];
