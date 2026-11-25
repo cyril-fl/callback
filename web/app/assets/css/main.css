@@ -7,7 +7,7 @@
 }
 
 /* The themes of app/utils/themes.ts: four accents, lilac the default (on Lilac Vodka, #bfc2f3, its 300; its greys
-   nearly neutral) and the others after those of the previous app, each with greys tinted by its hue, and its status
+   a dark lilac) and the others after those of the previous app, each with greys tinted by its hue, and its status
    colors (info, success, warning, error) picked from the same family, as in tide: pink with periwinkle, mint, peach and
    coral red; lilac with sky, sea glass, apricot and rose; blue with sky, seafoam, sand and soft coral; green with steel
    blue, jade, ochre and terracotta. 400, the dark mode's, is that color, lightened until it reads at 4.5:1 on the
@@ -98,17 +98,17 @@
   --color-callback-lilac-900: #272551;
   --color-callback-lilac-950: #171538;
 
-  --color-callback-lilac-gray-50: #f6f6fb;
-  --color-callback-lilac-gray-100: #eaeaf1;
-  --color-callback-lilac-gray-200: #d6d7e1;
-  --color-callback-lilac-gray-300: #bbbdc9;
-  --color-callback-lilac-gray-400: #a2a3b1;
-  --color-callback-lilac-gray-500: #727381;
-  --color-callback-lilac-gray-600: #61626f;
-  --color-callback-lilac-gray-700: #3e3f47;
-  --color-callback-lilac-gray-800: #28282e;
-  --color-callback-lilac-gray-900: #19191e;
-  --color-callback-lilac-gray-950: #0e0e11;
+  --color-callback-lilac-gray-50: #f8f6fb;
+  --color-callback-lilac-gray-100: #ece9f2;
+  --color-callback-lilac-gray-200: #dad5e3;
+  --color-callback-lilac-gray-300: #c1bacd;
+  --color-callback-lilac-gray-400: #a8a0b7;
+  --color-callback-lilac-gray-500: #796f88;
+  --color-callback-lilac-gray-600: #675e77;
+  --color-callback-lilac-gray-700: #453958;
+  --color-callback-lilac-gray-800: #2f243e;
+  --color-callback-lilac-gray-900: #20162d;
+  --color-callback-lilac-gray-950: #140c1e;
 
   --color-callback-lilac-info-50: #f0f8fe;
   --color-callback-lilac-info-100: #def0fc;
