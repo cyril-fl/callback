@@ -410,7 +410,7 @@ components:
           type: object
         response_rate:
           description: ResponseRate is the share of applications that got past applied,
-            0 to 1.
+            0 to 1; left out without applications.
           type: number
         response_rate_by_source:
           additionalProperties:
@@ -422,7 +422,6 @@ components:
       required:
       - by_source
       - by_status
-      - response_rate
       - response_rate_by_source
       - total
       type: object

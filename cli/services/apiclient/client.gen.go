@@ -391,8 +391,8 @@ type ReadstatsStats struct {
 	// ByStatus ByStatus has every status, 0 included.
 	ByStatus map[string]int `json:"by_status"`
 
-	// ResponseRate ResponseRate is the share of applications that got past applied, 0 to 1.
-	ResponseRate float32 `json:"response_rate"`
+	// ResponseRate ResponseRate is the share of applications that got past applied, 0 to 1; left out without applications.
+	ResponseRate *float32 `json:"response_rate,omitempty"`
 
 	// ResponseRateBySource ResponseRateBySource is ResponseRate for each source of BySource.
 	ResponseRateBySource map[string]float32 `json:"response_rate_by_source"`

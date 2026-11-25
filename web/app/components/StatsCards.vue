@@ -14,7 +14,7 @@ const { t } = useI18n();
     </UCard>
     <UCard>
       <p class="text-sm text-muted">{{ t('stats.responseRate') }}</p>
-      <p class="text-2xl font-semibold">{{ Math.round((stats?.response_rate ?? 0) * 100) }} %</p>
+      <p class="text-2xl font-semibold">{{ stats?.response_rate === undefined ? '—' : `${Math.round(stats.response_rate * 100)} %` }}</p>
     </UCard>
   </div>
 </template>

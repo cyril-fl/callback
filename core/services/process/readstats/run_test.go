@@ -14,7 +14,7 @@ func TestRun(t *testing.T) {
 	db := testdb.New(t)
 	empty := readstats.Process(context.Background(), db)
 	empty.Run()
-	if got := empty.GetResult(); empty.HasErr() || got.Total != 0 || got.ResponseRate != 0 || len(got.ByStatus) != len(domain.Statuses) {
+	if got := empty.GetResult(); empty.HasErr() || got.Total != 0 || got.ResponseRate != nil || len(got.ByStatus) != len(domain.Statuses) {
 		t.Fatalf("empty = %+v, %v", got, empty.GetErr())
 	}
 
@@ -27,7 +27,7 @@ func TestRun(t *testing.T) {
 	process := readstats.Process(context.Background(), db)
 	process.Run()
 	got := process.GetResult()
-	if process.HasErr() || got.Total != 4 || got.ByStatus[domain.StatusApplied] != 2 || got.ByStatus[domain.StatusOffer] != 0 || got.ResponseRate != 0.5 ||
+	if process.HasErr() || got.Total != 4 || got.ByStatus[domain.StatusApplied] != 2 || got.ByStatus[domain.StatusOffer] != 0 || got.ResponseRate == nil || *got.ResponseRate != 0.5 ||
 		got.BySource["LinkedIn"] != 1 || got.BySource[domain.SourceSpontaneous] != 3 ||
 		got.ResponseRateBySource["LinkedIn"] != 0 || got.ResponseRateBySource[domain.SourceSpontaneous] != 2.0/3 {
 		t.Errorf("stats = %+v, %v", got, process.GetErr())

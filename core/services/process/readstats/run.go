@@ -16,8 +16,8 @@ type Stats struct {
 	ByStatus map[domain.Status]int `json:"by_status"`
 	// BySource has the sources in use: an agent reuses their names rather than make a near double.
 	BySource map[domain.Source]int `json:"by_source"`
-	// ResponseRate is the share of applications that got past applied, 0 to 1.
-	ResponseRate float64 `json:"response_rate"`
+	// ResponseRate is the share of applications that got past applied, 0 to 1; left out without applications.
+	ResponseRate *float64 `json:"response_rate,omitempty" binding:"optional"`
 	// ResponseRateBySource is ResponseRate for each source of BySource.
 	ResponseRateBySource map[domain.Source]float64 `json:"response_rate_by_source"`
 }
@@ -79,7 +79,8 @@ func (p *run) count() {
 		stats.ResponseRateBySource[source] = float64(responded[source]) / float64(count)
 	}
 	if stats.Total > 0 {
-		stats.ResponseRate = float64(stats.Total-stats.ByStatus[domain.StatusApplied]) / float64(stats.Total)
+		rate := float64(stats.Total-stats.ByStatus[domain.StatusApplied]) / float64(stats.Total)
+		stats.ResponseRate = &rate
 	}
 	p.cache.result = stats
 }

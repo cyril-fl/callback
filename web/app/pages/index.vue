@@ -220,6 +220,7 @@ async function markFollowedUp(app: Application) {
       method: 'PATCH',
       body: { ops: [{ ids: [app.id], set: { followed_up: true } }] },
     });
+    useToast().add({ title: t('table.followedUp', { company: app.company }), color: 'success' });
     await refresh();
   } catch {
     // useApi already toasted.
@@ -465,7 +466,7 @@ function exportCsv() {
           >
             <UButton
               icon="i-lucide-bell-ring"
-              color="neutral"
+              :color="row.original.followed_up_at ? 'primary' : 'neutral'"
               variant="ghost"
               :aria-label="t('table.markFollowedUp')"
               @click="markFollowedUp(row.original)"

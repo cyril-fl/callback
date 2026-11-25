@@ -22,7 +22,7 @@ export function statsOf(applications: Application[]): Stats {
   }
   const response_rate_by_source = Object.fromEntries(Object.entries(by_source).map(([s, n]) => [s, (responded[s] ?? 0) / n]));
   const total = applications.length;
-  return { total, by_status, by_source, response_rate: total ? (total - by_status.applied) / total : 0, response_rate_by_source };
+  return { total, by_status, by_source, response_rate: total ? (total - by_status.applied) / total : undefined, response_rate_by_source };
 }
 
 /** The values and how many times each comes, the most first, top of them. */

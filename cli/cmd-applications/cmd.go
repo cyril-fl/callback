@@ -233,7 +233,11 @@ func Stats(cobra *cobra.Command, _ []string) error {
 	for _, status := range []string{"applied", "responded", "interview", "offer", "rejected"} {
 		rows = append(rows, []string{status, strconv.Itoa(stats.ByStatus[status])})
 	}
-	rows = append(rows, []string{"total", strconv.Itoa(stats.Total)}, []string{"response rate", fmt.Sprintf("%.0f%%", stats.ResponseRate*100)})
+	rate := "-"
+	if stats.ResponseRate != nil {
+		rate = fmt.Sprintf("%.0f%%", *stats.ResponseRate*100)
+	}
+	rows = append(rows, []string{"total", strconv.Itoa(stats.Total)}, []string{"response rate", rate})
 	return output.Table([]string{"status", "count"}, rows)
 }
 
