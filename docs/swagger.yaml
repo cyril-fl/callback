@@ -602,8 +602,8 @@ paths:
         name: max_chars
         schema:
           type: integer
-      - description: applied_at, company, source, status, rating, created_at, updated_at;
-          - first to reverse; -applied_at by default
+      - description: applied_at, company, source, status, rating, followed_up_at,
+          created_at, updated_at; - first to reverse; -applied_at by default
         in: query
         name: sort
         schema:

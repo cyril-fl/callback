@@ -468,7 +468,7 @@ type GetApiApplicationsParams struct {
 	// MaxChars Cut each comment to this many characters (truncated: true)
 	MaxChars *int `form:"max_chars,omitempty" json:"max_chars,omitempty"`
 
-	// Sort applied_at, company, source, status, rating, created_at, updated_at; - first to reverse; -applied_at by default
+	// Sort applied_at, company, source, status, rating, followed_up_at, created_at, updated_at; - first to reverse; -applied_at by default
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
 	// Limit Most applications returned, all when 0

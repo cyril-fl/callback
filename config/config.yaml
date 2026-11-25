@@ -158,7 +158,7 @@ commands:
         usage: "Cut each comment to this many characters"
       - name: "sort"
         type: "string"
-        usage: "applied_at, company, source, status, rating, created_at or updated_at; - first to reverse; -applied_at by default"
+        usage: "applied_at, company, source, status, rating, followed_up_at, created_at or updated_at; - first to reverse; -applied_at by default"
       - name: "limit"
         type: "int"
         usage: "Most applications listed, all when 0"
