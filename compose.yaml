@@ -1,0 +1,22 @@
+# The dev stack: `make up`, the image built locally. API and web on 8080, MCP on 8081.
+name: jat
+
+services:
+  jat:
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+    container_name: jat
+    environment:
+      JAT_PASSWORD: ${JAT_PASSWORD:?set JAT_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8081:8081"
+    command: serve --db /data/jat.db --web /web --addr :8080 --mcp-addr :8081
+    volumes:
+      - jat-data:/data
+    restart: unless-stopped
+
+volumes:
+  jat-data:

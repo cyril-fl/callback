@@ -1,0 +1,29 @@
+# `docker compose -f compose.prod.yaml up -d`, with a .env next to it (see .env.example).
+# Update: `docker compose -f compose.prod.yaml pull && docker compose -f compose.prod.yaml up -d`.
+#
+# Exposure: both ports are published on 127.0.0.1 only. The API and the web app (8080) stay private on the tailnet
+# (`tailscale serve` in front of 8080). Only /mcp (8081) is opened to the Internet: `tailscale funnel` on the MCP
+# port, or a Cloudflare tunnel to 127.0.0.1:8081.
+services:
+  jat:
+    # The name image.yml publishes, ghcr.io/<the GitHub repository>. JAT_IMAGE overrides it (the CI uses a local tag).
+    image: ${JAT_IMAGE:-ghcr.io/cyril-fl/jat:latest}
+    container_name: jat
+    environment:
+      JAT_PASSWORD: ${JAT_PASSWORD:-}
+    # --origin: the address the browser types, requests from any other page are refused. --published: the address
+    # published on the host, so the server knows it sits behind a proxy on loopback.
+    command: >-
+      serve --db /data/jat.db --web /web --addr :8080
+      --origin ${JAT_ORIGIN:?set JAT_ORIGIN in .env}
+      --published ${JAT_LISTEN:-127.0.0.1:8080}
+      --mcp-addr :8081 --mcp-published ${JAT_MCP_LISTEN:-127.0.0.1:8081}
+    ports:
+      - "${JAT_LISTEN:-127.0.0.1:8080}:8080"
+      - "${JAT_MCP_LISTEN:-127.0.0.1:8081}:8081"
+    volumes:
+      - jat-data:/data
+    restart: unless-stopped
+
+volumes:
+  jat-data:
