@@ -512,37 +512,37 @@ function exportCsv() {
         </div>
       </template>
     </UTable>
-    <!-- Fixed to the viewport so a short table does not lift it; the page's pb-16 keeps the last rows visible. -->
-    <UContainer v-if="view === 'table' && selected.length" class="fixed inset-x-0 bottom-4 z-10">
-      <div class="flex flex-wrap items-center gap-2 rounded-lg border border-default bg-elevated px-3 py-2 shadow-lg">
-        <span class="text-sm">{{ t('table.selected', selected.length) }}</span>
-        <UDropdownMenu :items="selectedStatusMenu">
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="sm"
-            trailing-icon="i-lucide-chevron-down"
-            :label="t('table.batchStatus')"
-          />
-        </UDropdownMenu>
-        <UButton
-          color="error"
-          variant="soft"
-          size="sm"
-          icon="i-lucide-trash-2"
-          :label="t('common.delete')"
-          @click="askDeleteSelected"
-        />
+    <!-- Fixed to the viewport so a short table does not lift it; the page's pb-16 keeps the last rows visible.
+         Compact and centred, its buttons like the toolbar's. -->
+    <div
+      v-if="view === 'table' && selected.length"
+      class="fixed bottom-4 left-1/2 z-10 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 flex-wrap items-center gap-2 rounded-lg border border-default bg-default p-2 shadow-lg"
+    >
+      <UButton
+        icon="i-lucide-x"
+        color="neutral"
+        variant="ghost"
+        :aria-label="t('common.cancel')"
+        @click="selection = {}"
+      />
+      <span class="pr-2 text-sm font-medium whitespace-nowrap">{{ t('table.selected', selected.length) }}</span>
+      <USeparator orientation="vertical" class="h-5" />
+      <UDropdownMenu :items="selectedStatusMenu" :content="{ side: 'top' }">
         <UButton
           color="neutral"
-          variant="ghost"
-          size="sm"
-          class="ml-auto"
-          :label="t('common.cancel')"
-          @click="selection = {}"
+          variant="outline"
+          trailing-icon="i-lucide-chevron-down"
+          :label="t('table.batchStatus')"
         />
-      </div>
-    </UContainer>
+      </UDropdownMenu>
+      <UButton
+        color="error"
+        variant="outline"
+        icon="i-lucide-trash-2"
+        :label="t('common.delete')"
+        @click="askDeleteSelected"
+      />
+    </div>
 
     <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="saved" />
     <ConfirmModal
