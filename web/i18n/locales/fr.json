@@ -17,10 +17,10 @@
     "empty": "Aucune candidature"
   },
   "nav": {
-    "dashboard": "Tableau de bord",
+    "dashboard": "Bilan",
     "settings": "Réglages",
     "logout": "Se déconnecter",
-    "applications": "Candidatures"
+    "applications": "Liste"
   },
   "login": {
     "title": "Connexion",

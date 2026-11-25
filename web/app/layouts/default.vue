@@ -2,6 +2,12 @@
 const { t } = useI18n();
 const logout = useLogout();
 const plan = usePlan();
+// One word each; the pro mode's dashboard has a page of its own.
+const links = computed(() => [
+  ...(plan.value === 'pro' ? [{ to: '/dashboard', icon: 'i-lucide-chart-column', label: t('nav.dashboard') }] : []),
+  { to: '/', icon: 'i-lucide-list', label: t('nav.applications') },
+  { to: '/settings', icon: 'i-lucide-settings', label: t('nav.settings') },
+]);
 </script>
 
 <template>
@@ -11,36 +17,26 @@ const plan = usePlan();
         <NuxtLink to="/" class="font-semibold">{{ t('app.name') }}</NuxtLink>
         <nav class="flex items-center gap-1">
           <UButton
-            :to="plan === 'pro' ? '/dashboard' : '/'"
-            variant="ghost"
-            color="neutral"
-            icon="i-lucide-layout-dashboard"
-            :label="t('nav.dashboard')"
+            v-for="link in links"
+            :key="link.to"
+            :to="link.to"
+            :icon="link.icon"
+            :label="link.label"
             :ui="{ label: 'max-sm:sr-only' }"
-          />
-          <UButton
-            v-if="plan === 'pro'"
-            to="/"
             variant="ghost"
             color="neutral"
-            icon="i-lucide-list"
-            :label="t('nav.applications')"
-            :ui="{ label: 'max-sm:sr-only' }"
+            active-variant="soft"
           />
-          <UButton
-            to="/settings"
-            variant="ghost"
-            color="neutral"
-            icon="i-lucide-settings"
-            :aria-label="t('nav.settings')"
-          />
-          <UButton
-            variant="ghost"
-            color="neutral"
-            icon="i-lucide-log-out"
-            :aria-label="t('nav.logout')"
-            @click="logout"
-          />
+          <USeparator orientation="vertical" class="mx-1 h-5" />
+          <UTooltip :text="t('nav.logout')">
+            <UButton
+              variant="ghost"
+              color="neutral"
+              icon="i-lucide-log-out"
+              :aria-label="t('nav.logout')"
+              @click="logout"
+            />
+          </UTooltip>
         </nav>
       </UContainer>
     </header>
