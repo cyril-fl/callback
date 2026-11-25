@@ -35,7 +35,7 @@ export interface paths {
                     fields?: string[];
                     /** @description Cut each comment to this many characters (truncated: true) */
                     max_chars?: number;
-                    /** @description applied_at, company, source, status, rating, followed_up_at, created_at, updated_at; - first to reverse; -applied_at by default */
+                    /** @description applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at; - first to reverse; -applied_at by default */
                     sort?: string;
                     /** @description Most applications returned, all when 0 */
                     limit?: number;
