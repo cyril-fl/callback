@@ -46,11 +46,11 @@ func TestHistory(t *testing.T) {
 		}
 		var got []string
 		for _, change := range process.GetResult() {
-			got = append(got, change.ApplicationID+" "+string(change.Status))
+			got = append(got, change.ApplicationID+" "+change.Company+" "+string(change.From)+">"+string(change.Status))
 		}
 		return got
 	}
-	want := []string{ids[0] + " applied", ids[1] + " interview", ids[0] + " responded"}
+	want := []string{ids[0] + " Acme >applied", ids[1] + " Globex >interview", ids[0] + " Acme applied>responded"}
 	if got := history(liststatuschanges.Input{}); fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Errorf("history = %v, want %v", got, want)
 	}

@@ -341,6 +341,9 @@ type DomainStatusChange struct {
 	ApplicationId string `json:"application_id"`
 	At            string `json:"at"`
 
+	// Company Company is read from the application, to tell the changes apart without reading the applications.
+	Company *string `json:"company,omitempty"`
+
 	// From From is the status before the change, empty when the application was created with Status.
 	From   DomainStatus `json:"from"`
 	Status DomainStatus `json:"status"`

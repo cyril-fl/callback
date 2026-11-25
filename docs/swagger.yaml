@@ -316,6 +316,10 @@ components:
           type: string
         at:
           type: string
+        company:
+          description: Company is read from the application, to tell the changes apart
+            without reading the applications.
+          type: string
         from:
           $ref: '#/components/schemas/domain.Status'
           description: From is the status before the change, empty when the application

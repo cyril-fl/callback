@@ -1032,6 +1032,8 @@ export interface components {
         "domain.StatusChange": {
             application_id: string;
             at: string;
+            /** @description Company is read from the application, to tell the changes apart without reading the applications. */
+            company?: string;
             /** @description From is the status before the change, empty when the application was created with Status. */
             from: components["schemas"]["domain.Status"];
             status: components["schemas"]["domain.Status"];
