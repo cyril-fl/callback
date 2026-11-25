@@ -229,10 +229,10 @@ async function submit() {
             v-model:search-term="sourceSearch"
             :items="sourceItems"
             value-key="value"
-            create-item
             class="w-full"
-            @create="createSource"
-            @blur="sourceSearch && createSource(sourceSearch)"
+            :ui="{ content: 'has-data-[slot=empty]:hidden' }"
+            @blur="createSource(sourceSearch)"
+            @keydown.enter="createSource(sourceSearch)"
           />
         </UFormField>
         <UFormField v-if="detail" name="source_detail" :label="detail.label" :required="detail.required">
