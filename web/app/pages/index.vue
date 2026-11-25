@@ -454,7 +454,7 @@ function exportCsv() {
       :loading="loadStatus === 'pending'"
       :sorting-options="{ manualSorting: true }"
     >
-      <template #empty>{{ t('common.empty') }}</template>
+      <template #empty><UEmpty icon="i-lucide-inbox" :title="t('common.empty')" variant="naked" /></template>
       <template #company-cell="{ row }">
         <a
           v-if="row.original.website"
