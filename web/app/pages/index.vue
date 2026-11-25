@@ -360,37 +360,6 @@ function exportCsv() {
       @move="setStatus"
       @edit="openForm"
     />
-    <div
-      v-if="view === 'table' && selected.length"
-      class="flex flex-wrap items-center gap-2 rounded-lg border border-default bg-elevated px-3 py-2"
-    >
-      <span class="text-sm">{{ t('table.selected', selected.length) }}</span>
-      <UDropdownMenu :items="selectedStatusMenu">
-        <UButton
-          color="neutral"
-          variant="outline"
-          size="sm"
-          trailing-icon="i-lucide-chevron-down"
-          :label="t('table.batchStatus')"
-        />
-      </UDropdownMenu>
-      <UButton
-        color="error"
-        variant="soft"
-        size="sm"
-        icon="i-lucide-trash-2"
-        :label="t('common.delete')"
-        @click="askDeleteSelected"
-      />
-      <UButton
-        color="neutral"
-        variant="ghost"
-        size="sm"
-        class="ml-auto"
-        :label="t('common.cancel')"
-        @click="selection = {}"
-      />
-    </div>
     <UTable
       v-if="view === 'table'"
       v-model:sorting="sorting"
@@ -488,6 +457,37 @@ function exportCsv() {
         </div>
       </template>
     </UTable>
+    <div
+      v-if="view === 'table' && selected.length"
+      class="sticky bottom-4 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-default bg-elevated px-3 py-2 shadow-lg"
+    >
+      <span class="text-sm">{{ t('table.selected', selected.length) }}</span>
+      <UDropdownMenu :items="selectedStatusMenu">
+        <UButton
+          color="neutral"
+          variant="outline"
+          size="sm"
+          trailing-icon="i-lucide-chevron-down"
+          :label="t('table.batchStatus')"
+        />
+      </UDropdownMenu>
+      <UButton
+        color="error"
+        variant="soft"
+        size="sm"
+        icon="i-lucide-trash-2"
+        :label="t('common.delete')"
+        @click="askDeleteSelected"
+      />
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        class="ml-auto"
+        :label="t('common.cancel')"
+        @click="selection = {}"
+      />
+    </div>
 
     <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="refresh" />
     <ConfirmModal
