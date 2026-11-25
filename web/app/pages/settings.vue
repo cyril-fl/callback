@@ -3,6 +3,7 @@ import type { Me, PurgeResult, Token, TokenInput, TokenResult } from '~/types/it
 
 const { t } = useI18n();
 const api = useApi();
+const logout = useLogout();
 const toast = useToast();
 const theme = useTheme();
 const { preferences, pro, save } = usePreferences();
@@ -145,6 +146,17 @@ async function revoke() {
         <li v-if="me?.version" class="flex flex-wrap items-center gap-4 px-4 py-3">
           <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.version') }}</p>
           <span class="font-mono text-xs text-muted">{{ me.version }}</span>
+        </li>
+        <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <p class="min-w-0 flex-1 text-sm">{{ t('nav.logout') }}</p>
+          <UButton
+            icon="i-lucide-log-out"
+            :label="t('nav.logout')"
+            :ui="{ label: 'max-sm:sr-only' }"
+            color="neutral"
+            variant="ghost"
+            @click="logout"
+          />
         </li>
       </ul>
     </section>

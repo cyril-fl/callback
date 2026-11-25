@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const { t } = useI18n();
-const logout = useLogout();
 const { pro } = usePreferences();
 // One word each; the pro mode's dashboard has a page of its own.
 const links = computed(() => [
@@ -27,16 +26,6 @@ const links = computed(() => [
             color="neutral"
             active-variant="soft"
           />
-          <USeparator orientation="vertical" class="mx-1 h-5" />
-          <UTooltip :text="t('nav.logout')">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              icon="i-lucide-log-out"
-              :aria-label="t('nav.logout')"
-              @click="logout"
-            />
-          </UTooltip>
         </nav>
         <!-- A page's own actions, teleported here (the list's view, export and add). -->
         <div id="header-actions" class="flex items-center gap-2" />
