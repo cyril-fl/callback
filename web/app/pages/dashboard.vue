@@ -23,7 +23,7 @@ const { data: changes, refresh: refreshChanges } = await useAsyncData(
 const refresh = () => Promise.all([refreshApplications(), refreshChanges()]);
 
 // The period and the city filter every block.
-const periods = { '1w': { weeks: 1 }, '1m': { months: 1 }, '3m': { months: 3 }, '6m': { months: 6 }, '1y': { years: 1 }, all: undefined } as const;
+const periods = { '1w': { weeks: 1 }, '1m': { months: 1 }, '3m': { months: 3 }, all: undefined } as const;
 type Period = keyof typeof periods;
 const period = ref<Period>('1m');
 const periodItems = (Object.keys(periods) as Period[]).map((value) => ({ value, label: t(`stats.periods.${value}`) }));
