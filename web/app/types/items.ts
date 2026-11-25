@@ -10,6 +10,7 @@ export type Status = S['domain.Status'];
 export type BatchResult = S['domain.BatchResult'];
 export type Token = S['domain.Token'];
 export type TokenResult = S['createapitoken.Result'];
+export type PurgeResult = S['purgeapplications.Result'];
 export type TokenInput = S['createapitoken.Input'];
 export type Stats = S['readstats.Stats'];
 export type SourceCount = S['listsources.Source'];

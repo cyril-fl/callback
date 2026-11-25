@@ -53,7 +53,7 @@ func New(db bun.IDB, next http.Handler) http.Handler {
 				SetCookie(w, Token(r), token.ExpiresAt)
 			}
 		} else if manages(r) {
-			respond.Fail(w, http.StatusForbidden, "a token cannot manage the tokens nor log out: log in")
+			respond.Fail(w, http.StatusForbidden, "a token cannot manage the tokens, log out nor delete everything: log in")
 			return
 		}
 		if token.ReadOnly {
@@ -67,11 +67,11 @@ func New(db bun.IDB, next http.Handler) http.Handler {
 	})
 }
 
-// manages tells the routes refused to an API or OAuth token. The mux has not matched the route yet, so this goes by
+// manages tells the routes refused to an API or OAuth token: the tokens, the logout and the purge of everything. The mux has not matched the route yet, so this goes by
 // path; the mux redirects an unclean path (//, ..) instead of serving it.
 func manages(r *http.Request) bool {
 	path := r.URL.Path
-	return path == "/api/logout" || path == "/api/tokens" || strings.HasPrefix(path, "/api/tokens/")
+	return path == "/api/logout" || path == "/api/data" || path == "/api/tokens" || strings.HasPrefix(path, "/api/tokens/")
 }
 
 // Token is the request's token, "" without one.

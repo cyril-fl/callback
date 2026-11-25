@@ -40,6 +40,10 @@ docker compose -f compose.prod.yaml exec callback /callback-server --db /data/ca
 docker cp callback:/data/backup-$(date +%F).db .
 ```
 
+A new job search: Settings → Danger zone deletes every application and its history (type `supprimer` to confirm),
+after a backup. The password, the settings and the tokens stay. Only a logged-in session can, never an API token or
+an agent.
+
 ## The CLI
 
 ```sh

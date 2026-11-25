@@ -369,6 +369,11 @@ type LoginMeResult struct {
 	Version  string          `json:"version"`
 }
 
+// PurgeapplicationsResult defines model for purgeapplications.Result.
+type PurgeapplicationsResult struct {
+	Count int `json:"count"`
+}
+
 // ReadstatsStats defines model for readstats.Stats.
 type ReadstatsStats struct {
 	// BySource BySource has the sources in use: an agent reuses their names rather than make a near double.
@@ -615,6 +620,11 @@ type ClientInterface interface {
 	// Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 	PostApiApplications(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteApiData Delete every application
+	//
+	// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
+	DeleteApiData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiLoginWithBody Log in
 	//
 	// Takes any type of body and a specified content type.
@@ -805,6 +815,21 @@ func (c *Client) PostApiApplicationsWithBody(ctx context.Context, contentType st
 // Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 func (c *Client) PostApiApplications(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiApplicationsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteApiData Delete every application
+//
+// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
+func (c *Client) DeleteApiData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiDataRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1355,6 +1380,33 @@ func NewPostApiApplicationsRequestWithBody(server string, contentType string, bo
 	return req, nil
 }
 
+// NewDeleteApiDataRequest constructs an http.Request for the DeleteApiData method
+func NewDeleteApiDataRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/data")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPostApiLoginRequest calls the generic PostApiLogin builder with application/json body
 func NewPostApiLoginRequest(server string, body PostApiLoginJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -1830,6 +1882,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 	PostApiApplicationsWithResponse(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiApplicationsResponse, error)
 
+	// DeleteApiDataWithResponse Delete every application
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
+	DeleteApiDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteApiDataResponse, error)
+
 	// PostApiLoginWithBodyWithResponse Log in
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -2178,6 +2237,61 @@ func (r PostApiApplicationsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostApiApplicationsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteApiDataResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PurgeapplicationsResult
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DeleteApiDataResponse) GetJSON200() *PurgeapplicationsResult {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteApiDataResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DeleteApiDataResponse) GetJSON403() *RespondFailure {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteApiDataResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteApiDataResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteApiDataResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteApiDataResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -2852,6 +2966,19 @@ func (c *ClientWithResponses) PostApiApplicationsWithResponse(ctx context.Contex
 	return ParsePostApiApplicationsResponse(rsp)
 }
 
+// DeleteApiDataWithResponse Delete every application
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
+func (c *ClientWithResponses) DeleteApiDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteApiDataResponse, error) {
+	rsp, err := c.DeleteApiData(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteApiDataResponse(rsp)
+}
+
 // PostApiLoginWithBodyWithResponse Log in
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -3215,6 +3342,46 @@ func ParsePostApiApplicationsResponse(rsp *http.Response) (*PostApiApplicationsR
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteApiDataResponse parses an HTTP response from a DeleteApiDataWithResponse call
+func ParseDeleteApiDataResponse(rsp *http.Response) (*DeleteApiDataResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteApiDataResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PurgeapplicationsResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest RespondFailure

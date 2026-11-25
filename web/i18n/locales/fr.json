@@ -10,6 +10,7 @@
     "add": "Ajouter",
     "save": "Enregistrer",
     "cancel": "Annuler",
+    "typeToConfirm": "Tapez « {word} » pour confirmer",
     "delete": "Supprimer",
     "edit": "Modifier",
     "close": "Fermer",
@@ -193,6 +194,13 @@
     "defaultPlace": "Lieu par défaut",
     "defaultPlaceHelp": "Pour une nouvelle candidature.",
     "followUp": "Délai de relance",
-    "followUpHelp": "Sans nouvelles depuis ce délai, une candidature est à relancer."
+    "followUpHelp": "Sans nouvelles depuis ce délai, une candidature est à relancer.",
+    "danger": "Zone de danger",
+    "purge": "Repartir de zéro",
+    "purgeHelp": "Supprime toutes les candidatures et leur historique, pour une nouvelle recherche. Les réglages et les jetons restent.",
+    "purgeAction": "Tout supprimer",
+    "purgeMessage": "Toutes les candidatures sont supprimées pour de bon. Faites d'abord une sauvegarde (callback-server backup) pour garder une copie.",
+    "purgeWord": "supprimer",
+    "purged": "{count} candidatures supprimées"
   }
 }

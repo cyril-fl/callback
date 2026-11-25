@@ -4,1053 +4,1110 @@
  */
 
 export interface paths {
-    "/api/applications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List applications */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Applications by id, comma separated or repeated */
-                    ids?: string[];
-                    /** @description Any of these statuses */
-                    status?: ("applied" | "responded" | "interview" | "offer" | "rejected")[];
-                    /** @description Source: spontaneous, job_post, recruiter or a name given by the user */
-                    source?: string;
-                    /** @description Text in company, address, website, source, contact or comment */
-                    q?: string;
-                    /** @description applied_at < this day (2026-01-31) */
-                    applied_before?: string;
-                    /** @description applied_at > this day (2026-01-31) */
-                    applied_after?: string;
-                    /** @description Not updated since this day (2026-01-31) */
-                    untouched_since?: string;
-                    /** @description Columns returned, all when empty; id always comes */
-                    fields?: string[];
-                    /** @description Cut each comment to this many characters (truncated: true) */
-                    max_chars?: number;
-                    /** @description applied_at, company, source, status, rating, created_at, updated_at; - first to reverse; -applied_at by default */
-                    sort?: string;
-                    /** @description Most applications returned, all when 0 */
-                    limit?: number;
-                    /** @description Applications skipped */
-                    offset?: number;
-                    /** @description No application, X-Total-Count only */
-                    count_only?: boolean;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        /** @description Count of all the applications that match */
-                        "X-Total-Count"?: number;
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.Application"][];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /** Create applications */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description At most 500 applications */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["domain.NewApplication"][];
-                };
-            };
-            responses: {
-                /** @description None created: every item failed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.BatchResult"];
-                    };
-                };
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.BatchResult"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        /** Delete applications */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description body */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["deleteapplications.Input"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.BatchResult"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        /** Change applications */
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description body */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["updateapplications.Input"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.BatchResult"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        trace?: never;
+  '/api/applications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    /** List applications */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Applications by id, comma separated or repeated */
+          ids?: string[];
+          /** @description Any of these statuses */
+          status?: ('applied' | 'responded' | 'interview' | 'offer' | 'rejected')[];
+          /** @description Source: spontaneous, job_post, recruiter or a name given by the user */
+          source?: string;
+          /** @description Text in company, address, website, source, contact or comment */
+          q?: string;
+          /** @description applied_at < this day (2026-01-31) */
+          applied_before?: string;
+          /** @description applied_at > this day (2026-01-31) */
+          applied_after?: string;
+          /** @description Not updated since this day (2026-01-31) */
+          untouched_since?: string;
+          /** @description Columns returned, all when empty; id always comes */
+          fields?: string[];
+          /** @description Cut each comment to this many characters (truncated: true) */
+          max_chars?: number;
+          /** @description applied_at, company, source, status, rating, created_at, updated_at; - first to reverse; -applied_at by default */
+          sort?: string;
+          /** @description Most applications returned, all when 0 */
+          limit?: number;
+          /** @description Applications skipped */
+          offset?: number;
+          /** @description No application, X-Total-Count only */
+          count_only?: boolean;
         };
-        get?: never;
-        put?: never;
-        /** Log in */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description body */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["createsession.Input"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["createsession.Result"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Too Many Requests */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            /** @description Count of all the applications that match */
+            'X-Total-Count'?: number;
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.Application'][];
+          };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
     };
-    "/api/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    put?: never;
+    /** Create applications */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description At most 500 applications */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.NewApplication'][];
         };
-        get?: never;
-        put?: never;
-        /** Log out */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description No Content */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+      };
+      responses: {
+        /** @description None created: every item failed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.BatchResult'];
+          };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.BatchResult'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
     };
-    "/api/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    /** Delete applications */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description body */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['deleteapplications.Input'];
         };
-        /** Who is asking */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["login.MeResult"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.BatchResult'];
+          };
         };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
     };
-    "/api/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    options?: never;
+    head?: never;
+    /** Change applications */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description body */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['updateapplications.Input'];
         };
-        /** Read the preferences */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.Preferences"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.BatchResult'];
+          };
         };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Change the preferences */
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description body */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["domain.PreferenceChanges"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.Preferences"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
         };
-        trace?: never;
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
     };
-    "/api/sources": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the sources in use */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["listsources.Source"][];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    trace?: never;
+  };
+  '/api/data': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete every application */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['purgeapplications.Result'];
+          };
         };
-        /** Count the applications */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["readstats.Stats"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
         };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
     };
-    "/api/status-changes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the status history */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Of these applications, comma separated or repeated */
-                    ids?: string[];
-                    /** @description Reached on this day or after (2026-01-31) */
-                    since?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.StatusChange"][];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    get?: never;
+    put?: never;
+    /** Log in */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description body */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['createsession.Input'];
         };
-        /** List the tokens */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["domain.Token"][];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['createsession.Result'];
+          };
         };
-        put?: never;
-        /** Create an API token */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description body */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["createapitoken.Input"];
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["createapitoken.Result"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Too Many Requests */
+        429: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
     };
-    "/api/tokens/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revoke a token */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Token id */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description No Content */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["respond.Failure"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    /** Log out */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description No Content */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Who is asking */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['login.MeResult'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/preferences': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read the preferences */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.Preferences'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Change the preferences */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description body */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.PreferenceChanges'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.Preferences'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    trace?: never;
+  };
+  '/api/sources': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the sources in use */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['listsources.Source'][];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Count the applications */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['readstats.Stats'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/status-changes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the status history */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Of these applications, comma separated or repeated */
+          ids?: string[];
+          /** @description Reached on this day or after (2026-01-31) */
+          since?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.StatusChange'][];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/tokens': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the tokens */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.Token'][];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /** Create an API token */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description body */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['createapitoken.Input'];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['createapitoken.Result'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/tokens/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke a token */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Token id */
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description No Content */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['respond.Failure'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        "createapitoken.Input": {
-            /**
-             * @description ExpiresIn is how long the token works, 90d when left out.
-             * @enum {string}
-             */
-            expires_in?: "7d" | "30d" | "90d" | "1y" | "never";
-            name: string;
-            /** @description ReadOnly makes a token that reads and changes nothing. */
-            read_only?: boolean;
-        };
-        "createapitoken.Result": {
-            api_token: components["schemas"]["domain.Token"];
-            token: string;
-        };
-        "createsession.Input": {
-            password: string;
-            /** @description Token asks the token in the answer too, for a client without cookies (the CLI): the web keeps it HttpOnly. */
-            token?: boolean;
-        };
-        "createsession.Result": {
-            expires_at: string;
-            token?: string;
-        };
-        "deleteapplications.Input": {
-            /** @example 2026-01-01 */
-            applied_after?: string;
-            /**
-             * @description AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
-             * @example 2026-01-31
-             */
-            applied_before?: string;
-            /** @description DryRun deletes nothing: the result is what the call would delete. */
-            dry_run?: boolean;
-            /** @description IDs are the applications by id. */
-            ids?: string[];
-            /** @description Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive. */
-            q?: string;
-            /** @example job_post */
-            source?: string;
-            /** @description Status is any of these statuses. */
-            status?: components["schemas"]["domain.Status"][];
-            /** @description Summary leaves the ids out of the result: the counts and failures only. */
-            summary?: boolean;
-            /**
-             * @description UntouchedSince is the applications not updated since this day.
-             * @example 2026-01-01
-             */
-            untouched_since?: string;
-        };
-        "domain.Application": {
-            /** @example 2026-01-31 */
-            applied_at?: string;
-            comment?: string;
-            company?: string;
-            contact_email?: string;
-            contact_name?: string;
-            country?: string;
-            created_at?: string;
-            id: string;
-            /**
-             * @description InterviewAt is the next interview's local date and time.
-             * @example 2026-01-31T14:30
-             */
-            interview_at?: string;
-            /** @description Location is the city; Street, PostalCode and Country complete the address when known. */
-            location?: string;
-            postal_code?: string;
-            rating?: number;
-            /** @example job_post */
-            source?: string;
-            source_detail?: string;
-            status?: components["schemas"]["domain.Status"];
-            street?: string;
-            /** @description Truncated tells that comment was cut at max_chars. */
-            truncated?: boolean;
-            updated_at?: string;
-            /** @description Website is the company's site, or an e-mail to write to when it has none. */
-            website?: string;
-        };
-        "domain.BatchFailure": {
-            error: string;
-            id?: string;
-            index?: number;
-            op?: number;
-        };
-        "domain.BatchResult": {
-            count: number;
-            dry_run?: boolean;
-            failed?: components["schemas"]["domain.BatchFailure"][];
-            ids?: string[];
-        };
-        "domain.Changes": {
-            /** @example 2026-01-31 */
-            applied_at?: string;
-            comment?: string;
-            company?: string;
-            contact_email?: string;
-            contact_name?: string;
-            country?: string;
-            /**
-             * @description InterviewAt, ContactName and ContactEmail are cleared by "".
-             * @example 2026-01-31T14:30
-             */
-            interview_at?: string;
-            location?: string;
-            postal_code?: string;
-            rating?: number;
-            /** @example job_post */
-            source?: string;
-            source_detail?: string;
-            status?: components["schemas"]["domain.Status"];
-            street?: string;
-            website?: string;
-        };
-        "domain.NewApplication": {
-            /** @example 2026-01-31 */
-            applied_at?: string;
-            comment?: string;
-            company: string;
-            contact_email?: string;
-            contact_name?: string;
-            country?: string;
-            /** @example 2026-01-31T14:30 */
-            interview_at?: string;
-            location: string;
-            postal_code?: string;
-            rating?: number;
-            /** @example job_post */
-            source?: string;
-            source_detail?: string;
-            status?: components["schemas"]["domain.Status"];
-            street?: string;
-            website?: string;
-        };
-        "domain.PreferenceChanges": {
-            default_country?: string;
-            default_location?: string;
-            follow_up_days?: number;
-            /** @enum {string} */
-            plan?: "base" | "pro";
-        };
-        "domain.Preferences": {
-            default_country: string;
-            /** @description DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty. */
-            default_location: string;
-            /** @description FollowUpDays is how long an application waits without news before it is to follow up. */
-            follow_up_days: number;
-            /** @enum {string} */
-            plan: "base" | "pro";
-        };
-        /** @enum {string} */
-        "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected";
-        "domain.StatusChange": {
-            application_id: string;
-            at: string;
-            status: components["schemas"]["domain.Status"];
-        };
-        "domain.Token": {
-            created_at: string;
-            /** @description no limit when absent */
-            expires_at?: string;
-            id: string;
-            kind: components["schemas"]["domain.TokenKind"];
-            /** @description never used when absent */
-            last_used_at?: string;
-            name: string;
-            read_only: boolean;
-        };
-        /** @enum {string} */
-        "domain.TokenKind": "session" | "api" | "oauth";
-        "listsources.Source": {
-            count: number;
-            source: string;
-        };
-        "login.MeResult": {
-            kind: components["schemas"]["domain.TokenKind"];
-            name?: string;
-            read_only: boolean;
-            version: string;
-        };
-        "readstats.Stats": {
-            /** @description BySource has the sources in use: an agent reuses their names rather than make a near double. */
-            by_source: {
-                [key: string]: number;
-            };
-            /** @description ByStatus has every status, 0 included. */
-            by_status: {
-                [key: string]: number;
-            };
-            /** @description ResponseRate is the share of applications that got past applied, 0 to 1. */
-            response_rate: number;
-            total: number;
-        };
-        "respond.Failure": {
-            error: string;
-        };
-        "updateapplications.Input": {
-            /** @description DryRun writes nothing: the result is what the call would write. */
-            dry_run?: boolean;
-            ops: components["schemas"]["updateapplications.Op"][];
-            /** @description Summary leaves the ids out of the result: the counts and failures only. */
-            summary?: boolean;
-        };
-        "updateapplications.Op": {
-            /** @example 2026-01-01 */
-            applied_after?: string;
-            /**
-             * @description AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
-             * @example 2026-01-31
-             */
-            applied_before?: string;
-            /** @description IDs are the applications by id. */
-            ids?: string[];
-            /** @description Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive. */
-            q?: string;
-            set: components["schemas"]["domain.Changes"];
-            /** @example job_post */
-            source?: string;
-            /** @description Status is any of these statuses. */
-            status?: components["schemas"]["domain.Status"][];
-            /**
-             * @description UntouchedSince is the applications not updated since this day.
-             * @example 2026-01-01
-             */
-            untouched_since?: string;
-        };
+  schemas: {
+    'createapitoken.Input': {
+      /**
+       * @description ExpiresIn is how long the token works, 90d when left out.
+       * @enum {string}
+       */
+      expires_in?: '7d' | '30d' | '90d' | '1y' | 'never';
+      name: string;
+      /** @description ReadOnly makes a token that reads and changes nothing. */
+      read_only?: boolean;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    'createapitoken.Result': {
+      api_token: components['schemas']['domain.Token'];
+      token: string;
+    };
+    'createsession.Input': {
+      password: string;
+      /** @description Token asks the token in the answer too, for a client without cookies (the CLI): the web keeps it HttpOnly. */
+      token?: boolean;
+    };
+    'createsession.Result': {
+      expires_at: string;
+      token?: string;
+    };
+    'deleteapplications.Input': {
+      /** @example 2026-01-01 */
+      applied_after?: string;
+      /**
+       * @description AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
+       * @example 2026-01-31
+       */
+      applied_before?: string;
+      /** @description DryRun deletes nothing: the result is what the call would delete. */
+      dry_run?: boolean;
+      /** @description IDs are the applications by id. */
+      ids?: string[];
+      /** @description Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive. */
+      q?: string;
+      /** @example job_post */
+      source?: string;
+      /** @description Status is any of these statuses. */
+      status?: components['schemas']['domain.Status'][];
+      /** @description Summary leaves the ids out of the result: the counts and failures only. */
+      summary?: boolean;
+      /**
+       * @description UntouchedSince is the applications not updated since this day.
+       * @example 2026-01-01
+       */
+      untouched_since?: string;
+    };
+    'domain.Application': {
+      /** @example 2026-01-31 */
+      applied_at?: string;
+      comment?: string;
+      company?: string;
+      contact_email?: string;
+      contact_name?: string;
+      country?: string;
+      created_at?: string;
+      id: string;
+      /**
+       * @description InterviewAt is the next interview's local date and time.
+       * @example 2026-01-31T14:30
+       */
+      interview_at?: string;
+      /** @description Location is the city; Street, PostalCode and Country complete the address when known. */
+      location?: string;
+      postal_code?: string;
+      rating?: number;
+      /** @example job_post */
+      source?: string;
+      source_detail?: string;
+      status?: components['schemas']['domain.Status'];
+      street?: string;
+      /** @description Truncated tells that comment was cut at max_chars. */
+      truncated?: boolean;
+      updated_at?: string;
+      /** @description Website is the company's site, or an e-mail to write to when it has none. */
+      website?: string;
+    };
+    'domain.BatchFailure': {
+      error: string;
+      id?: string;
+      index?: number;
+      op?: number;
+    };
+    'domain.BatchResult': {
+      count: number;
+      dry_run?: boolean;
+      failed?: components['schemas']['domain.BatchFailure'][];
+      ids?: string[];
+    };
+    'domain.Changes': {
+      /** @example 2026-01-31 */
+      applied_at?: string;
+      comment?: string;
+      company?: string;
+      contact_email?: string;
+      contact_name?: string;
+      country?: string;
+      /**
+       * @description InterviewAt, ContactName and ContactEmail are cleared by "".
+       * @example 2026-01-31T14:30
+       */
+      interview_at?: string;
+      location?: string;
+      postal_code?: string;
+      rating?: number;
+      /** @example job_post */
+      source?: string;
+      source_detail?: string;
+      status?: components['schemas']['domain.Status'];
+      street?: string;
+      website?: string;
+    };
+    'domain.NewApplication': {
+      /** @example 2026-01-31 */
+      applied_at?: string;
+      comment?: string;
+      company: string;
+      contact_email?: string;
+      contact_name?: string;
+      country?: string;
+      /** @example 2026-01-31T14:30 */
+      interview_at?: string;
+      location: string;
+      postal_code?: string;
+      rating?: number;
+      /** @example job_post */
+      source?: string;
+      source_detail?: string;
+      status?: components['schemas']['domain.Status'];
+      street?: string;
+      website?: string;
+    };
+    'domain.PreferenceChanges': {
+      default_country?: string;
+      default_location?: string;
+      follow_up_days?: number;
+      /** @enum {string} */
+      plan?: 'base' | 'pro';
+    };
+    'domain.Preferences': {
+      default_country: string;
+      /** @description DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty. */
+      default_location: string;
+      /** @description FollowUpDays is how long an application waits without news before it is to follow up. */
+      follow_up_days: number;
+      /** @enum {string} */
+      plan: 'base' | 'pro';
+    };
+    /** @enum {string} */
+    'domain.Status': 'applied' | 'responded' | 'interview' | 'offer' | 'rejected';
+    'domain.StatusChange': {
+      application_id: string;
+      at: string;
+      status: components['schemas']['domain.Status'];
+    };
+    'domain.Token': {
+      created_at: string;
+      /** @description no limit when absent */
+      expires_at?: string;
+      id: string;
+      kind: components['schemas']['domain.TokenKind'];
+      /** @description never used when absent */
+      last_used_at?: string;
+      name: string;
+      read_only: boolean;
+    };
+    /** @enum {string} */
+    'domain.TokenKind': 'session' | 'api' | 'oauth';
+    'listsources.Source': {
+      count: number;
+      source: string;
+    };
+    'login.MeResult': {
+      kind: components['schemas']['domain.TokenKind'];
+      name?: string;
+      read_only: boolean;
+      version: string;
+    };
+    'purgeapplications.Result': {
+      count: number;
+    };
+    'readstats.Stats': {
+      /** @description BySource has the sources in use: an agent reuses their names rather than make a near double. */
+      by_source: {
+        [key: string]: number;
+      };
+      /** @description ByStatus has every status, 0 included. */
+      by_status: {
+        [key: string]: number;
+      };
+      /** @description ResponseRate is the share of applications that got past applied, 0 to 1. */
+      response_rate: number;
+      total: number;
+    };
+    'respond.Failure': {
+      error: string;
+    };
+    'updateapplications.Input': {
+      /** @description DryRun writes nothing: the result is what the call would write. */
+      dry_run?: boolean;
+      ops: components['schemas']['updateapplications.Op'][];
+      /** @description Summary leaves the ids out of the result: the counts and failures only. */
+      summary?: boolean;
+    };
+    'updateapplications.Op': {
+      /** @example 2026-01-01 */
+      applied_after?: string;
+      /**
+       * @description AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
+       * @example 2026-01-31
+       */
+      applied_before?: string;
+      /** @description IDs are the applications by id. */
+      ids?: string[];
+      /** @description Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive. */
+      q?: string;
+      set: components['schemas']['domain.Changes'];
+      /** @example job_post */
+      source?: string;
+      /** @description Status is any of these statuses. */
+      status?: components['schemas']['domain.Status'][];
+      /**
+       * @description UntouchedSince is the applications not updated since this day.
+       * @example 2026-01-01
+       */
+      untouched_since?: string;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

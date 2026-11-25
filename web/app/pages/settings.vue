@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Token, TokenInput, TokenResult } from '~/types/items';
+import type { PurgeResult, Token, TokenInput, TokenResult } from '~/types/items';
 
 const { t } = useI18n();
 const api = useApi();
@@ -56,6 +56,18 @@ function askRevoke(token: Token) {
   revoking.value = token;
   confirmOpen.value = true;
 }
+const purgeOpen = ref(false);
+async function purge() {
+  try {
+    const { count } = await api<PurgeResult>('/api/data', { method: 'DELETE' });
+    toast.add({ title: t('settings.purged', { count }), color: 'success' });
+    clearNuxtData(); // Every page read applications that are gone.
+    await navigateTo('/');
+  } catch {
+    // useApi already toasted.
+  }
+}
+
 async function revoke() {
   if (!revoking.value) return;
   try {
@@ -239,6 +251,25 @@ async function revoke() {
       <p v-else-if="tokens" class="mt-3 text-xs text-muted">{{ t('settings.noTokens') }}</p>
     </section>
 
+    <section>
+      <h2 class="mb-3 text-sm font-semibold text-error">{{ t('settings.danger') }}</h2>
+      <div class="flex flex-wrap items-center gap-4 rounded-lg border border-error/25 bg-error/5 px-4 py-3">
+        <div class="flex-1 basis-48">
+          <p class="text-sm">{{ t('settings.purge') }}</p>
+          <p class="text-xs text-muted">{{ t('settings.purgeHelp') }}</p>
+        </div>
+        <UButton :label="t('settings.purgeAction')" color="error" variant="ghost" @click="purgeOpen = true" />
+      </div>
+    </section>
+
+    <ConfirmModal
+      v-model:open="purgeOpen"
+      :title="t('settings.purge')"
+      :message="t('settings.purgeMessage')"
+      :confirm-label="t('settings.purgeAction')"
+      :expected="t('settings.purgeWord')"
+      @confirm="purge"
+    />
     <ConfirmModal
       v-model:open="confirmOpen"
       :title="t('settings.revokeTitle')"

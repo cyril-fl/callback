@@ -132,9 +132,11 @@ func TestAuth(t *testing.T) {
 		{"api token, tokens", api, "GET", "/api/tokens", nil, http.StatusForbidden},
 		{"api token, new token", api, "POST", "/api/tokens", map[string]any{"name": "x"}, http.StatusForbidden},
 		{"api token, logout", api, "POST", "/api/logout", nil, http.StatusForbidden},
+		{"api token, purge", api, "DELETE", "/api/data", nil, http.StatusForbidden},
 		{"read-only, list", readOnly, "GET", "/api/applications", nil, http.StatusOK},
 		{"read-only, create", readOnly, "POST", "/api/applications", []map[string]any{{"company": "A", "location": "B"}}, http.StatusForbidden},
 		{"read-only, delete", readOnly, "DELETE", "/api/applications", map[string]any{"q": "a"}, http.StatusForbidden},
+		{"session, purge", server.Session, "DELETE", "/api/data", nil, http.StatusOK},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
