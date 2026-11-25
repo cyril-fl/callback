@@ -61,13 +61,15 @@ const items = computed(() => [
     <UPopover v-else-if="search" :content="{ align: 'start' }">
       <UButton v-bind="trigger" />
       <template #content>
+        <!-- The input of the UCommandPalette above, so both searches look alike. -->
         <UInput
           v-model="model"
+          variant="none"
           icon="i-lucide-search"
           :placeholder="t('table.search')"
           :aria-label="t('table.search')"
           autofocus
-          class="m-2 w-56"
+          class="w-56 [&>input]:h-12"
         />
       </template>
     </UPopover>
