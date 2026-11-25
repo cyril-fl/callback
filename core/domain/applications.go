@@ -54,7 +54,7 @@ var (
 	ErrNoCompany      = Invalid("company is required")
 	ErrNoLocation     = Invalid("location (the city) is required")
 	ErrLong           = Invalid("company, location, street, postal_code, country, website and source_detail have at most 200 characters, comment 10000")
-	ErrInvalidWebsite = Invalid("website must be an http(s) URL")
+	ErrInvalidWebsite = Invalid("website must be an http(s) URL or an e-mail")
 	ErrInvalidSource  = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
 	ErrInvalidDetail  = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
 	ErrInvalidStatus  = Invalid("status must be one of applied, responded, interview, offer, rejected")
@@ -71,10 +71,11 @@ type Application struct {
 	ID      string `bun:",pk" json:"id"`
 	Company string `bun:",notnull" json:"company,omitempty" binding:"optional"`
 	// Location is the city; Street, PostalCode and Country complete the address when known.
-	Location     string    `bun:",notnull" json:"location,omitempty" binding:"optional"`
-	Street       string    `bun:",nullzero" json:"street,omitempty" binding:"optional"`
-	PostalCode   string    `bun:",nullzero" json:"postal_code,omitempty" binding:"optional"`
-	Country      string    `bun:",nullzero" json:"country,omitempty" binding:"optional"`
+	Location   string `bun:",notnull" json:"location,omitempty" binding:"optional"`
+	Street     string `bun:",nullzero" json:"street,omitempty" binding:"optional"`
+	PostalCode string `bun:",nullzero" json:"postal_code,omitempty" binding:"optional"`
+	Country    string `bun:",nullzero" json:"country,omitempty" binding:"optional"`
+	// Website is the company's site, or an e-mail to write to when it has none.
 	Website      string    `bun:",notnull" json:"website,omitempty" binding:"optional"`
 	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail string    `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
@@ -121,7 +122,7 @@ func (a *Application) Validate() error {
 		return ErrNoLocation
 	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.Comment) > MaxComment:
 		return ErrLong
-	case a.Website != "" && !isURL(a.Website):
+	case a.Website != "" && !isURL(a.Website) && !isEmail(a.Website):
 		return ErrInvalidWebsite
 	case runes(string(a.Source)) > MaxSource:
 		return ErrInvalidSource
@@ -148,13 +149,18 @@ func validDetail(source Source, detail string) bool {
 	case SourceJobPost:
 		return isURL(detail)
 	case SourceRecruiter:
-		address, err := mail.ParseAddress(detail)
-		return err == nil && address.Address == detail
+		return isEmail(detail)
 	case SourceSpontaneous:
 		return detail == ""
 	default:
 		return true
 	}
+}
+
+// isEmail tells a bare address, not "Name <address>".
+func isEmail(value string) bool {
+	address, err := mail.ParseAddress(value)
+	return err == nil && address.Address == value
 }
 
 func isURL(value string) bool {

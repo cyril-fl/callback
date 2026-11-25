@@ -25,6 +25,8 @@ func TestRun(t *testing.T) {
 		{Company: "Vandelay", Location: "Lyon", Street: " 1 rue de la Paix ", PostalCode: "69001", Country: "France", Source: " Agence intérim Adecco ", SourceDetail: "Marie, 06 00 00 00 00"},
 		{Company: "Pied Piper", Location: "Paris", Source: domain.Source(strings.Repeat("x", domain.MaxSource+1))},
 		{Company: "Dunder", Location: "Scranton", Source: domain.SourceSpontaneous, SourceDetail: "not for spontaneous"},
+		{Company: "Wonka", Location: "Paris", Website: "jobs@wonka.example"},
+		{Company: "Krusty", Location: "Paris", Website: "not a site"},
 	}
 	process := createapplications.Process(ctx, db, items)
 	process.Run()
@@ -32,10 +34,10 @@ func TestRun(t *testing.T) {
 		t.Fatal(process.GetErr())
 	}
 	result := process.GetResult()
-	if result.Count != 4 || len(result.IDs) != 4 {
-		t.Fatalf("count = %d, ids = %v; want 4", result.Count, result.IDs)
+	if result.Count != 5 || len(result.IDs) != 5 {
+		t.Fatalf("count = %d, ids = %v; want 5", result.Count, result.IDs)
 	}
-	wants := map[int]error{1: domain.ErrNoCompany, 3: domain.ErrInvalidDetail, 4: domain.ErrInvalidRating, 7: domain.ErrInvalidSource, 8: domain.ErrInvalidDetail}
+	wants := map[int]error{1: domain.ErrNoCompany, 3: domain.ErrInvalidDetail, 4: domain.ErrInvalidRating, 7: domain.ErrInvalidSource, 8: domain.ErrInvalidDetail, 10: domain.ErrInvalidWebsite}
 	if len(result.Failed) != len(wants) {
 		t.Fatalf("failed = %+v", result.Failed)
 	}

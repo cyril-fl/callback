@@ -741,6 +741,7 @@ export interface components {
             /** @description Truncated tells that comment was cut at max_chars. */
             truncated?: boolean;
             updated_at?: string;
+            /** @description Website is the company's site, or an e-mail to write to when it has none. */
             website?: string;
         };
         "domain.BatchFailure": {

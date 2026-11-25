@@ -199,7 +199,9 @@ type DomainApplication struct {
 	// Truncated Truncated tells that comment was cut at max_chars.
 	Truncated *bool   `json:"truncated,omitempty"`
 	UpdatedAt *string `json:"updated_at,omitempty"`
-	Website   *string `json:"website,omitempty"`
+
+	// Website Website is the company's site, or an e-mail to write to when it has none.
+	Website *string `json:"website,omitempty"`
 }
 
 // DomainBatchFailure defines model for domain.BatchFailure.

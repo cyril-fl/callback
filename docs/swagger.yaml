@@ -129,6 +129,8 @@ components:
         updated_at:
           type: string
         website:
+          description: Website is the company's site, or an e-mail to write to when
+            it has none.
           type: string
       required:
       - id

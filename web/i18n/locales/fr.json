@@ -73,7 +73,7 @@
     "street": "Adresse",
     "postalCode": "Code postal",
     "fullAddress": "Ajouter l'adresse complète",
-    "website": "Site web",
+    "website": "Site web ou e-mail",
     "source": "Source",
     "sourceUrl": "URL de l'offre",
     "sourceEmail": "E-mail du recruteur",
@@ -88,6 +88,7 @@
     "required": "Champ requis",
     "invalidUrl": "URL invalide",
     "invalidEmail": "E-mail invalide",
+    "invalidWebsite": "Une URL (https://…) ou un e-mail",
     "failed": "Ligne refusée : {error}",
     "saved": "Candidature enregistrée"
   },

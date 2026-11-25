@@ -23,7 +23,7 @@ const schema = computed(() => {
       street: z.string(),
       postal_code: z.string(),
       country: z.string(),
-      website: z.union([z.literal(''), z.url(t('form.invalidUrl'))]),
+      website: z.union([z.literal(''), z.url(), z.email()], { error: t('form.invalidWebsite') }),
       source: z.string().trim().min(1, t('form.required')).max(60),
       source_detail: z.string(),
       status: z.enum(['applied', 'responded', 'interview', 'offer', 'rejected']),
@@ -134,7 +134,7 @@ async function submit() {
           <UInput v-model="state.company" class="w-full" />
         </UFormField>
         <UFormField name="website" :label="t('form.website')">
-          <UInput v-model="state.website" type="url" placeholder="https://" class="w-full" />
+          <UInput v-model="state.website" placeholder="https://… ou contact@…" class="w-full" />
         </UFormField>
 
         <div class="grid grid-cols-2 gap-3">
