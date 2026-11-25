@@ -53,6 +53,22 @@ type commands struct {
 	Serve         plumcliconfig.Cmdparams `yaml:"serve"`
 	ResetPassword plumcliconfig.Cmdparams `yaml:"reset-password"`
 	Backup        plumcliconfig.Cmdparams `yaml:"backup"`
+
+	Root     plumcliconfig.Cmdparams `yaml:"root"`
+	Login    plumcliconfig.Cmdparams `yaml:"login"`
+	Logout   plumcliconfig.Cmdparams `yaml:"logout"`
+	Whoami   plumcliconfig.Cmdparams `yaml:"whoami"`
+	Add      plumcliconfig.Cmdparams `yaml:"add"`
+	Ls       plumcliconfig.Cmdparams `yaml:"ls"`
+	Show     plumcliconfig.Cmdparams `yaml:"show"`
+	Edit     plumcliconfig.Cmdparams `yaml:"edit"`
+	Rm       plumcliconfig.Cmdparams `yaml:"rm"`
+	Stats    plumcliconfig.Cmdparams `yaml:"stats"`
+	Token    plumcliconfig.Cmdparams `yaml:"token"`
+	TokenAdd plumcliconfig.Cmdparams `yaml:"token-add"`
+	TokenLs  plumcliconfig.Cmdparams `yaml:"token-ls"`
+	TokenRm  plumcliconfig.Cmdparams `yaml:"token-rm"`
+	MCP      plumcliconfig.Cmdparams `yaml:"mcp"`
 }
 
 func load() (*config, error) {
