@@ -44,7 +44,7 @@ onMounted(() => scroller.value && (scroller.value.scrollLeft = scroller.value.sc
 <template>
   <div class="rounded-lg border border-default px-4 py-3">
     <div ref="scroller" class="overflow-x-auto pb-1">
-      <div class="flex w-max gap-1" role="img" :aria-label="t('stats.activityTotal', total)">
+      <div class="mx-auto flex w-max gap-1" role="img" :aria-label="t('stats.activityTotal', total)">
         <div v-for="(week, i) in weeks" :key="week[0]!.key" class="flex flex-col gap-1">
           <span class="h-4 w-3 overflow-visible text-[10px] whitespace-nowrap text-muted">{{ month(week, i) }}</span>
           <div
