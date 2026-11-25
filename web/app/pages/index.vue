@@ -204,6 +204,8 @@ const dataColumns: TableColumn<Application>[] = [
   {
     accessorKey: 'followed_up_at',
     header: header('table.followUp', () => ({ menu: followUpFilterMenu.value, active: followUp.value })),
+    // An empty slot (no bell) falls back to this cell: never the raw timestamp.
+    cell: () => '',
   },
   {
     id: 'actions',
