@@ -124,29 +124,22 @@ const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
 
 // A column header: its label sorts asc then desc, the funnel beside it filters.
 const header =
-  (
-    label: string,
-    filter?: { menu: DropdownMenuItem[][]; active: boolean },
-    sortable = true,
-  ): TableColumn<Application>['header'] =>
+  (label: string, filter?: { menu: DropdownMenuItem[][]; active: boolean }): TableColumn<Application>['header'] =>
   ({ column }) => {
     const dir = column.getIsSorted();
-    // The API does not sort on every column: those show their label only.
-    const sort = !sortable
-      ? h('span', label)
-      : h(UButton, {
-          color: 'neutral',
-          variant: 'ghost',
-          label,
-          class: '-mx-2.5',
-          icon: dir
-            ? dir === 'asc'
-              ? 'i-lucide-arrow-up-narrow-wide'
-              : 'i-lucide-arrow-down-wide-narrow'
-            : 'i-lucide-arrow-up-down',
-          onClick: () => column.toggleSorting(dir === 'asc'),
-          'aria-label': `${t('table.sortBy')} ${label}`,
-        });
+    const sort = h(UButton, {
+      color: 'neutral',
+      variant: 'ghost',
+      label,
+      class: '-mx-2.5',
+      icon: dir
+        ? dir === 'asc'
+          ? 'i-lucide-arrow-up-narrow-wide'
+          : 'i-lucide-arrow-down-wide-narrow'
+        : 'i-lucide-arrow-up-down',
+      onClick: () => column.toggleSorting(dir === 'asc'),
+      'aria-label': `${t('table.sortBy')} ${label}`,
+    });
     if (!filter) return sort;
     return h('div', { class: 'flex items-center gap-1' }, [
       sort,
@@ -215,8 +208,8 @@ const columns = computed<TableColumn<Application>[]>(() => [
   { accessorKey: 'rating', header: header(t('table.rating')) },
   { accessorKey: 'applied_at', header: header(t('table.appliedAt')) },
   {
-    id: 'followUp',
-    header: header(t('table.followUp'), { menu: followUpFilterMenu.value, active: followUp.value }, false),
+    accessorKey: 'followed_up_at',
+    header: header(t('table.followUp'), { menu: followUpFilterMenu.value, active: followUp.value }),
   },
   { id: 'actions', header: () => h('span', { class: 'sr-only' }, t('table.actions')) },
 ]);
@@ -469,7 +462,7 @@ function exportCsv() {
           <span>{{ day(row.original.applied_at) }}</span>
         </UTooltip>
       </template>
-      <template #followUp-cell="{ row }">
+      <template #followed_up_at-cell="{ row }">
         <UTooltip
           v-if="canFollowUp(row.original, followUpSince)"
           :text="
@@ -486,6 +479,8 @@ function exportCsv() {
             @click="markFollowedUp(row.original)"
           />
         </UTooltip>
+        <span v-else-if="row.original.followed_up_at">{{ day(row.original.followed_up_at) }}</span>
+        <span v-else />
       </template>
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
