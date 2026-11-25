@@ -21,9 +21,9 @@ function commit() {
     v-model:search-term="search"
     :model-value="model"
     :items="items"
-    :ui="{ content: 'has-data-[slot=empty]:hidden' }"
+    :ui="{ content: 'has-data-[slot=empty]:hidden!' }"
     @update:model-value="(v: string | null) => (model = v ?? '')"
     @blur="commit"
-    @keydown.enter="commit"
+    @keydown.enter="noneHighlighted($event) && commit()"
   />
 </template>

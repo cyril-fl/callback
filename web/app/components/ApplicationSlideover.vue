@@ -230,9 +230,9 @@ async function submit() {
             :items="sourceItems"
             value-key="value"
             class="w-full"
-            :ui="{ content: 'has-data-[slot=empty]:hidden' }"
+            :ui="{ content: 'has-data-[slot=empty]:hidden!' }"
             @blur="createSource(sourceSearch)"
-            @keydown.enter="createSource(sourceSearch)"
+            @keydown.enter="noneHighlighted($event) && createSource(sourceSearch)"
           />
         </UFormField>
         <UFormField v-if="detail" name="source_detail" :label="detail.label" :required="detail.required">
