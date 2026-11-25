@@ -2,16 +2,19 @@
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Application, BatchResult, Stats, Status } from '~/types/items';
 import { STATUSES } from '~/types/items';
+import { today as todayDate, getLocalTimeZone } from '@internationalized/date';
 
 const { t } = useI18n();
 const api = useApi();
 const sources = useSources();
-const { pro } = usePreferences();
+const { pro, preferences } = usePreferences();
 
 const q = ref('');
 const qDebounced = refDebounced(q, 300);
 const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
+// Pro: the applications without news for the follow-up delay, applied or responded.
+const followUp = ref(false);
 const defaultSorting = [{ id: 'applied_at', desc: true }];
 const sorting = ref<{ id: string; desc: boolean }[]>([...defaultSorting]);
 // On the kanban the page is the window's height (less the layout's header, h-14 and its border, and its padding,
@@ -21,16 +24,24 @@ const view = useLocalStorage<'table' | 'kanban'>('callback-view', 'table');
 const filtered = computed(
   () =>
     q.value !== '' ||
+    followUp.value ||
     statusFilter.value.length > 0 ||
     sourceFilter.value !== 'all' ||
     JSON.stringify(sorting.value) !== JSON.stringify(defaultSorting),
 );
 function reset() {
   q.value = '';
+  followUp.value = false;
   statusFilter.value = [];
   sourceFilter.value = 'all';
   sorting.value = [...defaultSorting];
 }
+
+// The day the follow-up delay started: an application untouched since then is to follow up.
+const followUpSince = computed(() => {
+  const since = todayDate(getLocalTimeZone()).subtract({ days: preferences.value?.follow_up_days ?? 7 });
+  return since.toString();
+});
 
 const sort = computed(() => {
   const s = sorting.value[0];
@@ -48,12 +59,17 @@ const {
     api<Application[]>('/api/applications', {
       query: {
         q: qDebounced.value || undefined,
-        status: statusFilter.value.length ? statusFilter.value.join(',') : undefined,
+        status: followUp.value
+          ? 'applied,responded'
+          : statusFilter.value.length
+            ? statusFilter.value.join(',')
+            : undefined,
+        untouched_since: followUp.value ? followUpSince.value : undefined,
         source: sourceFilter.value === 'all' ? undefined : sourceFilter.value,
         sort: sort.value,
       },
     }),
-  { watch: [qDebounced, statusFilter, sourceFilter, sort] },
+  { watch: [qDebounced, followUp, statusFilter, sourceFilter, sort] },
 );
 const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh()]);
 
@@ -67,6 +83,7 @@ const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | '
 };
 
 const UButton = resolveComponent('UButton');
+const UCheckbox = resolveComponent('UCheckbox');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 
 // The menu stays open while ticking: preventDefault keeps it from closing on select.
@@ -143,7 +160,28 @@ const header =
     ]);
   };
 
+// Pro: rows are picked by id for the batch bar.
+const selection = ref<Record<string, boolean>>({});
+const selected = computed(() => Object.keys(selection.value).filter((id) => selection.value[id]));
+watch(applications, () => (selection.value = {}));
+const selectColumn: TableColumn<Application> = {
+  id: 'select',
+  header: ({ table }) =>
+    h(UCheckbox, {
+      modelValue: table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
+      'onUpdate:modelValue': (v: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!v),
+      'aria-label': t('table.selectAll'),
+    }),
+  cell: ({ row }) =>
+    h(UCheckbox, {
+      modelValue: row.getIsSelected(),
+      'onUpdate:modelValue': (v: boolean | 'indeterminate') => row.toggleSelected(!!v),
+      'aria-label': t('table.select'),
+    }),
+};
+
 const columns = computed<TableColumn<Application>[]>(() => [
+  ...(pro.value ? [selectColumn] : []),
   { accessorKey: 'company', header: header(t('table.company')) },
   { accessorKey: 'location', header: t('table.location') },
   {
@@ -191,21 +229,77 @@ function openForm(app?: Application) {
   slideover.value = true;
 }
 
+// One application from its row, or the selected ones from the batch bar.
 const confirmOpen = ref(false);
-const deleting = ref<Application>();
+const deleting = ref<{ ids: string[]; message: string }>();
 function askDelete(app: Application) {
-  deleting.value = app;
+  deleting.value = { ids: [app.id], message: t('delete.message', { company: app.company ?? '' }) };
+  confirmOpen.value = true;
+}
+function askDeleteSelected() {
+  deleting.value = { ids: selected.value, message: t('delete.messageMany', selected.value.length) };
   confirmOpen.value = true;
 }
 async function doDelete() {
   if (!deleting.value) return;
   try {
-    await api<BatchResult>('/api/applications', { method: 'DELETE', body: { ids: [deleting.value.id] } });
+    await api<BatchResult>('/api/applications', { method: 'DELETE', body: { ids: deleting.value.ids } });
     useToast().add({ title: t('delete.done'), color: 'success' });
     await refresh();
   } catch {
     // useApi already toasted.
   }
+}
+
+async function setSelectedStatus(status: Status) {
+  try {
+    await api<BatchResult>('/api/applications', {
+      method: 'PATCH',
+      body: { ops: [{ ids: selected.value, set: { status } }] },
+    });
+    await refresh();
+  } catch {
+    // useApi already toasted.
+  }
+}
+const selectedStatusMenu = computed(() =>
+  STATUSES.map((s) => ({ label: t(`status.${s}`), onSelect: () => setSelectedStatus(s) })),
+);
+
+// The list as shown, filters and sort included, to a CSV file.
+const csvColumns = [
+  'company',
+  'location',
+  'street',
+  'postal_code',
+  'country',
+  'website',
+  'source',
+  'source_detail',
+  'status',
+  'rating',
+  'comment',
+  'applied_at',
+  'interview_at',
+  'contact_name',
+  'contact_email',
+  'created_at',
+  'updated_at',
+] as const;
+function exportCsv() {
+  const cell = (v: unknown) => `"${String(v ?? '').replaceAll('"', '""')}"`;
+  const lines = [
+    csvColumns.join(','),
+    ...(applications.value ?? []).map((a) => csvColumns.map((c) => cell(a[c])).join(',')),
+  ];
+  // The BOM tells a spreadsheet the file is UTF-8.
+  const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  const link = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `candidatures-${todayDate(getLocalTimeZone())}.csv`,
+  });
+  link.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 
@@ -215,6 +309,15 @@ async function doDelete() {
 
     <div class="flex flex-wrap items-center gap-2">
       <UInput v-model="q" icon="i-lucide-search" :placeholder="t('table.search')" :aria-label="t('table.search')" />
+      <UButton
+        v-if="pro"
+        icon="i-lucide-bell-ring"
+        :color="followUp ? 'primary' : 'neutral'"
+        :variant="followUp ? 'soft' : 'outline'"
+        :label="t('table.followUp')"
+        :aria-pressed="followUp"
+        @click="followUp = !followUp"
+      />
       <UButton
         v-if="filtered"
         icon="i-lucide-rotate-ccw"
@@ -242,6 +345,15 @@ async function doDelete() {
             @click="view = 'kanban'"
           />
         </UFieldGroup>
+        <UButton
+          v-if="pro"
+          icon="i-lucide-download"
+          color="neutral"
+          variant="outline"
+          :aria-label="t('table.export')"
+          :disabled="!applications?.length"
+          @click="exportCsv"
+        />
         <UButton icon="i-lucide-plus" :label="t('common.add')" @click="openForm()" />
       </div>
     </div>
@@ -253,9 +365,42 @@ async function doDelete() {
       @move="setStatus"
       @edit="openForm"
     />
+    <div
+      v-if="view === 'table' && selected.length"
+      class="flex flex-wrap items-center gap-2 rounded-lg border border-default bg-elevated px-3 py-2"
+    >
+      <span class="text-sm">{{ t('table.selected', selected.length) }}</span>
+      <UDropdownMenu :items="selectedStatusMenu">
+        <UButton
+          color="neutral"
+          variant="outline"
+          size="sm"
+          trailing-icon="i-lucide-chevron-down"
+          :label="t('table.batchStatus')"
+        />
+      </UDropdownMenu>
+      <UButton
+        color="error"
+        variant="soft"
+        size="sm"
+        icon="i-lucide-trash-2"
+        :label="t('common.delete')"
+        @click="askDeleteSelected"
+      />
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        class="ml-auto"
+        :label="t('common.cancel')"
+        @click="selection = {}"
+      />
+    </div>
     <UTable
-      v-else
+      v-if="view === 'table'"
       v-model:sorting="sorting"
+      v-model:row-selection="selection"
+      :get-row-id="(row: Application) => row.id"
       :data="applications ?? []"
       :columns="columns"
       :loading="loadStatus === 'pending'"
@@ -347,7 +492,7 @@ async function doDelete() {
     <ConfirmModal
       v-model:open="confirmOpen"
       :title="t('delete.title')"
-      :message="t('delete.message', { company: deleting?.company ?? '' })"
+      :message="deleting?.message ?? ''"
       :confirm-label="t('common.delete')"
       @confirm="doDelete"
     />

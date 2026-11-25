@@ -65,7 +65,13 @@
     "changeStatus": "Statut",
     "sortBy": "Trier par",
     "filterBy": "Filtrer par",
-    "reset": "Réinitialiser"
+    "reset": "Réinitialiser",
+    "followUp": "À relancer",
+    "export": "Exporter en CSV",
+    "select": "Sélectionner",
+    "selectAll": "Tout sélectionner",
+    "selected": "{n} sélectionnée | {n} sélectionnées",
+    "batchStatus": "Changer le statut"
   },
   "view": {
     "table": "Tableau",
@@ -110,6 +116,7 @@
   "delete": {
     "title": "Supprimer",
     "message": "Supprimer {company} ? Irréversible.",
+    "messageMany": "Supprimer {n} candidature ? Irréversible. | Supprimer {n} candidatures ? Irréversible.",
     "done": "Supprimée"
   },
   "settings": {
