@@ -101,6 +101,7 @@
   },
   "settings": {
     "title": "Réglages",
+    "appearance": "Apparence",
     "colorMode": "Mode",
     "theme": "Thème",
     "themes": {
@@ -115,7 +116,6 @@
     "tokens": "Jetons d'accès",
     "tokensHelp": "Pour le CLI et le MCP.",
     "name": "Nom",
-    "kind": "Type",
     "kinds": {
       "session": "Session",
       "api": "API",

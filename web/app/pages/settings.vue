@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
 import type { Token, TokenInput, TokenResult } from '~/types/items';
 
 const { t } = useI18n();
@@ -13,21 +12,12 @@ const mode = computed({
 });
 
 const modes = ['light', 'dark', 'system'] as const;
-const modeItems = modes.map((value) => ({ value, label: t(`settings.${value}`) }));
+const modeIcons = { light: 'i-lucide-sun', dark: 'i-lucide-moon', system: 'i-lucide-monitor' };
+const modeItems = modes.map((value) => ({ value, label: t(`settings.${value}`), icon: modeIcons[value] }));
 
 const { data: tokens, refresh } = await useAsyncData('tokens', () => api<Token[]>('/api/tokens'));
 
 const when = (v?: string) => (v ? new Date(v).toLocaleDateString('fr-FR') : t('settings.never'));
-const columns = computed<TableColumn<Token>[]>(() => [
-  { accessorKey: 'name', header: t('settings.name') },
-  { accessorKey: 'kind', header: t('settings.kind') },
-  { accessorKey: 'read_only', header: t('settings.readOnly') },
-  { accessorKey: 'created_at', header: t('settings.createdAt') },
-  { accessorKey: 'last_used_at', header: t('settings.lastUsedAt') },
-  { accessorKey: 'expires_at', header: t('settings.expiresAt') },
-  { id: 'actions', header: () => h('span', { class: 'sr-only' }, t('table.actions')) },
-]);
-
 const expiryItems = (['7d', '30d', '90d', '1y', 'never'] as const).map((value) => ({
   value,
   label: t(`settings.expiry.${value}`),
@@ -75,76 +65,114 @@ async function revoke() {
 </script>
 
 <template>
-  <div class="space-y-8">
+  <div class="max-w-3xl space-y-10">
     <h1 class="text-xl font-semibold">{{ t('settings.title') }}</h1>
 
-    <section class="space-y-3">
-      <h2 class="font-medium">{{ t('settings.theme') }}</h2>
-      <div class="grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-        <ThemePreview
-          v-for="item in themes"
-          :key="item.id"
-          :theme="item"
-          :active="theme === item.id"
-          @click="theme = item.id"
-        />
-      </div>
-      <h2 class="pt-2 font-medium">{{ t('settings.colorMode') }}</h2>
-      <USelect v-model="mode" :items="modeItems" :aria-label="t('settings.colorMode')" class="w-48" />
-    </section>
-
-    <section class="space-y-4">
-      <div>
-        <h2 class="font-medium">{{ t('settings.tokens') }}</h2>
-        <p class="text-sm text-muted">{{ t('settings.tokensHelp') }}</p>
-      </div>
-
-      <UForm :state="form" class="flex flex-wrap items-end gap-3" @submit="create">
-        <UFormField :label="t('settings.name')" name="name" required>
-          <UInput v-model="form.name" required />
-        </UFormField>
-        <UFormField :label="t('settings.expiresIn')" name="expires_in">
-          <USelect v-model="form.expires_in" :items="expiryItems" class="w-40" />
-        </UFormField>
-        <UCheckbox v-model="form.read_only" :label="t('settings.readOnly')" class="pb-2" />
-        <UButton type="submit" icon="i-lucide-plus" :loading="creating" :label="t('settings.create')" />
-      </UForm>
-
-      <UAlert
-        v-if="created"
-        color="warning"
-        variant="subtle"
-        icon="i-lucide-key-round"
-        :title="t('settings.newToken')"
-        :description="t('settings.tokenOnce')"
-      >
-        <template #actions>
-          <code class="break-all rounded bg-elevated px-2 py-1 text-sm">{{ created }}</code>
-          <UButton icon="i-lucide-copy" :label="t('settings.copy')" color="neutral" @click="copyToken" />
-        </template>
-      </UAlert>
-
-      <UTable :data="tokens ?? []" :columns="columns">
-        <template #empty>{{ t('settings.noTokens') }}</template>
-        <template #kind-cell="{ row }">{{ t(`settings.kinds.${row.original.kind}`) }}</template>
-        <template #read_only-cell="{ row }">
-          <UIcon v-if="row.original.read_only" name="i-lucide-check" :aria-label="t('settings.readOnly')" />
-        </template>
-        <template #created_at-cell="{ row }">{{ when(row.original.created_at) }}</template>
-        <template #last_used_at-cell="{ row }">{{ when(row.original.last_used_at) }}</template>
-        <template #expires_at-cell="{ row }">{{ when(row.original.expires_at) }}</template>
-        <template #actions-cell="{ row }">
-          <div class="flex justify-end">
-            <UButton
-              icon="i-lucide-trash-2"
-              color="error"
-              variant="ghost"
-              :aria-label="t('settings.revoke')"
-              @click="askRevoke(row.original)"
+    <section>
+      <h2 class="mb-3 text-sm font-semibold">{{ t('settings.appearance') }}</h2>
+      <ul class="divide-y divide-default rounded-lg border border-default">
+        <li class="px-4 py-3">
+          <p class="mb-3 text-sm">{{ t('settings.theme') }}</p>
+          <div class="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3">
+            <ThemePreview
+              v-for="item in themes"
+              :key="item.id"
+              :theme="item"
+              :active="theme === item.id"
+              @click="theme = item.id"
             />
           </div>
-        </template>
-      </UTable>
+        </li>
+        <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <p class="flex-1 basis-48 text-sm">{{ t('settings.colorMode') }}</p>
+          <UTabs
+            v-model="mode"
+            :items="modeItems"
+            :content="false"
+            size="sm"
+            :ui="{ label: 'max-sm:sr-only' }"
+            :aria-label="t('settings.colorMode')"
+          />
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="mb-1 text-sm font-semibold">{{ t('settings.tokens') }}</h2>
+      <p class="mb-3 text-xs text-muted">{{ t('settings.tokensHelp') }}</p>
+
+      <form class="flex flex-wrap items-end gap-4" @submit.prevent="create">
+        <UFormField :label="t('settings.name')">
+          <UInput v-model="form.name" class="w-56" />
+        </UFormField>
+        <UFormField :label="t('settings.expiresIn')">
+          <USelect v-model="form.expires_in" :items="expiryItems" class="w-40" />
+        </UFormField>
+        <UCheckbox v-model="form.read_only" :label="t('settings.readOnly')" class="mb-2" />
+        <UButton
+          type="submit"
+          icon="i-lucide-key-round"
+          color="neutral"
+          variant="outline"
+          :loading="creating"
+          :disabled="!form.name.trim()"
+          :label="t('settings.create')"
+        />
+      </form>
+
+      <div v-if="created" class="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-default px-4 py-2">
+        <span class="text-xs text-muted">{{ t('settings.tokenOnce') }}</span>
+        <UInput
+          :model-value="created"
+          readonly
+          size="sm"
+          class="min-w-0 flex-1 basis-64 font-mono"
+          :aria-label="t('settings.newToken')"
+        >
+          <template #trailing>
+            <UButton
+              icon="i-lucide-copy"
+              :aria-label="t('settings.copy')"
+              color="neutral"
+              variant="link"
+              size="sm"
+              @click="copyToken"
+            />
+          </template>
+        </UInput>
+      </div>
+
+      <ul v-if="tokens?.length" class="mt-3 divide-y divide-default rounded-lg border border-default">
+        <li v-for="token in tokens" :key="token.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
+          <UIcon name="i-lucide-key-round" class="size-4 shrink-0 text-muted" />
+          <div class="min-w-0 flex-1 basis-48">
+            <p class="flex min-w-0 items-center gap-2 text-sm">
+              <span class="truncate">{{ token.name }}</span>
+              <UBadge :label="t(`settings.kinds.${token.kind}`)" size="sm" color="neutral" variant="subtle" />
+              <UBadge
+                v-if="token.read_only"
+                :label="t('settings.readOnly')"
+                size="sm"
+                color="neutral"
+                variant="subtle"
+              />
+            </p>
+            <p class="text-xs text-muted">
+              {{ t('settings.createdAt') }} {{ when(token.created_at) }} · {{ t('settings.lastUsedAt') }}
+              {{ when(token.last_used_at) }} · {{ t('settings.expiresAt') }} {{ when(token.expires_at) }}
+            </p>
+          </div>
+          <UButton
+            icon="i-lucide-trash-2"
+            :label="t('settings.revoke')"
+            :ui="{ label: 'max-sm:sr-only' }"
+            color="neutral"
+            variant="ghost"
+            @click="askRevoke(token)"
+          />
+        </li>
+      </ul>
+      <p v-else-if="tokens" class="mt-3 text-xs text-muted">{{ t('settings.noTokens') }}</p>
     </section>
 
     <ConfirmModal
