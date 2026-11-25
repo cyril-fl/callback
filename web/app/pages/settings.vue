@@ -29,6 +29,25 @@ const { data: tokens, refresh } = await useAsyncData('tokens', () => api<Token[]
 const { data: trash, refresh: refreshTrash } = await useAsyncData('trash', () =>
   api<DeletedApplication[]>('/api/applications/deleted'),
 );
+// One application from its row, or the whole trash.
+const forgetting = ref<{ body: { ids: string[] } | { all: true }; message: string }>();
+const forgetOpen = ref(false);
+function askForget(deleted?: DeletedApplication) {
+  forgetting.value = deleted
+    ? { body: { ids: [deleted.id] }, message: t('settings.forgetMessage', { company: deleted.application.company }) }
+    : { body: { all: true }, message: t('settings.emptyTrashMessage', trash.value?.length ?? 0) };
+  forgetOpen.value = true;
+}
+async function forget() {
+  if (!forgetting.value) return;
+  try {
+    await api('/api/applications/deleted', { method: 'DELETE', body: forgetting.value.body });
+  } catch {
+    // useApi already toasted.
+  } finally {
+    await refreshTrash();
+  }
+}
 async function restore(deleted: DeletedApplication) {
   try {
     await api('/api/applications/restore', { method: 'POST', body: { ids: [deleted.id] } });
@@ -214,7 +233,17 @@ async function revoke() {
     </section>
 
     <section>
-      <h2 class="mb-3 text-sm font-semibold">{{ t('settings.trash') }}</h2>
+      <div class="mb-3 flex items-center justify-between gap-4">
+        <h2 class="text-sm font-semibold">{{ t('settings.trash') }}</h2>
+        <UButton
+          v-if="trash?.length"
+          :label="t('settings.emptyTrash')"
+          color="error"
+          variant="ghost"
+          size="sm"
+          @click="askForget()"
+        />
+      </div>
       <ul class="divide-y divide-default rounded-lg border border-default">
         <li class="flex flex-wrap items-center gap-4 px-4 py-3">
           <div class="flex-1 basis-48">
@@ -246,6 +275,13 @@ async function revoke() {
             color="neutral"
             variant="ghost"
             @click="restore(deleted)"
+          />
+          <UButton
+            icon="i-lucide-trash-2"
+            :aria-label="t('settings.forget')"
+            color="error"
+            variant="ghost"
+            @click="askForget(deleted)"
           />
         </li>
         <li v-if="trash && !trash.length" class="px-4 py-3 text-xs text-muted">{{ t('settings.trashEmpty') }}</li>
@@ -341,6 +377,13 @@ async function revoke() {
       </div>
     </section>
 
+    <ConfirmModal
+      v-model:open="forgetOpen"
+      :title="forgetting && 'all' in forgetting.body ? t('settings.emptyTrash') : t('settings.forget')"
+      :message="forgetting?.message ?? ''"
+      :confirm-label="t('common.delete')"
+      @confirm="forget"
+    />
     <ConfirmModal
       v-model:open="purgeOpen"
       :title="t('settings.purge')"

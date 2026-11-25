@@ -212,6 +212,10 @@
     "trashEmpty": "La corbeille est vide",
     "deletedAt": "Supprimée le",
     "restore": "Restaurer",
-    "restored": "{company} restaurée"
+    "restored": "{company} restaurée",
+    "forget": "Supprimer définitivement",
+    "forgetMessage": "{company} et son historique sont supprimés pour de bon.",
+    "emptyTrash": "Vider la corbeille",
+    "emptyTrashMessage": "La candidature de la corbeille et son historique sont supprimés pour de bon. | Les {n} candidatures de la corbeille et leur historique sont supprimés pour de bon."
   }
 }
