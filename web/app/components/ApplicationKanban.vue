@@ -27,12 +27,6 @@ const sourceIcon: Record<string, string> = {
   recruiter: 'i-lucide-user-round',
 };
 
-// The board reaches the bottom of the window, each column scrolls inside: its height is the room left below it.
-const board = useTemplateRef('board');
-const { top } = useElementBounding(board);
-const { height: windowHeight } = useWindowSize();
-const height = computed(() => `${Math.max(320, windowHeight.value - top.value - 24)}px`);
-
 // A drag moves a card to another column; a click opens it. The form changes the status from the keyboard.
 const dragged = ref<Application>();
 const over = ref<Status>();
@@ -48,11 +42,11 @@ const day = (v?: string) =>
 </script>
 
 <template>
-  <div ref="board" class="flex gap-3 overflow-x-auto pb-1" :style="{ height }">
+  <div class="flex min-h-80 flex-1 gap-3 overflow-x-auto pb-1">
     <section
       v-for="column in columns"
       :key="column.status"
-      class="flex w-72 min-w-64 flex-1 shrink-0 flex-col rounded-xl bg-elevated/60 ring-1 transition-colors ring-inset"
+      class="flex min-w-52 flex-1 shrink-0 flex-col rounded-xl bg-elevated/60 ring-1 transition-colors ring-inset"
       :class="over === column.status ? 'bg-primary/5 ring-primary' : 'ring-default'"
       :aria-label="t(`status.${column.status}`)"
       @dragover.prevent="over = column.status"

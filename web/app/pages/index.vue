@@ -12,6 +12,8 @@ const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
 const defaultSorting = [{ id: 'applied_at', desc: true }];
 const sorting = ref<{ id: string; desc: boolean }[]>([...defaultSorting]);
+// On the kanban the page is the window's height (less the layout's header, h-14 and its border, and its padding,
+// py-6): the board takes what is left and its columns scroll inside.
 const view = useLocalStorage<'table' | 'kanban'>('callback-view', 'table');
 
 const filtered = computed(
@@ -205,7 +207,7 @@ async function doDelete() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="flex flex-col gap-6" :class="view === 'kanban' ? 'h-[calc(100dvh-3.5rem-1px-3rem)]' : ''">
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       <UCard v-for="s in STATUSES" :key="s">
         <p class="text-sm text-muted">{{ t(`status.${s}`) }}</p>
