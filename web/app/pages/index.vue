@@ -250,7 +250,7 @@ async function doDelete() {
             @click="view = 'kanban'"
           />
         </UFieldGroup>
-        <UButton icon="i-lucide-plus" :label="t('form.add')" @click="openForm()" />
+        <UButton icon="i-lucide-plus" :label="t('common.add')" @click="openForm()" />
       </div>
     </div>
 

@@ -1,17 +1,20 @@
 {
-  "app": { "name": "Callback" },
+  "app": {
+    "name": "Callback"
+  },
   "api": {
-    "down": "Le serveur ne répond pas.",
-    "failed": "La requête a échoué."
+    "down": "Serveur injoignable",
+    "failed": "Échec de la requête"
   },
   "common": {
+    "add": "Ajouter",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "edit": "Modifier",
     "close": "Fermer",
     "all": "Tous",
-    "empty": "Aucune candidature."
+    "empty": "Aucune candidature"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -24,7 +27,7 @@
     "submit": "Se connecter"
   },
   "status": {
-    "applied": "Candidature envoyée",
+    "applied": "Envoyée",
     "responded": "Réponse reçue",
     "interview": "Entretien",
     "offer": "Offre",
@@ -45,86 +48,100 @@
     "source": "Source",
     "status": "Statut",
     "rating": "Note",
-    "appliedAt": "Candidature",
+    "appliedAt": "Date",
     "actions": "Actions",
     "created": "Créée le {date}",
     "updated": "Modifiée le {date}",
     "search": "Rechercher",
     "stars": "{n} sur 5",
-    "changeStatus": "Changer le statut",
+    "changeStatus": "Statut",
     "sortBy": "Trier par",
     "filterBy": "Filtrer par",
     "reset": "Réinitialiser"
   },
   "view": {
-    "table": "Vue tableau",
-    "kanban": "Vue kanban"
+    "table": "Tableau",
+    "kanban": "Kanban"
   },
   "kanban": {
-    "dropHere": "Glissez une candidature ici"
+    "dropHere": "Déposer ici"
   },
   "form": {
-    "add": "Ajouter une candidature",
-    "edit": "Modifier la candidature",
+    "add": "Nouvelle candidature",
+    "edit": "Modifier",
     "company": "Entreprise",
     "location": "Lieu",
     "city": "Ville",
     "country": "Pays",
     "street": "Adresse",
     "postalCode": "Code postal",
-    "fullAddress": "Ajouter l'adresse complète",
-    "website": "Site web ou e-mail",
+    "fullAddress": "Adresse complète",
+    "website": "Site ou e-mail",
     "source": "Source",
-    "sourceUrl": "URL de l'offre",
-    "sourceEmail": "E-mail du recruteur",
-    "sourceHelp": "Choisissez-en une ou tapez un nom pour en créer une (Facebook, agence intérim…).",
+    "sourceUrl": "Lien de l'offre",
+    "sourceEmail": "E-mail",
     "sourceOther": "Détail",
-    "sourceOtherHint": "Contact, lien, référence…",
-    "pickDate": "Choisir une date",
+    "sourceOtherHint": "Contact, lien…",
+    "pickDate": "Calendrier",
     "status": "Statut",
     "rating": "Note",
     "comment": "Commentaire",
-    "appliedAt": "Date de candidature",
-    "required": "Champ requis",
+    "appliedAt": "Date",
+    "required": "Requis",
     "invalidUrl": "URL invalide",
     "invalidEmail": "E-mail invalide",
-    "invalidWebsite": "Une URL (https://…) ou un e-mail",
-    "failed": "Ligne refusée : {error}",
-    "saved": "Candidature enregistrée"
+    "invalidWebsite": "URL ou e-mail",
+    "failed": "Refusée : {error}",
+    "saved": "Enregistrée"
   },
   "delete": {
-    "title": "Supprimer la candidature",
-    "message": "Supprimer la candidature chez {company} ? Cette action est définitive.",
-    "done": "Candidature supprimée"
+    "title": "Supprimer",
+    "message": "Supprimer {company} ? Irréversible.",
+    "done": "Supprimée"
   },
   "settings": {
     "title": "Réglages",
     "colorMode": "Mode",
     "theme": "Thème",
-    "themes": { "pink": "Rose", "lilac": "Lilas", "blue": "Bleu", "green": "Vert" },
+    "themes": {
+      "pink": "Rose",
+      "lilac": "Lilas",
+      "blue": "Bleu",
+      "green": "Vert"
+    },
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système",
     "tokens": "Jetons d'accès",
-    "tokensHelp": "Jetons d'API et connexions OAuth (CLI, MCP).",
+    "tokensHelp": "Pour le CLI et le MCP.",
     "name": "Nom",
     "kind": "Type",
-    "kinds": { "session": "Session", "api": "API", "oauth": "OAuth" },
+    "kinds": {
+      "session": "Session",
+      "api": "API",
+      "oauth": "OAuth"
+    },
     "readOnly": "Lecture seule",
     "createdAt": "Créé le",
-    "lastUsedAt": "Dernier usage",
+    "lastUsedAt": "Utilisé le",
     "expiresAt": "Expire le",
     "never": "Jamais",
     "newToken": "Nouveau jeton",
     "expiresIn": "Expiration",
-    "expiry": { "7d": "7 jours", "30d": "30 jours", "90d": "90 jours", "1y": "1 an", "never": "Jamais" },
+    "expiry": {
+      "7d": "7 jours",
+      "30d": "30 jours",
+      "90d": "90 jours",
+      "1y": "1 an",
+      "never": "Jamais"
+    },
     "create": "Créer",
-    "tokenOnce": "Copiez ce jeton maintenant : il ne sera plus affiché.",
+    "tokenOnce": "Copiez-le, il ne sera plus affiché.",
     "copy": "Copier",
     "copied": "Copié",
     "revoke": "Révoquer",
-    "revokeTitle": "Révoquer le jeton",
-    "revokeMessage": "Révoquer « {name} » ? Les clients qui l'utilisent perdront l'accès.",
-    "noTokens": "Aucun jeton."
+    "revokeTitle": "Révoquer",
+    "revokeMessage": "Révoquer « {name} » ?",
+    "noTokens": "Aucun jeton"
   }
 }

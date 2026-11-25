@@ -127,14 +127,19 @@ async function submit() {
 </script>
 
 <template>
-  <USlideover v-model:open="open" :title="application ? t('form.edit') : t('form.add')" :description="t('app.name')">
+  <USlideover
+    v-model:open="open"
+    :title="application ? t('form.edit') : t('form.add')"
+    :description="application ? t('form.edit') : t('form.add')"
+    :ui="{ description: 'sr-only' }"
+  >
     <template #body>
       <UForm id="application-form" :schema="schema" :state="state" class="space-y-4" @submit="submit">
         <UFormField name="company" :label="t('form.company')" required>
           <UInput v-model="state.company" class="w-full" />
         </UFormField>
         <UFormField name="website" :label="t('form.website')">
-          <UInput v-model="state.website" placeholder="https://… ou contact@…" class="w-full" />
+          <UInput v-model="state.website" placeholder="https://" class="w-full" />
         </UFormField>
 
         <div class="grid grid-cols-2 gap-3">
@@ -164,7 +169,7 @@ async function submit() {
           @click="fullAddress = true"
         />
 
-        <UFormField name="source" :label="t('form.source')" :help="t('form.sourceHelp')">
+        <UFormField name="source" :label="t('form.source')">
           <UInputMenu
             v-model="state.source"
             :items="sourceItems"
