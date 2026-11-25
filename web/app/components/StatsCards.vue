@@ -7,14 +7,16 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
     <UCard v-for="s in STATUSES" :key="s">
       <p class="text-sm text-muted">{{ t(`status.${s}`) }}</p>
       <p class="text-2xl font-semibold">{{ stats?.by_status[s] ?? 0 }}</p>
     </UCard>
     <UCard>
       <p class="text-sm text-muted">{{ t('stats.responseRate') }}</p>
-      <p class="text-2xl font-semibold">{{ stats?.response_rate === undefined ? '—' : `${Math.round(stats.response_rate * 100)} %` }}</p>
+      <p class="text-2xl font-semibold">
+        {{ stats?.response_rate === undefined ? '—' : `${Math.round(stats.response_rate * 100)} %` }}
+      </p>
     </UCard>
   </div>
 </template>

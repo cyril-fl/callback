@@ -79,7 +79,7 @@ func (p *run) count() {
 		stats.ByStatus[row.Status] += row.Count
 		stats.BySource[row.Source] += row.Count
 		stats.Total += row.Count
-		if row.Status != domain.StatusApplied {
+		if row.Status.Answered() {
 			responded[row.Source] += row.Count
 		}
 	}
@@ -87,7 +87,7 @@ func (p *run) count() {
 		stats.ResponseRateBySource[source] = float64(responded[source]) / float64(count)
 	}
 	if stats.Total > 0 {
-		rate := float64(stats.Total-stats.ByStatus[domain.StatusApplied]) / float64(stats.Total)
+		rate := float64(stats.Total-stats.ByStatus[domain.StatusApplied]-stats.ByStatus[domain.StatusNoReply]) / float64(stats.Total)
 		stats.ResponseRate = &rate
 	}
 	p.cache.result = stats

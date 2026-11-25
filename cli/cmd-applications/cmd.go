@@ -232,7 +232,7 @@ func Stats(cobra *cobra.Command, _ []string) error {
 		return output.JSON(stats)
 	}
 	rows := [][]string{}
-	for _, status := range []string{"applied", "responded", "interview", "offer", "rejected"} {
+	for _, status := range []string{"applied", "responded", "interview", "offer", "rejected", "no_reply"} {
 		rows = append(rows, []string{status, strconv.Itoa(stats.ByStatus[status])})
 	}
 	rate := "-"

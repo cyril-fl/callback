@@ -87,7 +87,7 @@ func TestAddTools(t *testing.T) {
 func TestInstructions(t *testing.T) {
 	for _, readOnly := range []bool{false, true} {
 		tools, instructions := announced(t, readOnly)
-		known := map[string]bool{"job_post": true, "source_detail": true, "interview_at": true} // values and columns, not arguments
+		known := map[string]bool{"job_post": true, "source_detail": true, "interview_at": true, "no_reply": true} // values and columns, not arguments
 		for _, tool := range tools {
 			known[tool.Name] = true
 			properties, _ := tool.InputSchema.(map[string]any)["properties"].(map[string]any)

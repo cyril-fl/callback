@@ -2,7 +2,7 @@
 // shortcut: every application and status change is read, API routes once there are thousands.
 import { parseDate, startOfWeek, type CalendarDate } from '@internationalized/date';
 import type { Application, Stats, Status, StatusChange } from '../types/items';
-import { STATUSES } from '../types/items';
+import { STATUSES, answered } from '../types/items';
 
 /** The applications applied on since (a day, '' for all) in city ('all' for every one). */
 export function inPeriod(applications: Application[], since: string, city: string) {
@@ -18,11 +18,19 @@ export function statsOf(applications: Application[]): Stats {
     by_status[a.status ?? 'applied']++;
     const source = a.source ?? 'spontaneous';
     by_source[source] = (by_source[source] ?? 0) + 1;
-    if ((a.status ?? 'applied') !== 'applied') responded[source] = (responded[source] ?? 0) + 1;
+    if (answered(a.status)) responded[source] = (responded[source] ?? 0) + 1;
   }
-  const response_rate_by_source = Object.fromEntries(Object.entries(by_source).map(([s, n]) => [s, (responded[s] ?? 0) / n]));
+  const response_rate_by_source = Object.fromEntries(
+    Object.entries(by_source).map(([s, n]) => [s, (responded[s] ?? 0) / n]),
+  );
   const total = applications.length;
-  return { total, by_status, by_source, response_rate: total ? (total - by_status.applied) / total : undefined, response_rate_by_source };
+  return {
+    total,
+    by_status,
+    by_source,
+    response_rate: total ? (total - by_status.applied - by_status.no_reply) / total : undefined,
+    response_rate_by_source,
+  };
 }
 
 /** The values and how many times each comes, the most first, top of them. */
@@ -50,13 +58,13 @@ export function weeksOf(days: string[], since: string, today: CalendarDate) {
   return weeks;
 }
 
-/** The share in percent of each source's applications that got past applied, the best first. */
+/** The share in percent of each source's applications that got an answer, the best first. */
 export function responseRates(applications: Application[], label: (source?: string) => string, top = 8) {
   const totals = new Map<string, { all: number; answered: number }>();
   for (const a of applications) {
     const total = totals.get(label(a.source)) ?? { all: 0, answered: 0 };
     total.all++;
-    if (a.status !== 'applied') total.answered++;
+    if (answered(a.status)) total.answered++;
     totals.set(label(a.source), total);
   }
   return [...totals]
@@ -84,26 +92,34 @@ export function funnelOf(history: Map<string, StatusChange[]>) {
   }));
 }
 
-/** The days from applying to the first status past applied, on average over the applications that got one. */
+/** The days from applying to the first answer, on average over the applications that got one. */
 export function averageDaysToResponse(applications: Application[], history: Map<string, StatusChange[]>) {
   const delays = applications.flatMap((a) => {
-    const first = history.get(a.id)?.find((c) => c.status !== 'applied');
+    const first = history.get(a.id)?.find((c) => answered(c.status));
     if (!first || !a.applied_at) return [];
     return [Math.max(0, (new Date(first.at).getTime() - new Date(`${a.applied_at}T00:00:00`).getTime()) / 86_400_000)];
   });
   return delays.length ? Math.round((delays.reduce((n, d) => n + d, 0) / delays.length) * 10) / 10 : undefined;
 }
 
-/** The last news of an application: its last status change or follow-up, as the server's untouched_since. */
+/** The last news of an application: its last status change, follow-up or interview (past or to come), as the server's
+ * untouched_since. */
 export function lastNews(a: Application, history: Map<string, StatusChange[]>) {
-  const dates = [...(history.get(a.id) ?? []).map((c) => c.at), a.followed_up_at ?? a.applied_at ?? a.created_at ?? ''];
+  const dates = [
+    ...(history.get(a.id) ?? []).map((c) => c.at),
+    a.followed_up_at ?? a.applied_at ?? a.created_at ?? '',
+    ...(a.interview_at ? [a.interview_at] : []),
+  ];
   return dates.reduce((last, d) => (new Date(d) > new Date(last) ? d : last));
 }
 
-/** Applied or responded and without news since limit, as the list's « À relancer »: the oldest news first. */
+/** The statuses that wait on the employer: an application in one of them and without news is to follow up. */
+export const FOLLOW_UP_STATUSES: Status[] = ['applied', 'responded', 'interview'];
+
+/** Waiting on the employer and without news since limit, as the list's « À relancer »: the oldest news first. */
 export function toFollowUp(applications: Application[], history: Map<string, StatusChange[]>, limit: Date) {
   return applications
-    .filter((a) => a.status === 'applied' || a.status === 'responded')
+    .filter((a) => FOLLOW_UP_STATUSES.includes(a.status ?? 'applied'))
     .map((a) => ({ ...a, news: lastNews(a, history) }))
     .filter((a) => new Date(a.news) < limit)
     .sort((a, b) => new Date(a.news).getTime() - new Date(b.news).getTime());
@@ -116,8 +132,9 @@ export function upcomingInterviews(applications: Application[], now: Date) {
     .sort((a, b) => a.interview_at!.localeCompare(b.interview_at!));
 }
 
-/** Applied or responded and neither followed up nor applied since the follow-up delay started (a YYYY-MM-DD day): the
- * follow-up button shows. Never followed up, the delay runs from the day it applied. */
+/** Waiting on the employer and neither followed up, applied nor interviewed since the follow-up delay started (a
+ * YYYY-MM-DD day): the follow-up button shows. Never followed up, the delay runs from the day it applied. */
 export const canFollowUp = (a: Application, since: string) =>
-  (a.status === 'applied' || a.status === 'responded') &&
-  (a.followed_up_at ?? a.applied_at ?? a.created_at ?? '').slice(0, 10) < since;
+  FOLLOW_UP_STATUSES.includes(a.status ?? 'applied') &&
+  (a.followed_up_at ?? a.applied_at ?? a.created_at ?? '').slice(0, 10) < since &&
+  (a.interview_at ?? '').slice(0, 10) < since;

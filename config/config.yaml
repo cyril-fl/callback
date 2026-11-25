@@ -100,7 +100,7 @@ commands:
         usage: "The job post's URL for job_post, the recruiter's e-mail for recruiter, free text for another source"
       - name: "status"
         type: "string"
-        usage: "applied (default), responded, interview, offer or rejected"
+        usage: "applied (default), responded, interview, offer, rejected or no_reply"
       - name: "rating"
         type: "int"
         usage: "Rating, 0 to 5"

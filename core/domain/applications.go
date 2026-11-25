@@ -38,9 +38,18 @@ const (
 	StatusInterview Status = "interview"
 	StatusOffer     Status = "offer"
 	StatusRejected  Status = "rejected"
+	// StatusNoReply is an application nobody answered: the server moves a waiting one there once it waited long enough.
+	StatusNoReply Status = "no_reply"
 )
 
-var Statuses = []Status{StatusApplied, StatusResponded, StatusInterview, StatusOffer, StatusRejected}
+var Statuses = []Status{StatusApplied, StatusResponded, StatusInterview, StatusOffer, StatusRejected, StatusNoReply}
+
+// Waiting are the statuses that wait on the employer: an application in one of them and without news is to follow up,
+// then no_reply.
+var Waiting = []Status{StatusApplied, StatusResponded, StatusInterview}
+
+// Answered tells that the employer replied: any status but applied, and no_reply.
+func (s Status) Answered() bool { return s != StatusApplied && s != StatusNoReply }
 
 // DateLayout is the layout of applied_at and of the date filters.
 const DateLayout = time.DateOnly
@@ -61,7 +70,7 @@ var (
 	ErrInvalidWebsite   = Invalid("website must be an http(s) URL or an e-mail")
 	ErrInvalidSource    = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
 	ErrInvalidDetail    = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
-	ErrInvalidStatus    = Invalid("status must be one of applied, responded, interview, offer, rejected")
+	ErrInvalidStatus    = Invalid("status must be one of applied, responded, interview, offer, rejected, no_reply")
 	ErrInvalidRating    = Invalid("rating must be between 0 and 5")
 	ErrInvalidDate      = Invalid("dates must look like 2026-01-31")
 	ErrInvalidInterview = Invalid("interview_at must look like 2026-01-31T14:30")
@@ -85,7 +94,7 @@ type Application struct {
 	Website      string `bun:",notnull" json:"website,omitempty" binding:"optional"`
 	Source       Source `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail string `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
-	Status       Status `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Status       Status `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected,no_reply"`
 	Rating       int    `bun:",notnull" json:"rating,omitempty" binding:"optional"`
 	Comment      string `bun:",notnull" json:"comment,omitempty" binding:"optional"`
 	AppliedAt    string `bun:",notnull" json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
@@ -233,7 +242,7 @@ type NewApplication struct {
 	Website      string `json:"website,omitempty" binding:"optional"`
 	Source       Source `json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail string `json:"source_detail,omitempty" binding:"optional"`
-	Status       Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Status       Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected,no_reply"`
 	Rating       int    `json:"rating,omitempty" binding:"optional"`
 	Comment      string `json:"comment,omitempty" binding:"optional"`
 	AppliedAt    string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
@@ -257,7 +266,7 @@ type Changes struct {
 	Website      *string `json:"website,omitempty" binding:"optional"`
 	Source       *Source `json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail *string `json:"source_detail,omitempty" binding:"optional"`
-	Status       *Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Status       *Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected,no_reply"`
 	Rating       *int    `json:"rating,omitempty" binding:"optional"`
 	Comment      *string `json:"comment,omitempty" binding:"optional"`
 	AppliedAt    *string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`

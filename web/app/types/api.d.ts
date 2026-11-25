@@ -18,7 +18,7 @@ export interface paths {
                     /** @description Applications by id, comma separated or repeated */
                     ids?: string[];
                     /** @description Any of these statuses */
-                    status?: ("applied" | "responded" | "interview" | "offer" | "rejected")[];
+                    status?: ("applied" | "responded" | "interview" | "offer" | "rejected" | "no_reply")[];
                     /** @description Source: spontaneous, job_post, recruiter or a name given by the user */
                     source?: string;
                     /** @description This city, whatever the case */
@@ -1209,7 +1209,7 @@ export interface components {
             /** @description Summary leaves the ids out of the result: the counts and failures only. */
             summary?: boolean;
             /**
-             * @description UntouchedSince is the applications without news since this day: no status change nor follow-up.
+             * @description UntouchedSince is the applications without news since this day: no status change, follow-up nor interview.
              * @example 2026-01-01
              */
             untouched_since?: string;
@@ -1333,6 +1333,7 @@ export interface components {
             default_country?: string;
             default_location?: string;
             follow_up_days?: number;
+            no_reply_days?: number;
             /** @enum {string} */
             plan?: "base" | "pro";
             trash_days?: number;
@@ -1343,13 +1344,18 @@ export interface components {
             default_location: string;
             /** @description FollowUpDays is how long an application waits without news before it is to follow up. */
             follow_up_days: number;
+            /**
+             * @description NoReplyDays is how long a waiting application stays without news (since its last follow-up, status change or
+             *     interview, else the day it applied) before the server moves it to no_reply; 0 never does.
+             */
+            no_reply_days: number;
             /** @enum {string} */
             plan: "base" | "pro";
             /** @description TrashDays is how long a deleted application can be restored, before it is gone with its history. */
             trash_days: number;
         };
         /** @enum {string} */
-        "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected";
+        "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected" | "no_reply";
         "domain.StatusChange": {
             application_id: string;
             at: string;
@@ -1449,7 +1455,7 @@ export interface components {
             /** @description Status is any of these statuses. */
             status?: components["schemas"]["domain.Status"][];
             /**
-             * @description UntouchedSince is the applications without news since this day: no status change nor follow-up.
+             * @description UntouchedSince is the applications without news since this day: no status change, follow-up nor interview.
              * @example 2026-01-01
              */
             untouched_since?: string;

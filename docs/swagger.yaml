@@ -92,7 +92,7 @@ components:
           type: boolean
         untouched_since:
           description: 'UntouchedSince is the applications without news since this
-            day: no status change nor follow-up.'
+            day: no status change, follow-up nor interview.'
           example: "2026-01-01"
           type: string
       type: object
@@ -340,6 +340,8 @@ components:
           type: string
         follow_up_days:
           type: integer
+        no_reply_days:
+          type: integer
         plan:
           enum:
           - base
@@ -360,6 +362,11 @@ components:
           description: FollowUpDays is how long an application waits without news
             before it is to follow up.
           type: integer
+        no_reply_days:
+          description: |-
+            NoReplyDays is how long a waiting application stays without news (since its last follow-up, status change or
+            interview, else the day it applied) before the server moves it to no_reply; 0 never does.
+          type: integer
         plan:
           enum:
           - base
@@ -373,6 +380,7 @@ components:
       - default_country
       - default_location
       - follow_up_days
+      - no_reply_days
       - plan
       - trash_days
       type: object
@@ -383,6 +391,7 @@ components:
       - interview
       - offer
       - rejected
+      - no_reply
       type: string
       x-enum-varnames:
       - StatusApplied
@@ -390,6 +399,7 @@ components:
       - StatusInterview
       - StatusOffer
       - StatusRejected
+      - StatusNoReply
     domain.StatusChange:
       properties:
         application_id:
@@ -609,7 +619,7 @@ components:
           uniqueItems: false
         untouched_since:
           description: 'UntouchedSince is the applications without news since this
-            day: no status change nor follow-up.'
+            day: no status change, follow-up nor interview.'
           example: "2026-01-01"
           type: string
       required:
@@ -683,6 +693,7 @@ paths:
             - interview
             - offer
             - rejected
+            - no_reply
             type: string
           type: array
         style: form

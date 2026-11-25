@@ -28,7 +28,7 @@ const schema = computed(() => {
       website: z.union([z.literal(''), z.url(), z.email()], { error: t('form.invalidWebsite') }),
       source: z.string().trim().min(1, t('form.required')).max(60),
       source_detail: z.string(),
-      status: z.enum(['applied', 'responded', 'interview', 'offer', 'rejected']),
+      status: z.enum(['applied', 'responded', 'interview', 'offer', 'rejected', 'no_reply']),
       rating: z.number().int().min(0).max(5),
       comment: z.string(),
       applied_at: z.string().min(1, t('form.required')),

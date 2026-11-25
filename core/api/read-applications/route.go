@@ -18,7 +18,7 @@ import (
 // @Tags     applications
 // @Produce  json
 // @Param    ids             query []string false "Applications by id, comma separated or repeated" collectionFormat(csv)
-// @Param    status          query []string false "Any of these statuses" collectionFormat(csv) Enums(applied,responded,interview,offer,rejected)
+// @Param    status          query []string false "Any of these statuses" collectionFormat(csv) Enums(applied,responded,interview,offer,rejected,no_reply)
 // @Param    source          query string   false "Source: spontaneous, job_post, recruiter or a name given by the user"
 // @Param    location        query string   false "This city, whatever the case"
 // @Param    q               query string   false "Text in company, address, website, source, contact or comment"

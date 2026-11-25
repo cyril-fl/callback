@@ -229,6 +229,21 @@ async function revoke() {
             @update:model-value="(v) => v && v !== preferences?.follow_up_days && save({ follow_up_days: v })"
           />
         </li>
+        <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <div class="flex-1 basis-48">
+            <p class="text-sm">{{ t('settings.noReply') }}</p>
+            <p class="text-xs text-muted">{{ t('settings.noReplyHelp') }}</p>
+          </div>
+          <UInputNumber
+            :model-value="preferences?.no_reply_days"
+            :min="0"
+            :max="365"
+            :format-options="{ style: 'unit', unit: 'day', unitDisplay: 'long' }"
+            :aria-label="t('settings.noReply')"
+            class="w-40"
+            @update:model-value="(v) => v != null && v !== preferences?.no_reply_days && save({ no_reply_days: v })"
+          />
+        </li>
         <li v-if="me?.version" class="flex flex-wrap items-center gap-4 px-4 py-3">
           <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.version') }}</p>
           <span class="font-mono text-xs text-muted">{{ me.version }}</span>

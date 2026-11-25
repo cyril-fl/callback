@@ -13,6 +13,7 @@ const (
 const (
 	MinFollowUpDays = 1
 	MaxFollowUpDays = 90
+	MaxNoReplyDays  = 365
 	MinTrashDays    = 1
 	MaxTrashDays    = 365
 )
@@ -20,6 +21,7 @@ const (
 var (
 	ErrInvalidPlan     = Invalid("plan is base or pro")
 	ErrInvalidFollowUp = Invalid("follow_up_days is between 1 and 90")
+	ErrInvalidNoReply  = Invalid("no_reply_days is between 0 and 365")
 	ErrInvalidTrash    = Invalid("trash_days is between 1 and 365")
 	ErrLongDefault     = Invalid("default_location and default_country have at most 200 characters")
 )
@@ -32,12 +34,15 @@ type Preferences struct {
 	DefaultCountry  string `json:"default_country"`
 	// FollowUpDays is how long an application waits without news before it is to follow up.
 	FollowUpDays int `json:"follow_up_days"`
+	// NoReplyDays is how long a waiting application stays without news (since its last follow-up, status change or
+	// interview, else the day it applied) before the server moves it to no_reply; 0 never does.
+	NoReplyDays int `json:"no_reply_days"`
 	// TrashDays is how long a deleted application can be restored, before it is gone with its history.
 	TrashDays int `json:"trash_days"`
 }
 
 // DefaultPreferences are the preferences of a base that never saved any.
-var DefaultPreferences = Preferences{Plan: PlanBase, FollowUpDays: 7, TrashDays: 30}
+var DefaultPreferences = Preferences{Plan: PlanBase, FollowUpDays: 7, NoReplyDays: 10, TrashDays: 30}
 
 // Validate checks preferences as they will be stored.
 func (p Preferences) Validate() error {
@@ -46,6 +51,8 @@ func (p Preferences) Validate() error {
 		return ErrInvalidPlan
 	case p.FollowUpDays < MinFollowUpDays || p.FollowUpDays > MaxFollowUpDays:
 		return ErrInvalidFollowUp
+	case p.NoReplyDays < 0 || p.NoReplyDays > MaxNoReplyDays:
+		return ErrInvalidNoReply
 	case p.TrashDays < MinTrashDays || p.TrashDays > MaxTrashDays:
 		return ErrInvalidTrash
 	case runes(p.DefaultLocation) > MaxShort || runes(p.DefaultCountry) > MaxShort:
@@ -60,6 +67,7 @@ type PreferenceChanges struct {
 	DefaultLocation *string `json:"default_location,omitempty" binding:"optional"`
 	DefaultCountry  *string `json:"default_country,omitempty" binding:"optional"`
 	FollowUpDays    *int    `json:"follow_up_days,omitempty" binding:"optional"`
+	NoReplyDays     *int    `json:"no_reply_days,omitempty" binding:"optional"`
 	TrashDays       *int    `json:"trash_days,omitempty" binding:"optional"`
 }
 
@@ -69,5 +77,6 @@ func (c PreferenceChanges) Apply(p *Preferences) {
 	set(&p.DefaultLocation, c.DefaultLocation)
 	set(&p.DefaultCountry, c.DefaultCountry)
 	set(&p.FollowUpDays, c.FollowUpDays)
+	set(&p.NoReplyDays, c.NoReplyDays)
 	set(&p.TrashDays, c.TrashDays)
 }

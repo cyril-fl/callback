@@ -44,8 +44,11 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 		}
 		if filter.UntouchedSince != "" {
 			since := filter.UntouchedTime()
+			// An interview on that day or after is news too, past or still to come: interview_at is a local
+			// "2026-01-31T14:30", which sorts after its day.
 			q = q.Where("(a.followed_up_at IS NULL OR a.followed_up_at < ?)", since).
-				Where("NOT EXISTS (SELECT 1 FROM status_changes WHERE application_id = a.id AND at >= ?)", since)
+				Where("NOT EXISTS (SELECT 1 FROM status_changes WHERE application_id = a.id AND at >= ?)", since).
+				Where("(a.interview_at IS NULL OR a.interview_at < ?)", filter.UntouchedSince)
 		}
 		return q
 	}

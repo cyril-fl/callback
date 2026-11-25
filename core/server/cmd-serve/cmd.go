@@ -16,12 +16,15 @@ import (
 
 	"github.com/cyril-fl/callback/core/api"
 	"github.com/cyril-fl/callback/core/api/services/guard"
+	"github.com/cyril-fl/callback/core/services/process/markunanswered"
 	"github.com/cyril-fl/callback/core/services/process/purgetokens"
+	"github.com/cyril-fl/callback/core/services/process/readpreferences"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun"
 )
 
 const (
+	// purgeInterval is how often serve purges the expired tokens and marks the unanswered applications.
 	purgeInterval   = time.Hour
 	shutdownTimeout = 10 * time.Second
 )
@@ -61,6 +64,7 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 		if purge.HasErr() && ctx.Err() == nil {
 			log.Printf("purge tokens: %v", purge.GetErr())
 		}
+		markUnanswered(ctx, db)
 	}
 	go func() {
 		cleanup()
@@ -124,6 +128,26 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 	}
 	log.Print("stopped")
 	return nil
+}
+
+// markUnanswered moves to no_reply the applications the preferences say nobody will answer.
+func markUnanswered(ctx context.Context, db bun.IDB) {
+	preferences := readpreferences.Process(ctx, db)
+	preferences.Run()
+	if preferences.HasErr() {
+		if ctx.Err() == nil {
+			log.Printf("read preferences: %v", preferences.GetErr())
+		}
+		return
+	}
+	mark := markunanswered.Process(ctx, db, preferences.GetResult().NoReplyDays, time.Now())
+	mark.Run()
+	switch {
+	case mark.HasErr() && ctx.Err() == nil:
+		log.Printf("mark unanswered: %v", mark.GetErr())
+	case mark.GetResult() > 0:
+		log.Printf("%d applications moved to no_reply", mark.GetResult())
+	}
 }
 
 // every runs task at each interval until ctx ends.

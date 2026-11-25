@@ -83,6 +83,7 @@ func (e DomainPreferencesPlan) Valid() bool {
 const (
 	StatusApplied   DomainStatus = "applied"
 	StatusInterview DomainStatus = "interview"
+	StatusNoReply   DomainStatus = "no_reply"
 	StatusOffer     DomainStatus = "offer"
 	StatusRejected  DomainStatus = "rejected"
 	StatusResponded DomainStatus = "responded"
@@ -94,6 +95,8 @@ func (e DomainStatus) Valid() bool {
 	case StatusApplied:
 		return true
 	case StatusInterview:
+		return true
+	case StatusNoReply:
 		return true
 	case StatusOffer:
 		return true
@@ -131,6 +134,7 @@ func (e DomainTokenKind) Valid() bool {
 const (
 	Applied   GetApiApplicationsParamsStatus = "applied"
 	Interview GetApiApplicationsParamsStatus = "interview"
+	NoReply   GetApiApplicationsParamsStatus = "no_reply"
 	Offer     GetApiApplicationsParamsStatus = "offer"
 	Rejected  GetApiApplicationsParamsStatus = "rejected"
 	Responded GetApiApplicationsParamsStatus = "responded"
@@ -142,6 +146,8 @@ func (e GetApiApplicationsParamsStatus) Valid() bool {
 	case Applied:
 		return true
 	case Interview:
+		return true
+	case NoReply:
 		return true
 	case Offer:
 		return true
@@ -213,7 +219,7 @@ type DeleteapplicationsInput struct {
 	// Summary Summary leaves the ids out of the result: the counts and failures only.
 	Summary *bool `json:"summary,omitempty"`
 
-	// UntouchedSince UntouchedSince is the applications without news since this day: no status change nor follow-up.
+	// UntouchedSince UntouchedSince is the applications without news since this day: no status change, follow-up nor interview.
 	UntouchedSince *string `json:"untouched_since,omitempty"`
 }
 
@@ -346,6 +352,7 @@ type DomainPreferenceChanges struct {
 	DefaultCountry  *string                      `json:"default_country,omitempty"`
 	DefaultLocation *string                      `json:"default_location,omitempty"`
 	FollowUpDays    *int                         `json:"follow_up_days,omitempty"`
+	NoReplyDays     *int                         `json:"no_reply_days,omitempty"`
 	Plan            *DomainPreferenceChangesPlan `json:"plan,omitempty"`
 	TrashDays       *int                         `json:"trash_days,omitempty"`
 }
@@ -361,8 +368,12 @@ type DomainPreferences struct {
 	DefaultLocation string `json:"default_location"`
 
 	// FollowUpDays FollowUpDays is how long an application waits without news before it is to follow up.
-	FollowUpDays int                   `json:"follow_up_days"`
-	Plan         DomainPreferencesPlan `json:"plan"`
+	FollowUpDays int `json:"follow_up_days"`
+
+	// NoReplyDays NoReplyDays is how long a waiting application stays without news (since its last follow-up, status change or
+	// interview, else the day it applied) before the server moves it to no_reply; 0 never does.
+	NoReplyDays int                   `json:"no_reply_days"`
+	Plan        DomainPreferencesPlan `json:"plan"`
 
 	// TrashDays TrashDays is how long a deleted application can be restored, before it is gone with its history.
 	TrashDays int `json:"trash_days"`
@@ -496,7 +507,7 @@ type UpdateapplicationsOp struct {
 	// Status Status is any of these statuses.
 	Status *[]DomainStatus `json:"status,omitempty"`
 
-	// UntouchedSince UntouchedSince is the applications without news since this day: no status change nor follow-up.
+	// UntouchedSince UntouchedSince is the applications without news since this day: no status change, follow-up nor interview.
 	UntouchedSince *string `json:"untouched_since,omitempty"`
 }
 

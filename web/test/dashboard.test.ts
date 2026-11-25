@@ -75,7 +75,7 @@ test('the period and the city filter the applications', () => {
 test('the stats count every status and the share past applied', () => {
   assert.deepEqual(statsOf(apps), {
     total: 3,
-    by_status: { applied: 1, responded: 1, interview: 1, offer: 0, rejected: 0 },
+    by_status: { applied: 1, responded: 1, interview: 1, offer: 0, rejected: 0, no_reply: 0 },
     by_source: { job_post: 2, spontaneous: 1 },
     response_rate: 2 / 3,
     response_rate_by_source: { job_post: 0.5, spontaneous: 1 },
@@ -119,7 +119,7 @@ test('the funnel counts the applications that ever reached a status, in the filt
   assert.equal(history.has('gone'), false);
   assert.deepEqual(
     funnelOf(history).map((s) => s.count),
-    [3, 2, 1, 0, 0],
+    [3, 2, 1, 0, 0, 0],
   );
 });
 
@@ -138,9 +138,15 @@ test('to follow up: applied or responded, no status change nor follow-up since t
   const followed = apps.map((a) => (a.id === 'a' ? { ...a, followed_up_at: '2026-01-25T10:00:00Z' } : a));
   assert.deepEqual(ids(followed, '2026-02-01T00:00:00Z'), ['c', 'a']);
   assert.deepEqual(ids(followed, '2026-01-22T00:00:00Z'), ['c']);
+  // An interview is news, and an interview to come keeps it off the list.
+  const interviewed = apps.map((a) =>
+    a.id === 'a' ? { ...a, status: 'interview' as const, interview_at: '2026-01-28T10:00' } : a,
+  );
+  assert.deepEqual(ids(interviewed, '2026-02-01T00:00:00Z'), ['c', 'a']);
+  assert.deepEqual(ids(interviewed, '2026-01-25T00:00:00Z'), ['c']);
 });
 
-test('the follow-up button: applied or responded, and no follow-up, else no application, since the delay started', () => {
+test('the follow-up button: waiting on the employer, and no follow-up nor interview, else no application, since the delay started', () => {
   // Applied on 2026-01-05, entered later: the delay runs from the day it applied.
   const app: Application = { ...apps[0]!, created_at: '2026-01-20T10:00:00Z' };
   assert.equal(canFollowUp(app, '2026-01-01'), false);
@@ -148,8 +154,12 @@ test('the follow-up button: applied or responded, and no follow-up, else no appl
   // Followed up since the delay started: no button, created long ago or not.
   assert.equal(canFollowUp({ ...app, followed_up_at: '2026-01-20T10:00:00Z' }, '2026-01-15'), false);
   assert.equal(canFollowUp({ ...app, followed_up_at: '2026-01-10T10:00:00Z' }, '2026-01-15'), true);
+  // An interview waits on the employer too, once it is past the start of the delay.
+  assert.equal(canFollowUp({ ...app, status: 'interview', interview_at: '2026-01-03T10:00' }, '2026-01-06'), true);
+  assert.equal(canFollowUp({ ...app, status: 'interview', interview_at: '2026-01-08T10:00' }, '2026-01-06'), false);
   // Past the follow-up statuses: never.
-  assert.equal(canFollowUp({ ...app, status: 'interview' }, '2026-01-06'), false);
+  assert.equal(canFollowUp({ ...app, status: 'offer' }, '2026-01-06'), false);
+  assert.equal(canFollowUp({ ...app, status: 'no_reply' }, '2026-01-06'), false);
 });
 
 test('the upcoming interviews are the ones from now on, the nearest first', () => {

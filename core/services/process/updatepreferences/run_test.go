@@ -29,7 +29,7 @@ func TestRun(t *testing.T) {
 	pro, paris := domain.PlanPro, "Paris"
 	update := updatepreferences.Process(ctx, db, domain.PreferenceChanges{Plan: &pro, DefaultLocation: &paris})
 	update.Run()
-	want := domain.Preferences{Plan: pro, DefaultLocation: paris, FollowUpDays: 7, TrashDays: 30}
+	want := domain.Preferences{Plan: pro, DefaultLocation: paris, FollowUpDays: 7, NoReplyDays: 10, TrashDays: 30}
 	if update.HasErr() || update.GetResult() != want || read() != want {
 		t.Fatalf("update = %+v, read %+v, %v", update.GetResult(), read(), update.GetErr())
 	}

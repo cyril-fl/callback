@@ -67,7 +67,7 @@ const {
       query: {
         q: qDebounced.value || undefined,
         status: followUp.value
-          ? 'applied,responded'
+          ? FOLLOW_UP_STATUSES.join(',')
           : statusFilter.value.length
             ? statusFilter.value.join(',')
             : undefined,
@@ -88,6 +88,7 @@ const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | '
   interview: 'warning',
   offer: 'success',
   rejected: 'error',
+  no_reply: 'neutral',
 };
 
 const UButton = resolveComponent('UButton');

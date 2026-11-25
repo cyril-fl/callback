@@ -88,8 +88,11 @@ Tous en lot : **un appel d'outil = une requête à l'API = une transaction**, ja
 | `update_applications` | `ops`, chacun choisit des candidatures par `ids` ou par filtres et donne `set` (`status`, `rating`, `comment`…, `followed_up: true` enregistre une relance, `undo_status: true` remet le statut d'avant son dernier changement et l'efface de l'historique, `undo_follow_up: true` efface la dernière relance) ; `dry_run` n'écrit rien et rend ce qui changerait, `summary` retire les ids | écriture (non idempotent avec `followed_up`) |
 | `delete_applications` | Supprime les candidatures de `ids` ou des filtres (gardées dans une corbeille le temps du réglage `trash_days`, 30 jours par défaut, que seule l'app web sait restaurer, puis effacées avec leur historique) ; `dry_run`, `summary`. Un filtre vide est refusé | destructif, idempotent |
 
-Les valeurs : `status` parmi `applied`, `responded`, `interview`, `offer`, `rejected` ; `source` : `spontaneous`
-(par défaut), `job_post` (avec l'URL de l'annonce en `source_detail`), `recruiter` (avec son e-mail) ou un nom libre
+Les valeurs : `status` parmi `applied`, `responded`, `interview`, `offer`, `rejected`, `no_reply` (posé par le
+serveur quand une candidature en attente, `applied`, `responded` ou `interview`, reste sans nouvelles depuis sa
+dernière relance, ou à défaut depuis son envoi, le délai `no_reply_days` des préférences, 10 jours par défaut) ;
+`source` : `spontaneous` (par défaut), `job_post` (avec l'URL de l'annonce en `source_detail`), `recruiter` (avec son
+e-mail) ou un nom libre
 (60 caractères au plus, `source_detail` libre) ; l'adresse : `location` est la ville, `street`, `postal_code` et
 `country` la complètent (aussi dans `fields` et `q`) ; `interview_at`, la date et l'heure locales de l'entretien
 (`2026-01-31T14:30`) ; `contact_name` et `contact_email` (une adresse valide), cherchés aussi par `q` ; `rating` de

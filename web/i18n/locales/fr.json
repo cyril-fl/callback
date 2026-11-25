@@ -34,7 +34,8 @@
     "responded": "Réponse reçue",
     "interview": "Entretien",
     "offer": "Offre",
-    "rejected": "Refus"
+    "rejected": "Refus",
+    "no_reply": "Sans réponse"
   },
   "source": {
     "spontaneous": "Spontanée",
@@ -197,7 +198,9 @@
     "defaultPlace": "Lieu par défaut",
     "defaultPlaceHelp": "Pour une nouvelle candidature.",
     "followUp": "Délai de relance",
-    "followUpHelp": "Sans nouvelles depuis ce délai, une candidature est à relancer.",
+    "followUpHelp": "Sans nouvelles depuis ce délai (statut, relance ou entretien passé), une candidature envoyée, avec réponse ou en entretien est à relancer.",
+    "noReply": "Passage en « Sans réponse »",
+    "noReplyHelp": "Une candidature en attente (envoyée, avec réponse ou en entretien) sans nouvelles depuis sa dernière relance, ou à défaut depuis son envoi, passe d'elle-même en « Sans réponse ». 0 : jamais.",
     "version": "Version",
     "backup": "Sauvegarde",
     "backupHelp": "Un fichier JSON avec les candidatures, la corbeille, l'historique des statuts et les relances. L'import ajoute ce qui manque et laisse en l'état ce que la base a déjà.",
