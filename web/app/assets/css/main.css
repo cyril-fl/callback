@@ -6,12 +6,13 @@
   --font-sans: 'Merriweather Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* The themes of app/utils/themes.ts: four accents, lilac (its 300 Lilac Vodka, #bfc2f3) the default, the others after
-   of the previous app, each with greys tinted by its hue, and its status colors (info, success, warning, error) picked from the same family, as in tide: pink with periwinkle,
-   mint, peach and coral red; lilac with sky, sea glass, apricot and rose; blue with sky, seafoam, sand and
-   soft coral; green with steel blue, jade, ochre and terracotta. 400, the dark mode's, is that color, lightened until it
-   reads at 4.5:1 on the theme's dark background; 500, the light mode's buttons, darkened until white text reads on it
-   at 4.5:1. Static: Tailwind keeps them though no class names them. */
+/* The themes of app/utils/themes.ts: four accents, lilac the default (on Lilac Vodka, #bfc2f3, its 300; its greys
+   nearly neutral) and the others after those of the previous app, each with greys tinted by its hue, and its status
+   colors (info, success, warning, error) picked from the same family, as in tide: pink with periwinkle, mint, peach and
+   coral red; lilac with sky, sea glass, apricot and rose; blue with sky, seafoam, sand and soft coral; green with steel
+   blue, jade, ochre and terracotta. 400, the dark mode's, is that color, lightened until it reads at 4.5:1 on the
+   theme's dark background; 500, the light mode's buttons, darkened until white text reads on it at 4.5:1. Static:
+   Tailwind keeps them though no class names them. */
 @theme static {
   --color-callback-pink-50: #fdf1f7;
   --color-callback-pink-100: #fbdfec;
