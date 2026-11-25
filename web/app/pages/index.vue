@@ -7,12 +7,14 @@ import { today as todayDate, getLocalTimeZone } from '@internationalized/date';
 const { t } = useI18n();
 const api = useApi();
 const sources = useSources();
+const places = usePlaces();
 const { pro, preferences } = usePreferences();
 
 const q = ref('');
 const qDebounced = refDebounced(q, 300);
 const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
+const locationFilter = ref<string>();
 // Pro: the applications without news for the follow-up delay, applied or responded.
 const followUp = ref(false);
 const defaultSorting = [{ id: 'applied_at', desc: true }];
@@ -27,6 +29,7 @@ const filtered = computed(
     followUp.value ||
     statusFilter.value.length > 0 ||
     sourceFilter.value !== 'all' ||
+    !!locationFilter.value ||
     JSON.stringify(sorting.value) !== JSON.stringify(defaultSorting),
 );
 function reset() {
@@ -34,6 +37,7 @@ function reset() {
   followUp.value = false;
   statusFilter.value = [];
   sourceFilter.value = 'all';
+  locationFilter.value = undefined;
   sorting.value = [...defaultSorting];
 }
 
@@ -66,12 +70,13 @@ const {
             : undefined,
         untouched_since: followUp.value ? followUpSince.value : undefined,
         source: sourceFilter.value === 'all' ? undefined : sourceFilter.value,
+        location: locationFilter.value,
         sort: sort.value,
       },
     }),
-  { watch: [qDebounced, followUp, statusFilter, sourceFilter, sort] },
+  { watch: [qDebounced, followUp, statusFilter, sourceFilter, locationFilter, sort] },
 );
-const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh()]);
+const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh(), places.refresh()]);
 
 // The statuses never take primary: it marks the actions, and the blue theme's info is close to it.
 const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | 'error'> = {
@@ -85,6 +90,7 @@ const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | '
 const UButton = resolveComponent('UButton');
 const UCheckbox = resolveComponent('UCheckbox');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
+const USelectMenu = resolveComponent('USelectMenu');
 
 // The menu stays open while ticking: preventDefault keeps it from closing on select.
 const keepOpen = (fn: () => void) => (e: Event) => {
@@ -122,16 +128,19 @@ const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
   })),
 ]);
 
-// A column header: its label sorts asc then desc, the funnel beside it filters.
+// A column header: the arrow beside the label sorts asc then desc; the label opens the filter, a menu for the closed
+// values (status, source), a search for the open ones (city).
+type Filter = { active: boolean } & (
+  { menu: DropdownMenuItem[][] } | { search: { items: string[]; value?: string; set: (v?: string) => void } }
+);
 const header =
-  (label: string, filter?: { menu: DropdownMenuItem[][]; active: boolean }): TableColumn<Application>['header'] =>
+  (label: string, filter?: Filter): TableColumn<Application>['header'] =>
   ({ column }) => {
     const dir = column.getIsSorted();
     const sort = h(UButton, {
-      color: 'neutral',
+      color: dir ? 'primary' : 'neutral',
       variant: 'ghost',
-      label,
-      class: '-mx-2.5',
+      size: 'xs',
       icon: dir
         ? dir === 'asc'
           ? 'i-lucide-arrow-up-narrow-wide'
@@ -140,24 +149,34 @@ const header =
       onClick: () => column.toggleSorting(dir === 'asc'),
       'aria-label': `${t('table.sortBy')} ${label}`,
     });
-    if (!filter) return sort;
-    return h('div', { class: 'flex items-center gap-1' }, [
-      sort,
-      h(
-        UDropdownMenu,
-        { items: filter.menu, content: { align: 'start' } },
-        {
-          default: () =>
-            h(UButton, {
-              icon: 'i-lucide-list-filter',
-              color: filter.active ? 'primary' : 'neutral',
-              variant: filter.active ? 'soft' : 'ghost',
-              size: 'xs',
-              'aria-label': `${t('table.filterBy')} ${label}`,
-            }),
-        },
-      ),
-    ]);
+    const trigger = {
+      label,
+      color: filter?.active ? 'primary' : 'neutral',
+      variant: filter?.active ? 'soft' : 'ghost',
+      trailingIcon: 'i-lucide-chevron-down',
+    } as const;
+    const title = !filter
+      ? h('span', { class: 'font-medium' }, label)
+      : 'menu' in filter
+        ? h(UDropdownMenu, { items: filter.menu, content: { align: 'start' } }, { default: () => h(UButton, trigger) })
+        : h(
+            USelectMenu,
+            {
+              ...trigger,
+              items: [
+                { label: t('common.all'), value: 'all' },
+                ...filter.search.items.map((v) => ({ label: v, value: v })),
+              ],
+              valueKey: 'value',
+              modelValue: filter.search.value ?? 'all',
+              'onUpdate:modelValue': (v: string) => filter.search.set(v === 'all' ? undefined : v),
+              searchInput: { placeholder: t('table.search') },
+              content: { align: 'start' },
+              class: ['w-auto', filter.active && 'bg-primary/10 text-primary'],
+            },
+            { default: () => label },
+          );
+    return h('div', { class: 'flex items-center gap-0.5 -ml-2' }, [sort, title]);
   };
 
 // The follow-up column filters on its button: all rows, or those that show it.
@@ -196,7 +215,13 @@ const selectColumn: TableColumn<Application> = {
 const columns = computed<TableColumn<Application>[]>(() => [
   ...(pro.value ? [selectColumn] : []),
   { accessorKey: 'company', header: header(t('table.company')) },
-  { accessorKey: 'location', header: t('table.location') },
+  {
+    accessorKey: 'location',
+    header: header(t('table.location'), {
+      search: { items: places.cities.value, value: locationFilter.value, set: (v) => (locationFilter.value = v) },
+      active: !!locationFilter.value,
+    }),
+  },
   {
     accessorKey: 'source',
     header: header(t('table.source'), { menu: sourceFilterMenu.value, active: sourceFilter.value !== 'all' }),
