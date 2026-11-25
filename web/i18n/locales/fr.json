@@ -15,7 +15,8 @@
     "edit": "Modifier",
     "close": "Fermer",
     "all": "Tous",
-    "empty": "Aucune candidature"
+    "empty": "Aucune candidature",
+    "undo": "Annuler"
   },
   "nav": {
     "dashboard": "Bilan",
@@ -135,8 +136,8 @@
   },
   "delete": {
     "title": "Supprimer",
-    "message": "Supprimer {company} ? Irréversible.",
-    "messageMany": "Supprimer {n} candidature ? Irréversible. | Supprimer {n} candidatures ? Irréversible.",
+    "message": "Supprimer {company} ?",
+    "messageMany": "Supprimer {n} candidature ? | Supprimer {n} candidatures ?",
     "done": "Supprimée"
   },
   "settings": {

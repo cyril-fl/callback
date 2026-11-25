@@ -4,6 +4,9 @@ export function useShortcuts() {
     search: ['/'],
     add: ['alt', 'n'],
     selectAll: ['meta', 'a'],
+    undo: ['meta', 'z'],
+    redo: ['meta', 'y'],
+    redoShift: ['meta', 'shift', 'z'],
   };
 
   return { shortcuts, key: (name: keyof typeof shortcuts) => shortcuts[name].join('_') };

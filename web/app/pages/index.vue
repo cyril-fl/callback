@@ -10,6 +10,8 @@ const sources = useSources();
 const places = usePlaces();
 const { pro, preferences } = usePreferences();
 const { shortcuts, key } = useShortcuts();
+const { record, undo, redo } = useHistory();
+const toast = useToast();
 
 const q = ref('');
 const qDebounced = refDebounced(q, 300);
@@ -247,14 +249,37 @@ async function write(ids: string[], local: Partial<Application> | 'delete', requ
 }
 const patch = (ids: string[], set: Record<string, unknown>) => () =>
   api<BatchResult>('/api/applications', { method: 'PATCH', body: { ops: [{ ids, set }] } });
+const remove = (ids: string[]) => () => api<BatchResult>('/api/applications', { method: 'DELETE', body: { ids } });
+const restore = (ids: string[]) => () =>
+  api<BatchResult>('/api/applications/restore', { method: 'POST', body: { ids } });
+
+// An undo or a redo, then the list read again. A batch's failures are told here: useApi only tells a refused request.
+async function replay(request: () => Promise<BatchResult>) {
+  let result: BatchResult | undefined;
+  await write([], {}, async () => (result = await request()));
+  const failure = result?.failed?.[0];
+  if (failure) toast.add({ title: failure.error, color: 'error' });
+  return !!result && !failure;
+}
+// The API takes a status back with its history: the undone step is not counted as reached.
+const recordStatus = (ids: string[], status: Status) =>
+  record({ undo: () => replay(patch(ids, { undo_status: true })), redo: () => replay(patch(ids, { status })) });
 
 async function setStatus(app: Application, status: Status) {
-  if (app.status !== status) await write([app.id], { status }, patch([app.id], { status }));
+  if (app.status === status) return;
+  const ids = [app.id];
+  if (await write(ids, { status }, patch(ids, { status }))) recordStatus(ids, status);
 }
 
 async function markFollowedUp(app: Application) {
-  if (await write([app.id], { followed_up_at: new Date().toISOString() }, patch([app.id], { followed_up: true })))
-    useToast().add({ title: t('table.followedUp', { company: app.company }), color: 'success' });
+  const ids = [app.id];
+  if (await write(ids, { followed_up_at: new Date().toISOString() }, patch(ids, { followed_up: true }))) {
+    record({
+      undo: () => replay(patch(ids, { undo_follow_up: true })),
+      redo: () => replay(patch(ids, { followed_up: true })),
+    });
+    toast.add({ title: t('table.followedUp', { company: app.company }), color: 'success' });
+  }
 }
 
 const statusMenu = (app: Application) =>
@@ -265,12 +290,12 @@ const statusMenu = (app: Application) =>
     onSelect: () => setStatus(app, s),
   }));
 
-// The form wrote it already: show it now, then refresh.
+// The form wrote it already: show it now, then refresh. A creation can be undone, not an edit.
 function saved(item: Application) {
   const list = applications.value ?? [];
-  applications.value = list.some((a) => a.id === item.id)
-    ? list.map((a) => (a.id === item.id ? { ...a, ...item } : a))
-    : [item, ...list];
+  const created = !list.some((a) => a.id === item.id);
+  applications.value = created ? [item, ...list] : list.map((a) => (a.id === item.id ? { ...a, ...item } : a));
+  if (created) record({ undo: () => replay(remove([item.id])), redo: () => replay(restore([item.id])) });
   refresh();
 }
 
@@ -295,12 +320,22 @@ function askDeleteSelected() {
 async function doDelete() {
   if (!deleting.value) return;
   const { ids } = deleting.value;
-  if (await write(ids, 'delete', () => api<BatchResult>('/api/applications', { method: 'DELETE', body: { ids } })))
-    useToast().add({ title: t('delete.done'), color: 'success' });
+  if (await write(ids, 'delete', remove(ids))) {
+    record({ undo: () => replay(restore(ids)), redo: () => replay(remove(ids)) });
+    toast.add({
+      title: t('delete.done'),
+      color: 'success',
+      actions: [{ label: t('common.undo'), color: 'neutral', variant: 'outline', onClick: () => undo() }],
+    });
+  }
 }
 
+// Only the ones whose status changes: an undo takes back their last change, the others have none of this batch.
 async function setSelectedStatus(status: Status) {
-  await write(selected.value, { status }, patch(selected.value, { status }));
+  const ids = (applications.value ?? [])
+    .filter((a) => selected.value.includes(a.id) && a.status !== status)
+    .map((a) => a.id);
+  if (ids.length && (await write(ids, { status }, patch(ids, { status })))) recordStatus(ids, status);
 }
 const selectedStatusMenu = computed(() =>
   STATUSES.map((s) => ({ label: t(`status.${s}`), onSelect: () => setSelectedStatus(s) })),
@@ -317,6 +352,10 @@ defineShortcuts({
       view.value === 'table' &&
       (selection.value = Object.fromEntries((applications.value ?? []).map((a) => [a.id, true]))),
   ),
+  // Outside a field, which undoes its own text.
+  [key('undo')]: outsideMenu(undo),
+  [key('redo')]: outsideMenu(redo),
+  [key('redoShift')]: outsideMenu(redo),
 });
 
 // The list as shown, filters and sort included, to a CSV file.
