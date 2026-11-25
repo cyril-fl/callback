@@ -6,9 +6,9 @@
   --font-sans: 'Merriweather Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* The themes of app/utils/themes.ts: four accents, lilac (Lilac Vodka, #bfc2f3) the default, the others after those
+/* The themes of app/utils/themes.ts: four accents, lilac (its 300 Lilac Vodka, #bfc2f3) the default, the others after
    of the previous app, each with greys tinted by its hue, and its status colors (info, success, warning, error) picked from the same family, as in tide: pink with periwinkle,
-   mint, peach and coral red; lilac with cornflower, sea glass, apricot and rose; blue with sky, seafoam, sand and
+   mint, peach and coral red; lilac with sky, sea glass, apricot and rose; blue with sky, seafoam, sand and
    soft coral; green with steel blue, jade, ochre and terracotta. 400, the dark mode's, is that color, lightened until it
    reads at 4.5:1 on the theme's dark background; 500, the light mode's buttons, darkened until white text reads on it
    at 4.5:1. Static: Tailwind keeps them though no class names them. */
@@ -88,8 +88,8 @@
   --color-callback-lilac-50: #f5f6fe;
   --color-callback-lilac-100: #eaebfe;
   --color-callback-lilac-200: #d6d9fe;
-  --color-callback-lilac-300: #c5c8ff;
-  --color-callback-lilac-400: #bfc2f3;
+  --color-callback-lilac-300: #bfc2f3;
+  --color-callback-lilac-400: #a8aaff;
   --color-callback-lilac-500: #6e6ebb;
   --color-callback-lilac-600: #5b5aa1;
   --color-callback-lilac-700: #494885;
@@ -97,29 +97,29 @@
   --color-callback-lilac-900: #272551;
   --color-callback-lilac-950: #171538;
 
-  --color-callback-lilac-gray-50: #f5f6ff;
-  --color-callback-lilac-gray-100: #eaeaf3;
-  --color-callback-lilac-gray-200: #d4d6eb;
-  --color-callback-lilac-gray-300: #babcd1;
-  --color-callback-lilac-gray-400: #a4a6bb;
-  --color-callback-lilac-gray-500: #717386;
-  --color-callback-lilac-gray-600: #606174;
-  --color-callback-lilac-gray-700: #3d3e50;
-  --color-callback-lilac-gray-800: #262737;
-  --color-callback-lilac-gray-900: #181922;
-  --color-callback-lilac-gray-950: #0d0d16;
+  --color-callback-lilac-gray-50: #f6f6fb;
+  --color-callback-lilac-gray-100: #eaeaf1;
+  --color-callback-lilac-gray-200: #d6d7e1;
+  --color-callback-lilac-gray-300: #bbbdc9;
+  --color-callback-lilac-gray-400: #a2a3b1;
+  --color-callback-lilac-gray-500: #727381;
+  --color-callback-lilac-gray-600: #61626f;
+  --color-callback-lilac-gray-700: #3e3f47;
+  --color-callback-lilac-gray-800: #28282e;
+  --color-callback-lilac-gray-900: #19191e;
+  --color-callback-lilac-gray-950: #0e0e11;
 
-  --color-callback-lilac-info-50: #f2f6fc;
-  --color-callback-lilac-info-100: #e2eaf9;
-  --color-callback-lilac-info-200: #c4d4f2;
-  --color-callback-lilac-info-300: #9fb9ea;
-  --color-callback-lilac-info-400: #7fa2e3;
-  --color-callback-lilac-info-500: #3c72d4;
-  --color-callback-lilac-info-600: #2b60c3;
-  --color-callback-lilac-info-700: #2451a5;
-  --color-callback-lilac-info-800: #1e4388;
-  --color-callback-lilac-info-900: #18376f;
-  --color-callback-lilac-info-950: #132a56;
+  --color-callback-lilac-info-50: #f0f8fe;
+  --color-callback-lilac-info-100: #def0fc;
+  --color-callback-lilac-info-200: #c0e4fc;
+  --color-callback-lilac-info-300: #98d3f9;
+  --color-callback-lilac-info-400: #67bbee;
+  --color-callback-lilac-info-500: #017db2;
+  --color-callback-lilac-info-600: #02628c;
+  --color-callback-lilac-info-700: #035074;
+  --color-callback-lilac-info-800: #023f5c;
+  --color-callback-lilac-info-900: #012f46;
+  --color-callback-lilac-info-950: #012031;
 
   --color-callback-lilac-success-50: #f4faf9;
   --color-callback-lilac-success-100: #e6f4f2;
