@@ -89,8 +89,7 @@ const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | '
 
 const UButton = resolveComponent('UButton');
 const UCheckbox = resolveComponent('UCheckbox');
-const UDropdownMenu = resolveComponent('UDropdownMenu');
-const USelectMenu = resolveComponent('USelectMenu');
+const ColumnHeader = resolveComponent('ColumnHeader');
 
 // The menu stays open while ticking: preventDefault keeps it from closing on select.
 const keepOpen = (fn: () => void) => (e: Event) => {
@@ -128,57 +127,6 @@ const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
   })),
 ]);
 
-// A column header: the arrow beside the label sorts asc then desc; the label opens the filter, a menu for the closed
-// values (status, source), a search for the open ones (city).
-type Filter = { active: boolean } & (
-  { menu: DropdownMenuItem[][] } | { search: { items: string[]; value?: string; set: (v?: string) => void } }
-);
-const header =
-  (label: string, filter?: Filter): TableColumn<Application>['header'] =>
-  ({ column }) => {
-    const dir = column.getIsSorted();
-    const sort = h(UButton, {
-      color: dir ? 'primary' : 'neutral',
-      variant: 'ghost',
-      size: 'xs',
-      icon: dir
-        ? dir === 'asc'
-          ? 'i-lucide-arrow-up-narrow-wide'
-          : 'i-lucide-arrow-down-wide-narrow'
-        : 'i-lucide-arrow-up-down',
-      onClick: () => column.toggleSorting(dir === 'asc'),
-      'aria-label': `${t('table.sortBy')} ${label}`,
-    });
-    const trigger = {
-      label,
-      color: filter?.active ? 'primary' : 'neutral',
-      variant: filter?.active ? 'soft' : 'ghost',
-      trailingIcon: 'i-lucide-chevron-down',
-    } as const;
-    const title = !filter
-      ? h('span', { class: 'font-medium' }, label)
-      : 'menu' in filter
-        ? h(UDropdownMenu, { items: filter.menu, content: { align: 'start' } }, { default: () => h(UButton, trigger) })
-        : h(
-            USelectMenu,
-            {
-              ...trigger,
-              items: [
-                { label: t('common.all'), value: 'all' },
-                ...filter.search.items.map((v) => ({ label: v, value: v })),
-              ],
-              valueKey: 'value',
-              modelValue: filter.search.value ?? 'all',
-              'onUpdate:modelValue': (v: string) => filter.search.set(v === 'all' ? undefined : v),
-              searchInput: { placeholder: t('table.search') },
-              content: { align: 'start' },
-              class: ['w-auto', filter.active && 'bg-primary/10 text-primary'],
-            },
-            { default: () => label },
-          );
-    return h('div', { class: 'flex items-center gap-0.5 -ml-2' }, [sort, title]);
-  };
-
 // The follow-up column filters on its button: all rows, or those that show it.
 const followUpFilterMenu = computed<DropdownMenuItem[][]>(() => [
   [
@@ -212,32 +160,70 @@ const selectColumn: TableColumn<Application> = {
     }),
 };
 
-const columns = computed<TableColumn<Application>[]>(() => [
-  ...(pro.value ? [selectColumn] : []),
-  { accessorKey: 'company', header: header(t('table.company')) },
+// A header: label and sort from TanStack, the filter's props read here so the header follows them.
+// The columns are built once: TanStack renders a header function as a component, a new function is a new component
+// and would close the open menu at every pick.
+const header =
+  (label: string, filter?: () => Record<string, unknown>): TableColumn<Application>['header'] =>
+  ({ column }) =>
+    h(ColumnHeader, {
+      label: t(label),
+      sorted: column.getIsSorted(),
+      onSort: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+      ...filter?.(),
+    });
+const dataColumns: TableColumn<Application>[] = [
+  {
+    accessorKey: 'company',
+    header: header('table.company', () => ({
+      search: true,
+      modelValue: q.value,
+      'onUpdate:modelValue': (v?: string) => (q.value = v ?? ''),
+      active: q.value !== '',
+    })),
+  },
   {
     accessorKey: 'location',
-    header: header(t('table.location'), {
-      search: { items: places.cities.value, value: locationFilter.value, set: (v) => (locationFilter.value = v) },
+    header: header('table.location', () => ({
+      options: places.cities.value,
+      modelValue: locationFilter.value,
+      'onUpdate:modelValue': (v?: string) => (locationFilter.value = v),
       active: !!locationFilter.value,
-    }),
+    })),
   },
   {
     accessorKey: 'source',
-    header: header(t('table.source'), { menu: sourceFilterMenu.value, active: sourceFilter.value !== 'all' }),
+    header: header('table.source', () => ({ menu: sourceFilterMenu.value, active: sourceFilter.value !== 'all' })),
   },
   {
     accessorKey: 'status',
-    header: header(t('table.status'), { menu: statusFilterMenu.value, active: statusFilter.value.length > 0 }),
+    header: header('table.status', () => ({ menu: statusFilterMenu.value, active: statusFilter.value.length > 0 })),
   },
-  { accessorKey: 'rating', header: header(t('table.rating')) },
-  { accessorKey: 'applied_at', header: header(t('table.appliedAt')) },
+  { accessorKey: 'rating', header: header('table.rating') },
+  { accessorKey: 'applied_at', header: header('table.appliedAt') },
   {
     accessorKey: 'followed_up_at',
-    header: header(t('table.followUp'), { menu: followUpFilterMenu.value, active: followUp.value }),
+    header: header('table.followUp', () => ({ menu: followUpFilterMenu.value, active: followUp.value })),
   },
-  { id: 'actions', header: () => h('span', { class: 'sr-only' }, t('table.actions')) },
-]);
+  {
+    id: 'actions',
+    // Always there, hidden when nothing is filtered: the columns do not move when it shows.
+    header: () =>
+      h('div', { class: 'flex justify-end' }, [
+        h('span', { class: 'sr-only' }, t('table.actions')),
+        h(UButton, {
+          icon: 'i-lucide-rotate-ccw',
+          color: 'neutral',
+          variant: 'ghost',
+          class: !filtered.value && 'invisible',
+          'aria-label': t('table.reset'),
+          title: t('table.reset'),
+          onClick: reset,
+        }),
+      ]),
+  },
+];
+const columns = computed(() => (pro.value ? [selectColumn, ...dataColumns] : dataColumns));
 
 // "2026-01-31" is a day, not an instant: no timezone shift.
 const day = (v?: string) => (v ? new Date(`${v.slice(0, 10)}T00:00:00`).toLocaleDateString('fr-FR') : '');
@@ -359,9 +345,9 @@ function exportCsv() {
     <StatsCards v-if="!pro" :stats="stats" />
 
     <div class="flex flex-wrap items-center gap-2">
-      <UInput v-model="q" icon="i-lucide-search" :placeholder="t('table.search')" :aria-label="t('table.search')" />
+      <!-- The table resets from its header; the kanban has none. -->
       <UButton
-        v-if="filtered"
+        v-if="filtered && view === 'kanban'"
         icon="i-lucide-rotate-ccw"
         color="neutral"
         variant="ghost"
