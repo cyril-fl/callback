@@ -516,30 +516,27 @@ function exportCsv() {
          The container gives it the table's width; its buttons are like the toolbar's. -->
     <UContainer v-if="view === 'table' && selected.length" class="fixed inset-x-0 bottom-4 z-10">
       <div class="flex flex-wrap items-center gap-2 rounded-lg border border-default bg-default p-2 shadow-lg">
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="ghost"
-          :aria-label="t('common.cancel')"
-          @click="selection = {}"
-        />
-        <span class="pr-2 text-sm font-medium whitespace-nowrap">{{ t('table.selected', selected.length) }}</span>
-        <USeparator orientation="vertical" class="h-5" />
+        <span class="px-2 text-sm font-medium whitespace-nowrap">{{ t('table.selected', selected.length) }}</span>
         <UDropdownMenu :items="selectedStatusMenu" :content="{ side: 'top' }">
           <UButton
             color="neutral"
             variant="outline"
+            size="sm"
             trailing-icon="i-lucide-chevron-down"
             :label="t('table.batchStatus')"
           />
         </UDropdownMenu>
-        <UButton
-          color="error"
-          variant="outline"
-          icon="i-lucide-trash-2"
-          :label="t('common.delete')"
-          @click="askDeleteSelected"
-        />
+        <div class="ml-auto flex items-center gap-2">
+          <UButton color="neutral" variant="outline" size="sm" :label="t('common.cancel')" @click="selection = {}" />
+          <UButton
+            color="error"
+            variant="outline"
+            size="sm"
+            icon="i-lucide-trash-2"
+            :label="t('common.delete')"
+            @click="askDeleteSelected"
+          />
+        </div>
       </div>
     </UContainer>
 
