@@ -62,7 +62,13 @@ const day = (v?: string) =>
       <header class="flex items-center gap-2 px-3 pt-3 pb-2">
         <span class="size-2.5 rounded-full" :class="dot[statusColor[column.status]]" aria-hidden="true" />
         <h3 class="text-sm font-medium">{{ t(`status.${column.status}`) }}</h3>
-        <UBadge :label="column.items.length" color="neutral" variant="subtle" size="sm" class="tabular-nums" />
+        <UBadge
+          :label="column.items.length"
+          color="neutral"
+          variant="soft"
+          size="sm"
+          class="rounded-full text-xs text-muted tabular-nums"
+        />
       </header>
 
       <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
