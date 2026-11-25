@@ -131,13 +131,7 @@ const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
 const followUpFilterMenu = computed<DropdownMenuItem[][]>(() => [
   [
     { label: t('common.all'), type: 'checkbox', checked: !followUp.value, onSelect: () => (followUp.value = false) },
-    {
-      label: t('table.followUp'),
-      icon: 'i-lucide-bell-ring',
-      type: 'checkbox',
-      checked: followUp.value,
-      onSelect: () => (followUp.value = true),
-    },
+    { label: t('table.followUp'), type: 'checkbox', checked: followUp.value, onSelect: () => (followUp.value = true) },
   ],
 ]);
 // Pro: rows are picked by id for the batch bar.
