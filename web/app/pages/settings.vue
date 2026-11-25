@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Me, PurgeResult, Token, TokenInput, TokenResult } from '~/types/items';
+import type { DeletedApplication, Me, PurgeResult, Token, TokenInput, TokenResult } from '~/types/items';
 
 const { t } = useI18n();
 const api = useApi();
@@ -18,9 +18,27 @@ const mode = computed({
 
 const modes = ['light', 'dark', 'system'] as const;
 const modeIcons = { light: 'i-lucide-sun', dark: 'i-lucide-moon', system: 'i-lucide-monitor' };
-const modeItems = modes.map((value) => ({ value, label: t(`settings.${value}`), icon: modeIcons[value] }));
+const modeItems = modes.map((value) => ({
+  value,
+  label: t(`settings.${value}`),
+  icon: modeIcons[value],
+  ui: { label: 'max-sm:sr-only' },
+}));
 
 const { data: tokens, refresh } = await useAsyncData('tokens', () => api<Token[]>('/api/tokens'));
+const { data: trash, refresh: refreshTrash } = await useAsyncData('trash', () =>
+  api<DeletedApplication[]>('/api/applications/deleted'),
+);
+async function restore(deleted: DeletedApplication) {
+  try {
+    await api('/api/applications/restore', { method: 'POST', body: { ids: [deleted.id] } });
+    toast.add({ title: t('settings.restored', { company: deleted.application.company }), color: 'success' });
+  } catch {
+    // useApi already toasted.
+  } finally {
+    await refreshTrash();
+  }
+}
 
 const when = (v?: string) => (v ? new Date(v).toLocaleDateString('fr-FR') : t('settings.never'));
 const expiryItems = (['7d', '30d', '90d', '1y', 'never'] as const).map((value) => ({
@@ -93,13 +111,16 @@ async function revoke() {
             <p class="text-sm">{{ t('settings.plan') }}</p>
             <p class="text-xs text-muted">{{ t(`settings.planHelp.${preferences?.plan ?? 'base'}`) }}</p>
           </div>
-          <UTabs
+          <!-- Clicking the pressed option would empty the group: it is ignored. -->
+          <UToggleGroup
             :model-value="preferences?.plan"
             :items="planItems"
-            :content="false"
+            color="neutral"
+            variant="outline"
             size="sm"
+            attached
             :aria-label="t('settings.plan')"
-            @update:model-value="(v) => save({ plan: v as 'base' | 'pro' })"
+            @update:model-value="(v) => v && save({ plan: v as 'base' | 'pro' })"
           />
         </li>
         <li class="flex flex-wrap items-center gap-4 px-4 py-3">
@@ -178,15 +199,56 @@ async function revoke() {
         </li>
         <li class="flex flex-wrap items-center gap-4 px-4 py-3">
           <p class="flex-1 basis-48 text-sm">{{ t('settings.colorMode') }}</p>
-          <UTabs
-            v-model="mode"
+          <UToggleGroup
+            :model-value="mode"
             :items="modeItems"
-            :content="false"
+            color="neutral"
+            variant="outline"
             size="sm"
-            :ui="{ label: 'max-sm:sr-only' }"
+            attached
             :aria-label="t('settings.colorMode')"
+            @update:model-value="(v) => v && (mode = v as 'light' | 'dark' | 'system')"
           />
         </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="mb-3 text-sm font-semibold">{{ t('settings.trash') }}</h2>
+      <ul class="divide-y divide-default rounded-lg border border-default">
+        <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <div class="flex-1 basis-48">
+            <p class="text-sm">{{ t('settings.trashDays') }}</p>
+            <p class="text-xs text-muted">{{ t('settings.trashDaysHelp') }}</p>
+          </div>
+          <UInputNumber
+            :model-value="preferences?.trash_days"
+            :min="1"
+            :max="365"
+            :format-options="{ style: 'unit', unit: 'day', unitDisplay: 'long' }"
+            :aria-label="t('settings.trashDays')"
+            class="w-40"
+            @update:model-value="(v) => v && v !== preferences?.trash_days && save({ trash_days: v })"
+          />
+        </li>
+        <li v-for="deleted in trash" :key="deleted.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
+          <UIcon name="i-lucide-trash-2" class="size-4 shrink-0 text-muted" />
+          <div class="min-w-0 flex-1 basis-48">
+            <p class="truncate text-sm">
+              {{ [deleted.application.company, deleted.application.location].filter(Boolean).join(' · ') }}
+            </p>
+            <p class="text-xs text-muted">{{ t('settings.deletedAt') }} {{ when(deleted.deleted_at) }}</p>
+          </div>
+          <UButton
+            icon="i-lucide-undo-2"
+            :label="t('settings.restore')"
+            :ui="{ label: 'max-sm:sr-only' }"
+            color="neutral"
+            variant="ghost"
+            @click="restore(deleted)"
+          />
+        </li>
+        <li v-if="trash && !trash.length" class="px-4 py-3 text-xs text-muted">{{ t('settings.trashEmpty') }}</li>
       </ul>
     </section>
 
