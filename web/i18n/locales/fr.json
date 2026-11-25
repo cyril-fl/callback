@@ -1,0 +1,110 @@
+{
+  "app": { "name": "JAT" },
+  "api": {
+    "down": "Le serveur ne répond pas.",
+    "failed": "La requête a échoué."
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "all": "Tous",
+    "empty": "Aucune candidature."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "settings": "Réglages",
+    "logout": "Se déconnecter"
+  },
+  "login": {
+    "title": "Connexion",
+    "password": "Mot de passe",
+    "submit": "Se connecter"
+  },
+  "status": {
+    "applied": "Candidature envoyée",
+    "responded": "Réponse reçue",
+    "interview": "Entretien",
+    "offer": "Offre",
+    "rejected": "Refus"
+  },
+  "source": {
+    "spontaneous": "Spontanée",
+    "job_post": "Offre d'emploi",
+    "recruiter": "Recruteur"
+  },
+  "stats": {
+    "responseRate": "Taux de réponse",
+    "total": "Total"
+  },
+  "table": {
+    "company": "Entreprise",
+    "location": "Lieu",
+    "source": "Source",
+    "status": "Statut",
+    "rating": "Note",
+    "appliedAt": "Candidature",
+    "actions": "Actions",
+    "created": "Créée le {date}",
+    "updated": "Modifiée le {date}",
+    "search": "Rechercher",
+    "statusFilter": "Statuts",
+    "sourceFilter": "Source",
+    "stars": "{n} sur 5",
+    "changeStatus": "Changer le statut"
+  },
+  "form": {
+    "add": "Ajouter une candidature",
+    "edit": "Modifier la candidature",
+    "company": "Entreprise",
+    "location": "Lieu",
+    "website": "Site web",
+    "source": "Source",
+    "sourceUrl": "URL de l'offre",
+    "sourceEmail": "E-mail du recruteur",
+    "status": "Statut",
+    "rating": "Note",
+    "comment": "Commentaire",
+    "appliedAt": "Date de candidature",
+    "required": "Champ requis",
+    "invalidUrl": "URL invalide",
+    "invalidEmail": "E-mail invalide",
+    "failed": "Ligne refusée : {error}",
+    "saved": "Candidature enregistrée"
+  },
+  "delete": {
+    "title": "Supprimer la candidature",
+    "message": "Supprimer la candidature chez {company} ? Cette action est définitive.",
+    "done": "Candidature supprimée"
+  },
+  "settings": {
+    "title": "Réglages",
+    "colorMode": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système",
+    "tokens": "Jetons d'accès",
+    "tokensHelp": "Jetons d'API et connexions OAuth (CLI, MCP).",
+    "name": "Nom",
+    "kind": "Type",
+    "kinds": { "session": "Session", "api": "API", "oauth": "OAuth" },
+    "readOnly": "Lecture seule",
+    "createdAt": "Créé le",
+    "lastUsedAt": "Dernier usage",
+    "expiresAt": "Expire le",
+    "never": "Jamais",
+    "newToken": "Nouveau jeton",
+    "expiresIn": "Expiration",
+    "expiry": { "7d": "7 jours", "30d": "30 jours", "90d": "90 jours", "1y": "1 an", "never": "Jamais" },
+    "create": "Créer",
+    "tokenOnce": "Copiez ce jeton maintenant : il ne sera plus affiché.",
+    "copy": "Copier",
+    "copied": "Copié",
+    "revoke": "Révoquer",
+    "revokeTitle": "Révoquer le jeton",
+    "revokeMessage": "Révoquer « {name} » ? Les clients qui l'utilisent perdront l'accès.",
+    "noTokens": "Aucun jeton."
+  }
+}
