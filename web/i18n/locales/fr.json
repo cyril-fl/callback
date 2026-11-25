@@ -86,7 +86,9 @@
   },
   "settings": {
     "title": "Réglages",
-    "colorMode": "Thème",
+    "colorMode": "Mode",
+    "theme": "Thème",
+    "themes": { "red": "Rouge", "purple": "Violet", "blue": "Bleu", "green": "Vert" },
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système",

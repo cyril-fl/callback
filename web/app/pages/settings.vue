@@ -5,6 +5,7 @@ import type { Token, TokenInput, TokenResult } from '~/types/items';
 const { t } = useI18n();
 const api = useApi();
 const toast = useToast();
+const theme = useTheme();
 const colorMode = useColorMode();
 const mode = computed({
   get: () => colorMode.preference as 'light' | 'dark' | 'system',
@@ -78,7 +79,17 @@ async function revoke() {
     <h1 class="text-xl font-semibold">{{ t('settings.title') }}</h1>
 
     <section class="space-y-3">
-      <h2 class="font-medium">{{ t('settings.colorMode') }}</h2>
+      <h2 class="font-medium">{{ t('settings.theme') }}</h2>
+      <div class="grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+        <ThemePreview
+          v-for="item in themes"
+          :key="item.id"
+          :theme="item"
+          :active="theme === item.id"
+          @click="theme = item.id"
+        />
+      </div>
+      <h2 class="pt-2 font-medium">{{ t('settings.colorMode') }}</h2>
       <USelect v-model="mode" :items="modeItems" :aria-label="t('settings.colorMode')" class="w-48" />
     </section>
 
