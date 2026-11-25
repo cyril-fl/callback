@@ -1,0 +1,62 @@
+# The server's Makefile: copy it as `Makefile` next to compose.prod.yaml and .env (from .env.example) on the server.
+# The image comes from ghcr.io (pushed by the CI on a v* tag), nothing is built here.
+# Tailscale: `sudo tailscale set --operator=$USER` once, or `make TAILSCALE="sudo tailscale" …`.
+.PHONY: up update down logs ps backup reset-password serve mcp mcp-off status check
+
+-include .env
+export
+
+COMPOSE := docker compose -f compose.prod.yaml
+TAILSCALE ?= tailscale
+# Funnel opens 443, 8443 or 10000 only; 443 is the app's, on the tailnet.
+MCP_PORT ?= 8443
+MCP_URL = $(CALLBACK_ORIGIN):$(MCP_PORT)/mcp
+
+up:
+	$(COMPOSE) up -d
+
+# The latest image, then a restart on it. Back up first: a new version may change the schema.
+update: backup
+	$(COMPOSE) pull && $(COMPOSE) up -d
+
+down:
+	$(COMPOSE) down
+
+logs:
+	$(COMPOSE) logs -f
+
+ps:
+	$(COMPOSE) ps
+
+# A consistent copy of the base (VACUUM INTO, safe while serving), into ./backups.
+backup:
+	@mkdir -p backups
+	@file=backup-$$(date +%Y%m%d-%H%M%S).db && \
+	$(COMPOSE) exec -T callback /callback-server --db /data/callback.db backup /data/$$file && \
+	docker cp callback:/data/$$file backups/$$file && \
+	echo backups/$$file
+
+reset-password:
+	$(COMPOSE) exec callback /callback-server --db /data/callback.db reset-password
+
+# The API and the web app on the tailnet only, at CALLBACK_ORIGIN.
+serve:
+	$(TAILSCALE) serve --bg --https=443 http://127.0.0.1:8080
+
+# The MCP and its OAuth open to the Internet (Tailscale Funnel): the Claude app calls it from Anthropic's servers.
+mcp:
+	$(TAILSCALE) funnel --bg --https=$(MCP_PORT) http://127.0.0.1:8081
+	@echo "MCP: $(MCP_URL)"
+
+# Closes the MCP to the Internet; the app stays on the tailnet.
+mcp-off:
+	$(TAILSCALE) funnel --https=$(MCP_PORT) off
+
+status:
+	@$(COMPOSE) ps
+	@$(TAILSCALE) serve status
+
+# From outside: /mcp must answer 401 with where to sign in, and the OAuth metadata must name this address.
+check:
+	@curl -s -o /dev/null -w '/mcp without token: %{http_code} (401 expected)\n' -X POST $(MCP_URL)
+	@curl -sf $(CALLBACK_ORIGIN):$(MCP_PORT)/.well-known/oauth-authorization-server | grep -o '"issuer":"[^"]*"'
