@@ -2,6 +2,7 @@ package throttle
 
 import (
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -52,5 +53,18 @@ func TestTry(t *testing.T) {
 	throttle.Reset(ctx, "a")
 	if wait := try(); wait != 0 {
 		t.Fatalf("after reset: wait = %s, want 0", wait)
+	}
+}
+
+// An IPv6 client is counted by its /64: it holds the whole of it.
+func TestAddressKey(t *testing.T) {
+	for remote, want := range map[string]string{
+		"192.0.2.1:1234":              "address 192.0.2.1",
+		"[2001:db8:1:2:3:4:5:6]:1234": "address 2001:db8:1:2::/64",
+		"[2001:db8:1:2:ffff::]:80":    "address 2001:db8:1:2::/64",
+	} {
+		if got := AddressKey(&http.Request{RemoteAddr: remote}); got != want {
+			t.Errorf("%s: %q, want %q", remote, got, want)
+		}
 	}
 }

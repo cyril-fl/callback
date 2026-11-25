@@ -2,6 +2,7 @@ package domain
 
 import (
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -30,9 +31,9 @@ type Filter struct {
 	UntouchedSince string `json:"untouched_since,omitempty" binding:"optional" example:"2026-01-01"`
 }
 
-// Empty tells a filter that matches every application.
+// Empty tells a filter that matches every application. A blank q adds no condition (appfilter trims it): empty too.
 func (f Filter) Empty() bool {
-	return len(f.IDs) == 0 && len(f.Status) == 0 && f.Source == "" && f.Q == "" && f.AppliedBefore == "" && f.AppliedAfter == "" && f.UntouchedSince == ""
+	return len(f.IDs) == 0 && len(f.Status) == 0 && f.Source == "" && strings.TrimSpace(f.Q) == "" && f.AppliedBefore == "" && f.AppliedAfter == "" && f.UntouchedSince == ""
 }
 
 // Validate checks the values of the filter.

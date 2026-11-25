@@ -1,4 +1,6 @@
 # The dev stack: `make up`, the image built locally. API and web on 8080, MCP on 8081.
+# Never put a tunnel in front of it: without --published, every client behind a proxy shares one address for the
+# wrong-password delay, so one stranger could lock you out. compose.prod.yaml is the one to expose.
 name: jat
 
 services:

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"log"
 	"math"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,6 +26,23 @@ var waits = []time.Duration{0, 0, 0, 30 * time.Second, time.Minute, 5 * time.Min
 const forget = 24 * time.Hour
 
 const message = "too many wrong passwords, try again later"
+
+// GlobalKey counts the wrong passwords of every address on the OAuth consent page, which faces the Internet: an
+// attacker rotating addresses still waits. The login stays on the tailnet and does not count it.
+const GlobalKey = "global consent"
+
+// AddressKey is the key of the request's client: its IPv4 address, or the /64 of an IPv6 one, which one client
+// usually holds whole.
+func AddressKey(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	if ip := net.ParseIP(host); ip != nil && ip.To4() == nil {
+		host = ip.Mask(net.CIDRMask(64, 128)).String() + "/64"
+	}
+	return "address " + host
+}
 
 // Throttle counts the tries in a row of each key.
 type Throttle struct {

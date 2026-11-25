@@ -128,8 +128,12 @@ func TestFlow(t *testing.T) {
 	if response, _ := authorize(http.MethodGet, with("client_id", "nope")); response.StatusCode != http.StatusBadRequest {
 		t.Errorf("unknown client: %d, want 400", response.StatusCode)
 	}
-	if response, _ := authorize(http.MethodGet, with("code_challenge_method", "plain")); !strings.Contains(response.Header.Get("Location"), "error=invalid_request") {
-		t.Errorf("no S256: to %q, want error=invalid_request", response.Header.Get("Location"))
+	// A request without PKCE S256 or with another response_type shows an error, never a redirect: registration is
+	// open, that would be an open redirect.
+	for name, value := range map[string][2]string{"no S256": {"code_challenge_method", "plain"}, "token flow": {"response_type", "token"}} {
+		if response, _ := authorize(http.MethodGet, with(value[0], value[1])); response.StatusCode != http.StatusBadRequest || response.Header.Get("Location") != "" {
+			t.Errorf("%s: %d to %q, want 400 and no redirect", name, response.StatusCode, response.Header.Get("Location"))
+		}
 	}
 	response, body := authorize(http.MethodGet, asked)
 	if response.StatusCode != http.StatusOK || !strings.Contains(body, "ChatGPT") || !strings.Contains(body, "chatgpt.com") || response.Header.Get("X-Frame-Options") != "DENY" {

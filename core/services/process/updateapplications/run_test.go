@@ -85,3 +85,14 @@ func TestNoOps(t *testing.T) {
 		t.Errorf("err = %v, want invalid", process.GetErr())
 	}
 }
+
+// A q of spaces adds no condition: the op fails instead of changing every application.
+func TestBlankQuery(t *testing.T) {
+	db := testdb.New(t)
+	seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	process := updateapplications.Process(context.Background(), db, updateapplications.Input{Ops: []updateapplications.Op{{Filter: domain.Filter{Q: " "}, Set: domain.Changes{Rating: ptr(1)}}}})
+	process.Run()
+	if got := process.GetResult(); process.HasErr() || got.Count != 0 || len(got.Failed) != 1 || got.Failed[0].Error != domain.ErrNoFilter.Error() {
+		t.Errorf("result = %+v, %v; want the op refused", got, process.GetErr())
+	}
+}

@@ -3,7 +3,6 @@ package login
 
 import (
 	"errors"
-	"net"
 	"net/http"
 	"time"
 
@@ -35,8 +34,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 		if !respond.Decode(w, r, &input) {
 			return
 		}
-		address, _, _ := net.SplitHostPort(r.RemoteAddr)
-		key := "address " + address
+		key := throttle.AddressKey(r)
 		failed := throttle.Passwords(db)
 		if failed.Blocked(w, r, key) {
 			return

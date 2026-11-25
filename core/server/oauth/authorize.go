@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"log"
 	"math"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -60,11 +59,10 @@ func authorize(db bun.IDB) http.HandlerFunc {
 		}
 		req := request{ClientID: params.Get("client_id"), RedirectURI: redirect, State: params.Get("state"), CodeChallenge: params.Get("code_challenge"), Client: c}
 		switch {
-		case params.Get("response_type") != "code":
-			back(w, r, req, url.Values{"error": {"unsupported_response_type"}})
-			return
-		case req.CodeChallenge == "" || params.Get("code_challenge_method") != "S256":
-			back(w, r, req, url.Values{"error": {"invalid_request"}, "error_description": {"PKCE with code_challenge_method=S256 is required"}})
+		// The page, not a redirect: registration is open, a redirect before the owner sees the page would make this
+		// address bounce anyone to any URL.
+		case params.Get("response_type") != "code", req.CodeChallenge == "" || params.Get("code_challenge_method") != "S256":
+			show(w, http.StatusBadRequest, page{Text: text, Error: text.BadClient})
 			return
 		}
 
@@ -80,9 +78,12 @@ func authorize(db bun.IDB) http.HandlerFunc {
 		}
 
 		shown.ReadOnly = r.PostForm.Get("read_only") == "on"
-		address, _, _ := net.SplitHostPort(r.RemoteAddr)
-		key := "address " + address
+		key := throttle.AddressKey(r)
 		wait, err := failed.Try(r.Context(), key)
+		if err == nil && wait == 0 {
+			// All addresses together too: the page faces the Internet, and an attacker has many addresses.
+			wait, err = failed.Try(r.Context(), throttle.GlobalKey)
+		}
 		if err != nil {
 			log.Printf("oauth authorize: %v", err)
 			shown.Error = text.Failed
@@ -108,12 +109,14 @@ func authorize(db bun.IDB) http.HandlerFunc {
 				return
 			}
 			failed.Forgive(r.Context(), key)
+			failed.Forgive(r.Context(), throttle.GlobalKey)
 			log.Printf("oauth authorize: %v", process.GetErr())
 			shown.Error = text.Failed
 			show(w, http.StatusInternalServerError, shown)
 			return
 		}
 		failed.Reset(r.Context(), key)
+		failed.Reset(r.Context(), throttle.GlobalKey)
 		back(w, r, req, url.Values{"code": {process.GetResult()}})
 	}
 }

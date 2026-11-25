@@ -54,3 +54,14 @@ func TestRun(t *testing.T) {
 		t.Errorf("missing id = %+v, %v", got, gone.GetErr())
 	}
 }
+
+// A q of spaces adds no condition: it would match everything, so it is refused like an empty filter.
+func TestBlankQuery(t *testing.T) {
+	db := testdb.New(t)
+	seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	process := deleteapplications.Process(context.Background(), db, deleteapplications.Input{Filter: domain.Filter{Q: "  "}})
+	process.Run()
+	if !errors.Is(process.GetErr(), domain.ErrNoFilter) {
+		t.Errorf("err = %v, want %v", process.GetErr(), domain.ErrNoFilter)
+	}
+}
