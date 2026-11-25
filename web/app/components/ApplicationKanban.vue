@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui';
 import type { Application, Status } from '~/types/items';
 import { STATUSES } from '~/types/items';
 
@@ -15,7 +14,26 @@ const columns = computed(() =>
   STATUSES.map((status) => ({ status, items: props.applications.filter((a) => a.status === status) })),
 );
 
-// Drag and drop moves a card; the menu of each card does the same from the keyboard.
+const dot: Record<string, string> = {
+  neutral: 'bg-inverted/40',
+  info: 'bg-info',
+  primary: 'bg-primary',
+  success: 'bg-success',
+  error: 'bg-error',
+};
+const sourceIcon: Record<string, string> = {
+  spontaneous: 'i-lucide-send',
+  job_post: 'i-lucide-briefcase',
+  recruiter: 'i-lucide-user-round',
+};
+
+// The board reaches the bottom of the window, each column scrolls inside: its height is the room left below it.
+const board = useTemplateRef('board');
+const { top } = useElementBounding(board);
+const { height: windowHeight } = useWindowSize();
+const height = computed(() => `${Math.max(320, windowHeight.value - top.value - 24)}px`);
+
+// A drag moves a card to another column; a click opens it. The form changes the status from the keyboard.
 const dragged = ref<Application>();
 const over = ref<Status>();
 function drop(status: Status) {
@@ -24,77 +42,72 @@ function drop(status: Status) {
   over.value = undefined;
 }
 
-const moveMenu = (app: Application): DropdownMenuItem[] =>
-  STATUSES.filter((s) => s !== app.status).map((s) => ({
-    label: t(`status.${s}`),
-    onSelect: () => emit('move', app, s),
-  }));
+// "2026-01-31" is a day, not an instant: no timezone shift.
+const day = (v?: string) =>
+  v ? new Date(`${v.slice(0, 10)}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
 </script>
 
 <template>
-  <div class="grid gap-3 overflow-x-auto md:grid-cols-5">
+  <div ref="board" class="flex gap-3 overflow-x-auto pb-1" :style="{ height }">
     <section
       v-for="column in columns"
       :key="column.status"
-      class="flex min-h-48 flex-col gap-2 rounded-lg border border-default bg-elevated/50 p-2 transition-colors"
-      :class="over === column.status ? 'border-primary bg-primary/5' : ''"
+      class="flex w-72 min-w-64 flex-1 shrink-0 flex-col rounded-xl bg-elevated/60 ring-1 transition-colors ring-inset"
+      :class="over === column.status ? 'bg-primary/5 ring-primary' : 'ring-default'"
       :aria-label="t(`status.${column.status}`)"
       @dragover.prevent="over = column.status"
-      @dragleave="over = over === column.status ? undefined : over"
+      @dragleave.self="over = undefined"
       @drop.prevent="drop(column.status)"
     >
-      <header class="flex items-center justify-between px-1">
-        <UBadge :color="statusColor[column.status]" variant="subtle" :label="t(`status.${column.status}`)" />
-        <span class="text-sm text-muted">{{ column.items.length }}</span>
+      <header class="flex items-center gap-2 px-3 pt-3 pb-2">
+        <span class="size-2.5 rounded-full" :class="dot[statusColor[column.status]]" aria-hidden="true" />
+        <h3 class="text-sm font-medium">{{ t(`status.${column.status}`) }}</h3>
+        <span class="rounded-full bg-accented/60 px-1.5 text-xs text-muted tabular-nums">{{
+          column.items.length
+        }}</span>
       </header>
-      <UCard
-        v-for="app in column.items"
-        :key="app.id"
-        draggable="true"
-        class="cursor-grab active:cursor-grabbing"
-        :class="dragged?.id === app.id ? 'opacity-50' : ''"
-        :ui="{ body: 'p-3 sm:p-3' }"
-        @dragstart="dragged = app"
-        @dragend="
-          dragged = undefined;
-          over = undefined;
-        "
-      >
-        <div class="flex items-start justify-between gap-1">
-          <div class="min-w-0">
-            <p class="truncate font-medium">{{ app.company }}</p>
-            <p class="truncate text-sm text-muted">{{ app.location }}</p>
-          </div>
-          <UDropdownMenu :items="moveMenu(app)">
-            <UButton
-              icon="i-lucide-ellipsis-vertical"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              :aria-label="t('table.changeStatus')"
-            />
-          </UDropdownMenu>
-        </div>
-        <div class="mt-2 flex items-center justify-between">
-          <span role="img" class="flex" :aria-label="t('table.stars', { n: app.rating ?? 0 })">
+
+      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
+        <div
+          v-for="app in column.items"
+          :key="app.id"
+          role="button"
+          tabindex="0"
+          draggable="true"
+          class="group cursor-pointer rounded-lg border border-default bg-default p-3 shadow-xs transition hover:border-accented hover:shadow-sm focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
+          :class="dragged?.id === app.id ? 'opacity-40' : ''"
+          :aria-label="`${app.company}, ${app.location}`"
+          @click="emit('edit', app)"
+          @keydown.enter.prevent="emit('edit', app)"
+          @dragstart="dragged = app"
+          @dragend="
+            dragged = undefined;
+            over = undefined;
+          "
+        >
+          <p class="truncate text-sm font-medium">{{ app.company }}</p>
+          <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
+            <UIcon name="i-lucide-map-pin" class="size-3 shrink-0" />{{ app.location }}
+          </p>
+          <div class="mt-3 flex items-center gap-2 text-xs text-muted">
             <UIcon
-              v-for="n in 5"
-              :key="n"
-              name="i-lucide-star"
-              class="size-3"
-              :class="n <= (app.rating ?? 0) ? 'text-warning' : 'text-muted/40'"
+              :name="sourceIcon[app.source ?? 'spontaneous']"
+              class="size-3.5"
+              :aria-label="t(`source.${app.source ?? 'spontaneous'}`)"
             />
-          </span>
-          <UButton
-            icon="i-lucide-pencil"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            :aria-label="t('common.edit')"
-            @click="emit('edit', app)"
-          />
+            <span v-if="app.rating" role="img" class="flex" :aria-label="t('table.stars', { n: app.rating })">
+              <UIcon v-for="n in app.rating" :key="n" name="i-lucide-star" class="size-3 text-warning" />
+            </span>
+            <span class="ml-auto tabular-nums">{{ day(app.applied_at) }}</span>
+          </div>
         </div>
-      </UCard>
+        <p
+          v-if="column.items.length === 0"
+          class="rounded-lg border border-dashed border-default p-4 text-center text-xs text-muted"
+        >
+          {{ t('kanban.dropHere') }}
+        </p>
+      </div>
     </section>
   </div>
 </template>

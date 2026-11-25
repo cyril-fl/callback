@@ -60,6 +60,9 @@
     "table": "Vue tableau",
     "kanban": "Vue kanban"
   },
+  "kanban": {
+    "dropHere": "Glissez une candidature ici"
+  },
   "form": {
     "add": "Ajouter une candidature",
     "edit": "Modifier la candidature",

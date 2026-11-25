@@ -266,6 +266,18 @@ async function doDelete() {
       :sorting-options="{ manualSorting: true }"
     >
       <template #empty>{{ t('common.empty') }}</template>
+      <template #company-cell="{ row }">
+        <a
+          v-if="row.original.website"
+          :href="row.original.website"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-primary hover:underline"
+        >
+          {{ row.original.company }}
+        </a>
+        <span v-else class="font-medium">{{ row.original.company }}</span>
+      </template>
       <template #source-cell="{ row }">
         <a
           v-if="row.original.source === 'job_post' && row.original.source_detail"
