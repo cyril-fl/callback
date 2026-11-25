@@ -91,7 +91,7 @@ function openForm(app: Application) {
 
     <section>
       <h2 class="mb-3 text-sm font-semibold">{{ t('stats.activity') }}</h2>
-      <ActivityHeatmap :days="days" />
+      <ActivityHeatmap :days="days" :since="since" />
     </section>
 
     <section>

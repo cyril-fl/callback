@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// The days applied on over the last year, a column a week from Monday, as GitHub's contributions.
-const props = defineProps<{ days: string[] }>();
+// The days applied on since `since` (else since the first one, at most a year without any), a column a week from Monday, as GitHub's contributions.
+const props = defineProps<{ days: string[]; since?: string }>();
 const { t } = useI18n();
 
 const iso = (d: Date) =>
@@ -14,8 +14,9 @@ const counts = computed(() => {
 const weeks = computed(() => {
   const today = new Date();
   today.setHours(12, 0, 0, 0);
-  const start = new Date(today);
-  start.setDate(start.getDate() - 52 * 7 - ((today.getDay() + 6) % 7));
+  const first = props.since || props.days.reduce((a, d) => (a && a < d ? a : d.slice(0, 10)), '');
+  const start = first ? new Date(`${first}T12:00:00`) : new Date(today.getTime() - 52 * 7 * 864e5);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
   const out: { key: string; date: Date; count: number; future: boolean }[][] = [];
   for (const d = new Date(start); d <= today || out.at(-1)!.length < 7; d.setDate(d.getDate() + 1)) {
     if (!out.length || out.at(-1)!.length === 7) out.push([]);
