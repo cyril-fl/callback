@@ -49,6 +49,8 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	backup.Applications = append(backup.Applications, domain.Application{ID: "bad", Location: "Nice"})
+	// The trash's restore inserts the application as it is: the item's id wins over the one inside.
+	backup.Deleted[0].Application.ID = "other"
 
 	to := testdb.New(t)
 	for pass := 1; pass <= 2; pass++ {
@@ -70,6 +72,9 @@ func TestRoundTrip(t *testing.T) {
 	again := exportdata.Process(ctx, to)
 	again.Run()
 	got := again.GetResult()
+	if got.Deleted[0].Application.ID != got.Deleted[0].ID {
+		t.Fatalf("deleted %q holds application %q", got.Deleted[0].ID, got.Deleted[0].Application.ID)
+	}
 	if len(got.Applications) != 1 || got.Applications[0].Company != "Acme" || len(got.Deleted) != 1 || len(got.StatusChanges) != 3 || len(got.FollowUps) != 1 {
 		t.Fatalf("restored: %d applications, %d deleted, %d changes, %d follow-ups", len(got.Applications), len(got.Deleted), len(got.StatusChanges), len(got.FollowUps))
 	}

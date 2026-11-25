@@ -44,6 +44,10 @@ docker compose -f compose.prod.yaml exec callback /callback-server --db /data/ca
 docker cp callback:/data/backup-$(date +%F).db .
 ```
 
+Settings → Backup (or `GET /api/export`) also gives the data as one JSON file: the applications, the trash, the status
+history and the follow-ups, without the settings nor the tokens. Importing it (`POST /api/import`) only adds what the
+base lacks, so the same file can be imported twice.
+
 A new job search: Settings → Danger zone deletes every application and its history (type `supprimer` to confirm),
 after a backup. The password, the settings and the tokens stay. Only a logged-in session can, never an API token or
 an agent.

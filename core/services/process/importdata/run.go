@@ -4,6 +4,7 @@ package importdata
 
 import (
 	"context"
+	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
@@ -11,8 +12,10 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Result counts what was added and lists what was refused: Failed holds the applications that are invalid (Index
-// is the place in the file's applications), Skipped is how many the base already had.
+var errNoID = domain.Invalid("id is required")
+
+// Result counts what was added and lists what was refused: Failed holds the invalid applications (Index is the place
+// in the file's applications, ID an item of its trash), Skipped is how many the base already had.
 type Result struct {
 	Added   int                   `json:"added"`
 	Deleted int                   `json:"deleted"`
@@ -71,32 +74,51 @@ func (p *run) restore() {
 		if err != nil {
 			return err
 		}
+		now := time.Now().UTC()
 		added := map[string]bool{}
-		var applications []domain.Application
-		for i, application := range p.backup.Applications {
+		// check readies an application as a creation would; a kept one returns true.
+		check := func(application *domain.Application, failure domain.BatchFailure) bool {
 			id := application.ID
 			application.Normalize()
 			application.Source = known.Match(application.Source)
-			switch err := application.Validate(); {
-			case id == "":
-				p.fail(i, domain.Invalid("id is required"))
+			if application.CreatedAt.IsZero() {
+				application.CreatedAt = now
+			}
+			if application.UpdatedAt.IsZero() {
+				application.UpdatedAt = application.CreatedAt
+			}
+			err := application.Validate()
+			if id == "" {
+				err = errNoID
+			}
+			switch {
 			case err != nil:
-				p.fail(i, err)
+				failure.Error = err.Error()
+				p.cache.result.Failed = append(p.cache.result.Failed, failure)
 			case taken[id] || added[id]:
 				p.cache.result.Skipped++
 			default:
 				added[id] = true
+				return true
+			}
+			return false
+		}
+		var applications []domain.Application
+		for i, application := range p.backup.Applications {
+			if check(&application, domain.BatchFailure{Index: &i}) {
 				applications = append(applications, application)
 			}
 		}
 		var deleted []domain.DeletedApplication
 		for _, item := range p.backup.Deleted {
-			if item.ID == "" || taken[item.ID] || added[item.ID] {
-				p.cache.result.Skipped++
-				continue
+			// The trash's restore inserts the application as it is: its id must be the item's.
+			item.Application.ID = item.ID
+			if item.DeletedAt.IsZero() {
+				item.DeletedAt = now
 			}
-			added[item.ID] = true
-			deleted = append(deleted, item)
+			if check(&item.Application, domain.BatchFailure{ID: item.ID}) {
+				deleted = append(deleted, item)
+			}
 		}
 		if err := insert(ctx, tx, applications); err != nil {
 			return err
@@ -126,10 +148,6 @@ func (p *run) restore() {
 		}
 		return insert(ctx, tx, followUps)
 	}))
-}
-
-func (p *run) fail(index int, err error) {
-	p.cache.result.Failed = append(p.cache.result.Failed, domain.BatchFailure{Index: &index, Error: err.Error()})
 }
 
 // Helpers

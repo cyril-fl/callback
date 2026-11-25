@@ -209,7 +209,7 @@
     "purge": "Repartir de zéro",
     "purgeHelp": "Supprime toutes les candidatures, corbeille comprise, et leur historique, pour une nouvelle recherche. Les réglages et les jetons restent.",
     "purgeAction": "Tout supprimer",
-    "purgeMessage": "Toutes les candidatures sont supprimées pour de bon. Faites d'abord une sauvegarde (callback-server backup) pour garder une copie.",
+    "purgeMessage": "Toutes les candidatures sont supprimées pour de bon. Exportez-les d'abord (Sauvegarde, plus haut) pour garder une copie.",
     "purgeWord": "supprimer",
     "purged": "{count} candidatures supprimées",
     "trash": "Corbeille",
