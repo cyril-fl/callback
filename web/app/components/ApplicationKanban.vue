@@ -90,7 +90,14 @@ const day = (v?: string) =>
             <UTooltip :text="sources.label(app.source)">
               <UIcon :name="sourceIcon(app.source)" class="size-3.5" :aria-label="sources.label(app.source)" />
             </UTooltip>
-            <UInputRating v-if="app.rating" :model-value="app.rating" readonly size="xs" />
+            <UInputRating
+              v-if="app.rating"
+              icon="i-callback-star-filled"
+              empty-icon="i-lucide-star"
+              :model-value="app.rating"
+              readonly
+              size="xs"
+            />
             <span class="ml-auto tabular-nums">{{ day(app.applied_at) }}</span>
           </div>
         </div>

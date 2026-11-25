@@ -290,7 +290,13 @@ async function submit() {
         </template>
 
         <UFormField name="rating" :label="t('form.rating')">
-          <UInputRating v-model="state.rating" clearable size="lg" />
+          <UInputRating
+            v-model="state.rating"
+            icon="i-callback-star-filled"
+            empty-icon="i-lucide-star"
+            clearable
+            size="lg"
+          />
         </UFormField>
         <UFormField name="comment" :label="t('form.comment')">
           <UTextarea v-model="state.comment" :rows="4" autoresize class="w-full" />

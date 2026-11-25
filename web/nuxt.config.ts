@@ -4,6 +4,8 @@ export default defineNuxtConfig({
   ssr: false,
   modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxt/fonts', '@vueuse/nuxt', '@nuxtjs/i18n'],
   css: ['~/assets/css/main.css'],
+  // Local icons, bundled with the app: i-callback-<file name>.
+  icon: { customCollections: [{ prefix: 'callback', dir: './app/assets/icons' }] },
   i18n: {
     strategy: 'no_prefix',
     defaultLocale: 'fr',

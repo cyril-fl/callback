@@ -451,7 +451,13 @@ function exportCsv() {
         </UDropdownMenu>
       </template>
       <template #rating-cell="{ row }">
-        <UInputRating :model-value="row.original.rating ?? 0" readonly size="xs" />
+        <UInputRating
+          icon="i-callback-star-filled"
+          empty-icon="i-lucide-star"
+          :model-value="row.original.rating ?? 0"
+          readonly
+          size="xs"
+        />
       </template>
       <template #location-cell="{ row }">
         {{ [row.original.location, row.original.country].filter(Boolean).join(', ') }}
