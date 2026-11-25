@@ -7,7 +7,8 @@
 }
 
 /* The themes of app/utils/themes.ts: four accents after those of the previous app (pink #EC6FA8, lilac #A78BDA, blue #3F7BCF,
-   green), each with greys tinted by its hue. 500, the buttons of the light mode, is the lightest shade white text
+   green), each with greys tinted by its hue, and its own info, success, warning and error: the usual hues turned a
+   little toward the accent (red and amber least), at a calmer saturation, so the statuses and badges belong to the theme. 500, the buttons of the light mode, is the lightest shade white text
    reads on at WCAG AA (4.5:1). Static: Tailwind keeps them though no class names them. */
 @theme static {
   --color-callback-pink-50: #fdf1f7;
@@ -34,6 +35,54 @@
   --color-callback-pink-gray-900: #21171c;
   --color-callback-pink-gray-950: #150f12;
 
+  --color-callback-pink-info-50: #f3f4fc;
+  --color-callback-pink-info-100: #e3e6f8;
+  --color-callback-pink-info-200: #c7cdf0;
+  --color-callback-pink-info-300: #9eaae5;
+  --color-callback-pink-info-400: #7686db;
+  --color-callback-pink-info-500: #5a6dd3;
+  --color-callback-pink-info-600: #3e54cc;
+  --color-callback-pink-info-700: #3045b5;
+  --color-callback-pink-info-800: #293a99;
+  --color-callback-pink-info-900: #223181;
+  --color-callback-pink-info-950: #1c2869;
+
+  --color-callback-pink-success-50: #f4fcf3;
+  --color-callback-pink-success-100: #e5f8e3;
+  --color-callback-pink-success-200: #caf0c7;
+  --color-callback-pink-success-300: #a5e59e;
+  --color-callback-pink-success-400: #7fdb76;
+  --color-callback-pink-success-500: #2c8523;
+  --color-callback-pink-success-600: #23691c;
+  --color-callback-pink-success-700: #194d14;
+  --color-callback-pink-success-800: #10300d;
+  --color-callback-pink-success-900: #081806;
+  --color-callback-pink-success-950: #081806;
+
+  --color-callback-pink-warning-50: #fcf7f3;
+  --color-callback-pink-warning-100: #f8ece3;
+  --color-callback-pink-warning-200: #f0dac7;
+  --color-callback-pink-warning-300: #e5bf9e;
+  --color-callback-pink-warning-400: #dba476;
+  --color-callback-pink-warning-500: #a7652c;
+  --color-callback-pink-warning-600: #8b5425;
+  --color-callback-pink-warning-700: #6f431d;
+  --color-callback-pink-warning-800: #533216;
+  --color-callback-pink-warning-900: #3a2310;
+  --color-callback-pink-warning-950: #221509;
+
+  --color-callback-pink-error-50: #fcf3f4;
+  --color-callback-pink-error-100: #f8e3e4;
+  --color-callback-pink-error-200: #f0c7ca;
+  --color-callback-pink-error-300: #e59ea4;
+  --color-callback-pink-error-400: #db767e;
+  --color-callback-pink-error-500: #cd444e;
+  --color-callback-pink-error-600: #bb323c;
+  --color-callback-pink-error-700: #9f2a33;
+  --color-callback-pink-error-800: #83232a;
+  --color-callback-pink-error-900: #6b1c22;
+  --color-callback-pink-error-950: #53161b;
+
   --color-callback-lilac-50: #f6f3fb;
   --color-callback-lilac-100: #eae4f6;
   --color-callback-lilac-200: #d6c9ee;
@@ -58,11 +107,59 @@
   --color-callback-lilac-gray-900: #1b1721;
   --color-callback-lilac-gray-950: #110f15;
 
+  --color-callback-lilac-info-50: #f3f7fb;
+  --color-callback-lilac-info-100: #e4ebf6;
+  --color-callback-lilac-info-200: #c9d7ee;
+  --color-callback-lilac-info-300: #a2bbe1;
+  --color-callback-lilac-info-400: #7c9fd5;
+  --color-callback-lilac-info-500: #4275c3;
+  --color-callback-lilac-info-600: #3664aa;
+  --color-callback-lilac-info-700: #2e548f;
+  --color-callback-lilac-info-800: #254474;
+  --color-callback-lilac-info-900: #1e375d;
+  --color-callback-lilac-info-950: #162946;
+
+  --color-callback-lilac-success-50: #f3fbfa;
+  --color-callback-lilac-success-100: #e4f6f4;
+  --color-callback-lilac-success-200: #c9eee9;
+  --color-callback-lilac-success-300: #a2e1d9;
+  --color-callback-lilac-success-400: #7cd5ca;
+  --color-callback-lilac-success-500: #298276;
+  --color-callback-lilac-success-600: #21665d;
+  --color-callback-lilac-success-700: #184b45;
+  --color-callback-lilac-success-800: #0f302c;
+  --color-callback-lilac-success-900: #081917;
+  --color-callback-lilac-success-950: #071715;
+
+  --color-callback-lilac-warning-50: #fbf6f3;
+  --color-callback-lilac-warning-100: #f6eae4;
+  --color-callback-lilac-warning-200: #eed5c9;
+  --color-callback-lilac-warning-300: #e1b6a2;
+  --color-callback-lilac-warning-400: #d5987c;
+  --color-callback-lilac-warning-500: #b05e38;
+  --color-callback-lilac-warning-600: #95502f;
+  --color-callback-lilac-warning-700: #7a4127;
+  --color-callback-lilac-warning-800: #5f331e;
+  --color-callback-lilac-warning-900: #482617;
+  --color-callback-lilac-warning-950: #301a0f;
+
+  --color-callback-lilac-error-50: #fbf3f5;
+  --color-callback-lilac-error-100: #f6e4e8;
+  --color-callback-lilac-error-200: #eec9d0;
+  --color-callback-lilac-error-300: #e1a2ae;
+  --color-callback-lilac-error-400: #d57c8d;
+  --color-callback-lilac-error-500: #c54961;
+  --color-callback-lilac-error-600: #b23950;
+  --color-callback-lilac-error-700: #973044;
+  --color-callback-lilac-error-800: #7c2738;
+  --color-callback-lilac-error-900: #65202d;
+  --color-callback-lilac-error-950: #4d1923;
+
   --color-callback-blue-50: #f3f7fc;
   --color-callback-blue-100: #e2ebf8;
   --color-callback-blue-200: #c6d8f1;
   --color-callback-blue-300: #9dbce7;
-  --color-callback-blue-400: #6c9ada;
+  --color-callback-blue-400: #74a0dc;
   --color-callback-blue-500: #3574cd;
   --color-callback-blue-600: #2c64b1;
   --color-callback-blue-700: #255495;
@@ -74,7 +171,7 @@
   --color-callback-blue-gray-100: #eaedf0;
   --color-callback-blue-gray-200: #d5dae2;
   --color-callback-blue-gray-300: #b7c0cd;
-  --color-callback-blue-gray-400: #93a0b4;
+  --color-callback-blue-gray-400: #99a6b8;
   --color-callback-blue-gray-500: #63758f;
   --color-callback-blue-gray-600: #55647a;
   --color-callback-blue-gray-700: #384351;
@@ -82,11 +179,59 @@
   --color-callback-blue-gray-900: #171b21;
   --color-callback-blue-gray-950: #0f1115;
 
+  --color-callback-blue-info-50: #f3f8fc;
+  --color-callback-blue-info-100: #e3eef8;
+  --color-callback-blue-info-200: #c7ddf0;
+  --color-callback-blue-info-300: #9ec5e5;
+  --color-callback-blue-info-400: #76addb;
+  --color-callback-blue-info-500: #3079b5;
+  --color-callback-blue-info-600: #296799;
+  --color-callback-blue-info-700: #21547d;
+  --color-callback-blue-info-800: #1a4161;
+  --color-callback-blue-info-900: #133149;
+  --color-callback-blue-info-950: #0d2030;
+
+  --color-callback-blue-success-50: #f3fcf9;
+  --color-callback-blue-success-100: #e3f8f2;
+  --color-callback-blue-success-200: #c7f0e4;
+  --color-callback-blue-success-300: #9ee5d1;
+  --color-callback-blue-success-400: #76dbbe;
+  --color-callback-blue-success-500: #238368;
+  --color-callback-blue-success-600: #1b6751;
+  --color-callback-blue-success-700: #144b3b;
+  --color-callback-blue-success-800: #0c2e25;
+  --color-callback-blue-success-900: #061813;
+  --color-callback-blue-success-950: #061813;
+
+  --color-callback-blue-warning-50: #fcf5f3;
+  --color-callback-blue-warning-100: #f8e7e3;
+  --color-callback-blue-warning-200: #f0d0c7;
+  --color-callback-blue-warning-300: #e5ae9e;
+  --color-callback-blue-warning-400: #db8c76;
+  --color-callback-blue-warning-500: #bf5233;
+  --color-callback-blue-warning-600: #a3462b;
+  --color-callback-blue-warning-700: #873a24;
+  --color-callback-blue-warning-800: #6b2e1c;
+  --color-callback-blue-warning-900: #532316;
+  --color-callback-blue-warning-950: #3a1910;
+
+  --color-callback-blue-error-50: #fcf3f5;
+  --color-callback-blue-error-100: #f8e3e8;
+  --color-callback-blue-error-200: #f0c7d2;
+  --color-callback-blue-error-300: #e59eb2;
+  --color-callback-blue-error-400: #db7691;
+  --color-callback-blue-error-500: #cd4267;
+  --color-callback-blue-error-600: #b93156;
+  --color-callback-blue-error-700: #9d2a49;
+  --color-callback-blue-error-800: #81223c;
+  --color-callback-blue-error-900: #691c31;
+  --color-callback-blue-error-950: #511525;
+
   --color-callback-green-50: #f7faf5;
   --color-callback-green-100: #edf3e7;
   --color-callback-green-200: #dce7d0;
   --color-callback-green-300: #c3d5ae;
-  --color-callback-green-400: #a4c086;
+  --color-callback-green-400: #a9c48d;
   --color-callback-green-500: #607c40;
   --color-callback-green-600: #4e6534;
   --color-callback-green-700: #3b4d28;
@@ -98,11 +243,59 @@
   --color-callback-green-gray-100: #edf0ea;
   --color-callback-green-gray-200: #dce2d5;
   --color-callback-green-gray-300: #c2cdb7;
-  --color-callback-green-gray-400: #a4b493;
+  --color-callback-green-gray-400: #a9b899;
   --color-callback-green-gray-500: #687a55;
   --color-callback-green-gray-600: #566546;
   --color-callback-green-gray-700: #455138;
   --color-callback-green-gray-800: #2c3324;
   --color-callback-green-gray-900: #1c2117;
   --color-callback-green-gray-950: #12150f;
+
+  --color-callback-green-info-50: #f4fafa;
+  --color-callback-green-info-100: #e6f4f4;
+  --color-callback-green-info-200: #cde9ea;
+  --color-callback-green-info-300: #a9d9da;
+  --color-callback-green-info-400: #86c9cb;
+  --color-callback-green-info-500: #377e81;
+  --color-callback-green-info-600: #2c6668;
+  --color-callback-green-info-700: #224d4f;
+  --color-callback-green-info-800: #173536;
+  --color-callback-green-info-900: #0e2020;
+  --color-callback-green-info-950: #091515;
+
+  --color-callback-green-success-50: #f4faf6;
+  --color-callback-green-success-100: #e6f4ea;
+  --color-callback-green-success-200: #cdead5;
+  --color-callback-green-success-300: #a9dab8;
+  --color-callback-green-success-400: #86cb9a;
+  --color-callback-green-success-500: #38824e;
+  --color-callback-green-success-600: #2d693f;
+  --color-callback-green-success-700: #225030;
+  --color-callback-green-success-800: #183721;
+  --color-callback-green-success-900: #0f2214;
+  --color-callback-green-success-950: #09150d;
+
+  --color-callback-green-warning-50: #faf9f4;
+  --color-callback-green-warning-100: #f4f0e6;
+  --color-callback-green-warning-200: #eae1cd;
+  --color-callback-green-warning-300: #dacba9;
+  --color-callback-green-warning-400: #cbb686;
+  --color-callback-green-warning-500: #89713b;
+  --color-callback-green-warning-600: #705d30;
+  --color-callback-green-warning-700: #574825;
+  --color-callback-green-warning-800: #3e331b;
+  --color-callback-green-warning-900: #292212;
+  --color-callback-green-warning-950: #151209;
+
+  --color-callback-green-error-50: #faf5f4;
+  --color-callback-green-error-100: #f4e8e6;
+  --color-callback-green-error-200: #ead0cd;
+  --color-callback-green-error-300: #daafa9;
+  --color-callback-green-error-400: #cb8e86;
+  --color-callback-green-error-500: #b35a4e;
+  --color-callback-green-error-600: #9b4d43;
+  --color-callback-green-error-700: #824138;
+  --color-callback-green-error-800: #69342d;
+  --color-callback-green-error-900: #542a24;
+  --color-callback-green-error-950: #3e1f1b;
 }

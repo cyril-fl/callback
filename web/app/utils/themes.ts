@@ -1,5 +1,13 @@
 // The themes to pick from: the Nuxt UI colors each sets, palettes of main.css. The choice stays on this device.
-const own = (id: string) => ({ id, primary: `callback-${id}`, neutral: `callback-${id}-gray` });
+const own = (id: string) => ({
+  id,
+  primary: `callback-${id}`,
+  neutral: `callback-${id}-gray`,
+  info: `callback-${id}-info`,
+  success: `callback-${id}-success`,
+  warning: `callback-${id}-warning`,
+  error: `callback-${id}-error`,
+});
 
 export const themes = [own('pink'), own('lilac'), own('blue'), own('green')];
 

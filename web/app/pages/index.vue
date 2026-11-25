@@ -55,10 +55,11 @@ const {
 );
 const refresh = () => Promise.all([refreshList(), refreshStats()]);
 
-const statusColor: Record<Status, 'neutral' | 'info' | 'primary' | 'success' | 'error'> = {
+// The statuses never take primary: it marks the actions, and the blue theme's info is close to it.
+const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | 'error'> = {
   applied: 'neutral',
   responded: 'info',
-  interview: 'primary',
+  interview: 'warning',
   offer: 'success',
   rejected: 'error',
 };
@@ -318,7 +319,7 @@ async function doDelete() {
             v-for="n in 5"
             :key="n"
             name="i-lucide-star"
-            :class="n <= (row.original.rating ?? 0) ? 'text-warning' : 'text-muted/40'"
+            :class="n <= (row.original.rating ?? 0) ? 'text-primary' : 'text-muted/40'"
           />
         </span>
       </template>

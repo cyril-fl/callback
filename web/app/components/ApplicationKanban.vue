@@ -4,7 +4,7 @@ import { STATUSES } from '~/types/items';
 
 const props = defineProps<{
   applications: Application[];
-  statusColor: Record<Status, 'neutral' | 'info' | 'primary' | 'success' | 'error'>;
+  statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | 'error'>;
 }>();
 const emit = defineEmits<{ move: [app: Application, status: Status]; edit: [app: Application] }>();
 
@@ -17,7 +17,7 @@ const columns = computed(() =>
 const dot: Record<string, string> = {
   neutral: 'bg-inverted/40',
   info: 'bg-info',
-  primary: 'bg-primary',
+  warning: 'bg-warning',
   success: 'bg-success',
   error: 'bg-error',
 };
@@ -90,7 +90,7 @@ const day = (v?: string) =>
               :aria-label="t(`source.${app.source ?? 'spontaneous'}`)"
             />
             <span v-if="app.rating" role="img" class="flex" :aria-label="t('table.stars', { n: app.rating })">
-              <UIcon v-for="n in app.rating" :key="n" name="i-lucide-star" class="size-3 text-warning" />
+              <UIcon v-for="n in app.rating" :key="n" name="i-lucide-star" class="size-3 text-primary" />
             </span>
             <span class="ml-auto tabular-nums">{{ day(app.applied_at) }}</span>
           </div>
