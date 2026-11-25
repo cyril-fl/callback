@@ -42,7 +42,13 @@
   "stats": {
     "responseRate": "Taux de réponse",
     "total": "Total",
-    "bySource": "Par source"
+    "bySource": "Par source",
+    "byCity": "Par ville",
+    "activity": "Activité",
+    "less": "Moins",
+    "more": "Plus",
+    "activityTotal": "Aucune candidature en un an | {count} candidature en un an | {count} candidatures en un an",
+    "dayCount": "Aucune candidature le {date} | {count} candidature le {date} | {count} candidatures le {date}"
   },
   "table": {
     "company": "Entreprise",
