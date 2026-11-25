@@ -201,30 +201,31 @@ const columns = computed<TableColumn<Application>[]>(() => [
 const day = (v?: string) => (v ? new Date(`${v.slice(0, 10)}T00:00:00`).toLocaleDateString('fr-FR') : '');
 const stamp = (v?: string) => (v ? new Date(v).toLocaleString('fr-FR') : '');
 
-async function setStatus(app: Application, status: Status) {
-  if (app.status === status) return;
+// Optimistic: the rows change at once; the refresh then brings the server's truth, or rolls back on a failure.
+async function write(ids: string[], local: Partial<Application> | 'delete', request: () => Promise<unknown>) {
+  applications.value =
+    local === 'delete'
+      ? applications.value?.filter((a) => !ids.includes(a.id))
+      : applications.value?.map((a) => (ids.includes(a.id) ? { ...a, ...local } : a));
   try {
-    await api<BatchResult>('/api/applications', {
-      method: 'PATCH',
-      body: { ops: [{ ids: [app.id], set: { status } }] },
-    });
-    await refresh();
+    await request();
+    return true;
   } catch {
-    // useApi already toasted.
+    return false; // useApi already toasted.
+  } finally {
+    await refresh();
   }
+}
+const patch = (ids: string[], set: Record<string, unknown>) => () =>
+  api<BatchResult>('/api/applications', { method: 'PATCH', body: { ops: [{ ids, set }] } });
+
+async function setStatus(app: Application, status: Status) {
+  if (app.status !== status) await write([app.id], { status }, patch([app.id], { status }));
 }
 
 async function markFollowedUp(app: Application) {
-  try {
-    await api<BatchResult>('/api/applications', {
-      method: 'PATCH',
-      body: { ops: [{ ids: [app.id], set: { followed_up: true } }] },
-    });
+  if (await write([app.id], { followed_up_at: new Date().toISOString() }, patch([app.id], { followed_up: true })))
     useToast().add({ title: t('table.followedUp', { company: app.company }), color: 'success' });
-    await refresh();
-  } catch {
-    // useApi already toasted.
-  }
 }
 
 const statusMenu = (app: Application) =>
@@ -234,6 +235,15 @@ const statusMenu = (app: Application) =>
     checked: app.status === s,
     onSelect: () => setStatus(app, s),
   }));
+
+// The form wrote it already: show it now, then refresh.
+function saved(item: Application) {
+  const list = applications.value ?? [];
+  applications.value = list.some((a) => a.id === item.id)
+    ? list.map((a) => (a.id === item.id ? { ...a, ...item } : a))
+    : [item, ...list];
+  refresh();
+}
 
 const slideover = ref(false);
 const editing = ref<Application>();
@@ -255,25 +265,13 @@ function askDeleteSelected() {
 }
 async function doDelete() {
   if (!deleting.value) return;
-  try {
-    await api<BatchResult>('/api/applications', { method: 'DELETE', body: { ids: deleting.value.ids } });
+  const { ids } = deleting.value;
+  if (await write(ids, 'delete', () => api<BatchResult>('/api/applications', { method: 'DELETE', body: { ids } })))
     useToast().add({ title: t('delete.done'), color: 'success' });
-    await refresh();
-  } catch {
-    // useApi already toasted.
-  }
 }
 
 async function setSelectedStatus(status: Status) {
-  try {
-    await api<BatchResult>('/api/applications', {
-      method: 'PATCH',
-      body: { ops: [{ ids: selected.value, set: { status } }] },
-    });
-    await refresh();
-  } catch {
-    // useApi already toasted.
-  }
+  await write(selected.value, { status }, patch(selected.value, { status }));
 }
 const selectedStatusMenu = computed(() =>
   STATUSES.map((s) => ({ label: t(`status.${s}`), onSelect: () => setSelectedStatus(s) })),
@@ -523,7 +521,7 @@ function exportCsv() {
       </div>
     </UContainer>
 
-    <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="refresh" />
+    <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="saved" />
     <ConfirmModal
       v-model:open="confirmOpen"
       :title="t('delete.title')"

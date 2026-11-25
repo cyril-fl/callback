@@ -6,7 +6,7 @@ import { STATUSES } from '~/types/items';
 
 const props = defineProps<{ application?: Application }>();
 const open = defineModel<boolean>('open', { required: true });
-const emit = defineEmits<{ saved: [] }>();
+const emit = defineEmits<{ saved: [app: Application] }>();
 
 const { t } = useI18n();
 const api = useApi();
@@ -156,7 +156,7 @@ async function submit() {
     }
     toast.add({ title: t('form.saved'), color: 'success' });
     open.value = false;
-    emit('saved');
+    emit('saved', { ...item, id: props.application?.id ?? result.ids?.[0] ?? '' } as Application);
   } catch {
     // useApi already toasted.
   } finally {
