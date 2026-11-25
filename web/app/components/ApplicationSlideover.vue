@@ -13,7 +13,7 @@ const api = useApi();
 const toast = useToast();
 const sources = useSources();
 const places = usePlaces();
-const defaults = useDefaults();
+const { preferences } = usePreferences();
 const loading = ref(false);
 
 const schema = computed(() => {
@@ -68,7 +68,11 @@ watch(open, (isOpen) => {
   // A new application starts at the default city and country of the settings.
   const next = a
     ? blank()
-    : { ...blank(), location: defaults.value.location || '', country: defaults.value.country || '' };
+    : {
+        ...blank(),
+        location: preferences.value?.default_location ?? '',
+        country: preferences.value?.default_country ?? '',
+      };
   if (a) for (const key of Object.keys(next) as (keyof State)[]) Object.assign(next, { [key]: a[key] ?? next[key] });
   Object.assign(state, next);
   fullAddress.value = !!(state.street || state.postal_code);
@@ -92,10 +96,7 @@ function createSource(name: string) {
   state.source = value;
 }
 
-// The cities and countries already used, the typed one included: picking a known city fills its country if empty.
-const withTyped = (typed: string, known: string[]) => (typed && !known.includes(typed) ? [typed, ...known] : known);
-const cityItems = computed(() => withTyped(state.location, places.cities.value));
-const countryItems = computed(() => withTyped(state.country, places.countries.value));
+// Picking a known city fills its country if empty.
 function pickCity(city: string) {
   state.location = city.trim();
   state.country ||= places.countryOf(state.location) ?? '';
@@ -159,23 +160,15 @@ async function submit() {
 
         <div class="grid grid-cols-2 gap-3">
           <UFormField name="location" :label="t('form.city')" required>
-            <UInputMenu
+            <SuggestInput
               :model-value="state.location"
-              :items="cityItems"
-              create-item
+              :suggestions="places.cities.value"
               class="w-full"
               @update:model-value="pickCity"
-              @create="pickCity"
             />
           </UFormField>
           <UFormField name="country" :label="t('form.country')">
-            <UInputMenu
-              v-model="state.country"
-              :items="countryItems"
-              create-item
-              class="w-full"
-              @create="(v: string) => (state.country = v.trim())"
-            />
+            <SuggestInput v-model="state.country" :suggestions="places.countries.value" class="w-full" />
           </UFormField>
         </div>
         <div v-if="fullAddress" class="grid grid-cols-3 gap-3">

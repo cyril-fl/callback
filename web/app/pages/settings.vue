@@ -5,11 +5,9 @@ const { t } = useI18n();
 const api = useApi();
 const toast = useToast();
 const theme = useTheme();
-const plan = usePlan();
-const defaults = useDefaults();
+const { preferences, save } = usePreferences();
 const places = usePlaces();
-const withTyped = (typed: string, known: string[]) => (typed && !known.includes(typed) ? [typed, ...known] : known);
-const planItems = plans.map((value) => ({ value, label: t(`settings.plans.${value}`) }));
+const planItems = (['base', 'pro'] as const).map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 const colorMode = useColorMode();
 const mode = computed({
   get: () => colorMode.preference as 'light' | 'dark' | 'system',
@@ -79,9 +77,16 @@ async function revoke() {
         <li class="flex flex-wrap items-center gap-4 px-4 py-3">
           <div class="flex-1 basis-48">
             <p class="text-sm">{{ t('settings.plan') }}</p>
-            <p class="text-xs text-muted">{{ t(`settings.planHelp.${plan}`) }}</p>
+            <p class="text-xs text-muted">{{ t(`settings.planHelp.${preferences?.plan ?? 'base'}`) }}</p>
           </div>
-          <UTabs v-model="plan" :items="planItems" :content="false" size="sm" :aria-label="t('settings.plan')" />
+          <UTabs
+            :model-value="preferences?.plan"
+            :items="planItems"
+            :content="false"
+            size="sm"
+            :aria-label="t('settings.plan')"
+            @update:model-value="(v) => save({ plan: v as 'base' | 'pro' })"
+          />
         </li>
         <li class="flex flex-wrap items-center gap-4 px-4 py-3">
           <div class="flex-1 basis-48">
@@ -89,27 +94,23 @@ async function revoke() {
             <p class="text-xs text-muted">{{ t('settings.defaultPlaceHelp') }}</p>
           </div>
           <div class="flex gap-2">
-            <UInputMenu
-              :model-value="defaults.location"
-              clear
-              :items="withTyped(defaults.location, places.cities.value)"
+            <SuggestInput
+              :model-value="preferences?.default_location ?? ''"
+              :suggestions="places.cities.value"
               :placeholder="t('form.city')"
               :aria-label="t('form.city')"
-              create-item
-              class="w-40"
-              @update:model-value="(v: string | null) => (defaults.location = v ?? '')"
-              @create="(v: string) => (defaults.location = v.trim())"
-            />
-            <UInputMenu
-              :model-value="defaults.country"
               clear
-              :items="withTyped(defaults.country, places.countries.value)"
+              class="w-40"
+              @update:model-value="(v: string) => save({ default_location: v })"
+            />
+            <SuggestInput
+              :model-value="preferences?.default_country ?? ''"
+              :suggestions="places.countries.value"
               :placeholder="t('form.country')"
               :aria-label="t('form.country')"
-              create-item
+              clear
               class="w-40"
-              @update:model-value="(v: string | null) => (defaults.country = v ?? '')"
-              @create="(v: string) => (defaults.country = v.trim())"
+              @update:model-value="(v: string) => save({ default_country: v })"
             />
           </div>
         </li>

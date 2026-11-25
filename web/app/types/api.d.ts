@@ -408,6 +408,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the preferences */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.Preferences"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the preferences */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description body */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["domain.PreferenceChanges"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.Preferences"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/sources": {
         parameters: {
             query?: never;
@@ -787,6 +875,22 @@ export interface components {
             status?: components["schemas"]["domain.Status"];
             street?: string;
             website?: string;
+        };
+        "domain.PreferenceChanges": {
+            default_country?: string;
+            default_location?: string;
+            follow_up_days?: number;
+            /** @enum {string} */
+            plan?: "base" | "pro";
+        };
+        "domain.Preferences": {
+            default_country: string;
+            /** @description DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty. */
+            default_location: string;
+            /** @description FollowUpDays is how long an application waits without news before it is to follow up. */
+            follow_up_days: number;
+            /** @enum {string} */
+            plan: "base" | "pro";
         };
         /** @enum {string} */
         "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected";

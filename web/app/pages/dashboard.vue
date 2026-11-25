@@ -2,7 +2,7 @@
 import type { Application, Stats } from '~/types/items';
 
 // The pro mode's page: in base the stats stay above the list.
-definePageMeta({ middleware: () => (usePlan().value === 'pro' ? undefined : navigateTo('/', { replace: true })) });
+definePageMeta({ middleware: 'pro' });
 
 const { t } = useI18n();
 const api = useApi();

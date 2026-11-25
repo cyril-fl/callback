@@ -8,6 +8,7 @@ import (
 	apideleteapplications "github.com/cyril-fl/callback/core/api/delete-applications"
 	apieditapplications "github.com/cyril-fl/callback/core/api/edit-applications"
 	apilogin "github.com/cyril-fl/callback/core/api/login"
+	apipreferences "github.com/cyril-fl/callback/core/api/preferences"
 	apireadapplications "github.com/cyril-fl/callback/core/api/read-applications"
 	apireadsources "github.com/cyril-fl/callback/core/api/read-sources"
 	apireadstats "github.com/cyril-fl/callback/core/api/read-stats"
@@ -34,6 +35,9 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("DELETE /api/applications", apideleteapplications.Handler(db))
 	mux.Handle("GET /api/stats", apireadstats.Handler(db))
 	mux.Handle("GET /api/sources", apireadsources.Handler(db))
+
+	mux.Handle("GET /api/preferences", apipreferences.Read(db))
+	mux.Handle("PATCH /api/preferences", apipreferences.Update(db))
 
 	mux.Handle("GET /api/tokens", apitokens.List(db))
 	mux.Handle("POST /api/tokens", apitokens.Create(db))

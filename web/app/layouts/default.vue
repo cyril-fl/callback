@@ -1,10 +1,10 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const logout = useLogout();
-const plan = usePlan();
+const { pro } = usePreferences();
 // One word each; the pro mode's dashboard has a page of its own.
 const links = computed(() => [
-  ...(plan.value === 'pro' ? [{ to: '/dashboard', icon: 'i-lucide-chart-column', label: t('nav.dashboard') }] : []),
+  ...(pro.value ? [{ to: '/dashboard', icon: 'i-lucide-chart-column', label: t('nav.dashboard') }] : []),
   { to: '/', icon: 'i-lucide-list', label: t('nav.applications') },
   { to: '/settings', icon: 'i-lucide-settings', label: t('nav.settings') },
 ]);

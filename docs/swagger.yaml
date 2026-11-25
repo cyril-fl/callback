@@ -228,6 +228,43 @@ components:
       - company
       - location
       type: object
+    domain.PreferenceChanges:
+      properties:
+        default_country:
+          type: string
+        default_location:
+          type: string
+        follow_up_days:
+          type: integer
+        plan:
+          enum:
+          - base
+          - pro
+          type: string
+      type: object
+    domain.Preferences:
+      properties:
+        default_country:
+          type: string
+        default_location:
+          description: DefaultLocation and DefaultCountry fill a new application of
+            the web app; both may be empty.
+          type: string
+        follow_up_days:
+          description: FollowUpDays is how long an application waits without news
+            before it is to follow up.
+          type: integer
+        plan:
+          enum:
+          - base
+          - pro
+          type: string
+      required:
+      - default_country
+      - default_location
+      - follow_up_days
+      - plan
+      type: object
     domain.Status:
       enum:
       - applied
@@ -696,6 +733,56 @@ paths:
       summary: Who is asking
       tags:
       - session
+  /api/preferences:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Preferences'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: Read the preferences
+      tags:
+      - preferences
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/domain.PreferenceChanges'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.Preferences'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: Change the preferences
+      tags:
+      - preferences
   /api/sources:
     get:
       responses:

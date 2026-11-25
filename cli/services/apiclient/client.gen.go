@@ -43,6 +43,42 @@ func (e CreateapitokenInputExpiresIn) Valid() bool {
 	}
 }
 
+// Defines values for DomainPreferenceChangesPlan.
+const (
+	DomainPreferenceChangesPlanBase DomainPreferenceChangesPlan = "base"
+	DomainPreferenceChangesPlanPro  DomainPreferenceChangesPlan = "pro"
+)
+
+// Valid indicates whether the value is a known member of the DomainPreferenceChangesPlan enum.
+func (e DomainPreferenceChangesPlan) Valid() bool {
+	switch e {
+	case DomainPreferenceChangesPlanBase:
+		return true
+	case DomainPreferenceChangesPlanPro:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DomainPreferencesPlan.
+const (
+	DomainPreferencesPlanBase DomainPreferencesPlan = "base"
+	DomainPreferencesPlanPro  DomainPreferencesPlan = "pro"
+)
+
+// Valid indicates whether the value is a known member of the DomainPreferencesPlan enum.
+func (e DomainPreferencesPlan) Valid() bool {
+	switch e {
+	case DomainPreferencesPlanBase:
+		return true
+	case DomainPreferencesPlanPro:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DomainStatus.
 const (
 	StatusApplied   DomainStatus = "applied"
@@ -252,6 +288,32 @@ type DomainNewApplication struct {
 	Website      *string       `json:"website,omitempty"`
 }
 
+// DomainPreferenceChanges defines model for domain.PreferenceChanges.
+type DomainPreferenceChanges struct {
+	DefaultCountry  *string                      `json:"default_country,omitempty"`
+	DefaultLocation *string                      `json:"default_location,omitempty"`
+	FollowUpDays    *int                         `json:"follow_up_days,omitempty"`
+	Plan            *DomainPreferenceChangesPlan `json:"plan,omitempty"`
+}
+
+// DomainPreferenceChangesPlan defines model for DomainPreferenceChanges.Plan.
+type DomainPreferenceChangesPlan string
+
+// DomainPreferences defines model for domain.Preferences.
+type DomainPreferences struct {
+	DefaultCountry string `json:"default_country"`
+
+	// DefaultLocation DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty.
+	DefaultLocation string `json:"default_location"`
+
+	// FollowUpDays FollowUpDays is how long an application waits without news before it is to follow up.
+	FollowUpDays int                   `json:"follow_up_days"`
+	Plan         DomainPreferencesPlan `json:"plan"`
+}
+
+// DomainPreferencesPlan defines model for DomainPreferences.Plan.
+type DomainPreferencesPlan string
+
 // DomainStatus defines model for domain.Status.
 type DomainStatus string
 
@@ -393,6 +455,9 @@ type PostApiApplicationsJSONRequestBody = PostApiApplicationsJSONBody
 
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = CreatesessionInput
+
+// PatchApiPreferencesJSONRequestBody defines body for PatchApiPreferences for application/json ContentType.
+type PatchApiPreferencesJSONRequestBody = DomainPreferenceChanges
 
 // PostApiTokensJSONRequestBody defines body for PostApiTokens for application/json ContentType.
 type PostApiTokensJSONRequestBody = CreateapitokenInput
@@ -541,6 +606,25 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/me (the `GetApiMe` operationId).
 	GetApiMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiPreferences Read the preferences
+	//
+	// Corresponds with GET /api/preferences (the `GetApiPreferences` operationId).
+	GetApiPreferences(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiPreferencesWithBody Change the preferences
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+	PatchApiPreferencesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiPreferences Change the preferences
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+	PatchApiPreferences(ctx context.Context, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiSources List the sources in use
 	//
@@ -748,6 +832,55 @@ func (c *Client) PostApiLogout(ctx context.Context, reqEditors ...RequestEditorF
 // Corresponds with GET /api/me (the `GetApiMe` operationId).
 func (c *Client) GetApiMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiMeRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetApiPreferences Read the preferences
+//
+// Corresponds with GET /api/preferences (the `GetApiPreferences` operationId).
+func (c *Client) GetApiPreferences(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiPreferencesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchApiPreferencesWithBody Change the preferences
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+func (c *Client) PatchApiPreferencesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiPreferencesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchApiPreferences Change the preferences
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+func (c *Client) PatchApiPreferences(ctx context.Context, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiPreferencesRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1264,6 +1397,73 @@ func NewGetApiMeRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetApiPreferencesRequest constructs an http.Request for the GetApiPreferences method
+func NewGetApiPreferencesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/preferences")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchApiPreferencesRequest calls the generic PatchApiPreferences builder with application/json body
+func NewPatchApiPreferencesRequest(server string, body PatchApiPreferencesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchApiPreferencesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPatchApiPreferencesRequestWithBody constructs an http.Request for the PatchApiPreferences method, with any body, and a specified content type
+func NewPatchApiPreferencesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/preferences")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetApiSourcesRequest constructs an http.Request for the GetApiSources method
 func NewGetApiSourcesRequest(server string) (*http.Request, error) {
 	var err error
@@ -1539,6 +1739,27 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/me (the `GetApiMe` operationId).
 	GetApiMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeResponse, error)
+
+	// GetApiPreferencesWithResponse Read the preferences
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/preferences (the `GetApiPreferences` operationId).
+	GetApiPreferencesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiPreferencesResponse, error)
+
+	// PatchApiPreferencesWithBodyWithResponse Change the preferences
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+	PatchApiPreferencesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error)
+
+	// PatchApiPreferencesWithResponse Change the preferences
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+	PatchApiPreferencesWithResponse(ctx context.Context, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error)
 
 	// GetApiSourcesWithResponse List the sources in use
 	//
@@ -1989,6 +2210,109 @@ func (r GetApiMeResponse) ContentType() string {
 	return ""
 }
 
+type GetApiPreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DomainPreferences
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetApiPreferencesResponse) GetJSON200() *DomainPreferences {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetApiPreferencesResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetApiPreferencesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiPreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiPreferencesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetApiPreferencesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PatchApiPreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DomainPreferences
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *RespondFailure
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PatchApiPreferencesResponse) GetJSON200() *DomainPreferences {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PatchApiPreferencesResponse) GetJSON400() *RespondFailure {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r PatchApiPreferencesResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r PatchApiPreferencesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchApiPreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchApiPreferencesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PatchApiPreferencesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetApiSourcesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -2400,6 +2724,45 @@ func (c *ClientWithResponses) GetApiMeWithResponse(ctx context.Context, reqEdito
 	return ParseGetApiMeResponse(rsp)
 }
 
+// GetApiPreferencesWithResponse Read the preferences
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/preferences (the `GetApiPreferences` operationId).
+func (c *ClientWithResponses) GetApiPreferencesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiPreferencesResponse, error) {
+	rsp, err := c.GetApiPreferences(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiPreferencesResponse(rsp)
+}
+
+// PatchApiPreferencesWithBodyWithResponse Change the preferences
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+func (c *ClientWithResponses) PatchApiPreferencesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error) {
+	rsp, err := c.PatchApiPreferencesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiPreferencesResponse(rsp)
+}
+
+// PatchApiPreferencesWithResponse Change the preferences
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /api/preferences (the `PatchApiPreferences` operationId).
+func (c *ClientWithResponses) PatchApiPreferencesWithResponse(ctx context.Context, body PatchApiPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiPreferencesResponse, error) {
+	rsp, err := c.PatchApiPreferences(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiPreferencesResponse(rsp)
+}
+
 // GetApiSourcesWithResponse List the sources in use
 //
 // Returns a wrapper object for the known response body format(s).
@@ -2775,6 +3138,79 @@ func ParseGetApiMeResponse(rsp *http.Response) (*GetApiMeResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiPreferencesResponse parses an HTTP response from a GetApiPreferencesWithResponse call
+func ParseGetApiPreferencesResponse(rsp *http.Response) (*GetApiPreferencesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiPreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DomainPreferences
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchApiPreferencesResponse parses an HTTP response from a PatchApiPreferencesWithResponse call
+func ParsePatchApiPreferencesResponse(rsp *http.Response) (*PatchApiPreferencesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchApiPreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DomainPreferences
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest RespondFailure

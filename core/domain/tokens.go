@@ -22,7 +22,7 @@ const (
 // Setting keys.
 const SettingPasswordHash = "password_hash"
 
-// Setting is a value of the one account: its password hash.
+// Setting is a value of the one account: its password hash, its preferences.
 type Setting struct {
 	bun.BaseModel `bun:"table:settings,alias:s"`
 

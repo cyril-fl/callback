@@ -18,3 +18,5 @@ export type Me = S['login.MeResult'];
 export const STATUSES: Status[] = ['applied', 'responded', 'interview', 'offer', 'rejected'];
 // The known sources: the API checks their detail. Any other name is a source too.
 export const SOURCES: Source[] = ['spontaneous', 'job_post', 'recruiter'];
+export type Preferences = S['domain.Preferences'];
+export type PreferenceChanges = S['domain.PreferenceChanges'];
