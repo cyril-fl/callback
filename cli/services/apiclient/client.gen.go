@@ -288,7 +288,14 @@ type DomainChanges struct {
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
-	Website      *string       `json:"website,omitempty"`
+
+	// UndoFollowUp UndoFollowUp forgets the last follow-up: followed_up_at goes back to the one before, if any.
+	UndoFollowUp *bool `json:"undo_follow_up,omitempty"`
+
+	// UndoStatus UndoStatus takes the status back to the one before its last change and forgets that change: a status set by
+	// mistake leaves no step in the history.
+	UndoStatus *bool   `json:"undo_status,omitempty"`
+	Website    *string `json:"website,omitempty"`
 }
 
 // DomainNewApplication defines model for domain.NewApplication.

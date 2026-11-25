@@ -267,9 +267,19 @@ type Changes struct {
 	ContactEmail *string `json:"contact_email,omitempty" binding:"optional"`
 	// FollowedUp records a follow-up now: followed_up_at becomes now, and the status counts as news again.
 	FollowedUp bool `json:"followed_up,omitempty" binding:"optional"`
+	// UndoStatus takes the status back to the one before its last change and forgets that change: a status set by
+	// mistake leaves no step in the history.
+	UndoStatus bool `json:"undo_status,omitempty" binding:"optional"`
+	// UndoFollowUp forgets the last follow-up: followed_up_at goes back to the one before, if any.
+	UndoFollowUp bool `json:"undo_follow_up,omitempty" binding:"optional"`
 }
 
-var ErrNoChanges = Invalid("set changes nothing: give at least one field")
+var (
+	ErrNoChanges      = Invalid("set changes nothing: give at least one field")
+	ErrUndoConflict   = Invalid("undo_status goes without status, undo_follow_up without followed_up")
+	ErrNoStatusChange = Invalid("no status change to undo")
+	ErrNoFollowUp     = Invalid("no follow-up to undo")
+)
 
 // Empty tells changes that set nothing.
 func (c Changes) Empty() bool {

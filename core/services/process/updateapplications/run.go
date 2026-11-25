@@ -4,6 +4,7 @@ package updateapplications
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -126,6 +127,14 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 	}
 	for _, application := range applications {
 		before := application.Status
+		undoChange, undoFollowUp, err := undo(ctx, tx, op.Set, &application)
+		if err != nil {
+			if !errors.Is(err, domain.ErrNoStatusChange) && !errors.Is(err, domain.ErrNoFollowUp) {
+				return err
+			}
+			fail(application.ID, err)
+			continue
+		}
 		op.Set.Apply(&application)
 		application.Normalize()
 		application.Source = known.Match(application.Source)
@@ -140,10 +149,20 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 				return err
 			}
 		}
+		if undoChange != nil {
+			if _, err := tx.NewDelete().Model(undoChange).WherePK().Exec(ctx); err != nil {
+				return err
+			}
+		}
+		if undoFollowUp != nil {
+			if _, err := tx.NewDelete().Model(undoFollowUp).WherePK().Exec(ctx); err != nil {
+				return err
+			}
+		}
 		if _, err := tx.NewUpdate().Model(&application).WherePK().ExcludeColumn("id", "created_at").Exec(ctx); err != nil {
 			return err
 		}
-		if application.Status != before {
+		if application.Status != before && !op.Set.UndoStatus {
 			change := domain.StatusChange{ApplicationID: application.ID, From: before, Status: application.Status, At: now}
 			if _, err := tx.NewInsert().Model(&change).Exec(ctx); err != nil {
 				return err
@@ -156,6 +175,40 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 
 // Helpers
 
+// undo takes application back before its last status change or follow-up, as set asks, and returns the rows to
+// delete once the application is written.
+func undo(ctx context.Context, tx bun.Tx, set domain.Changes, application *domain.Application) (*domain.StatusChange, *domain.FollowUp, error) {
+	var change *domain.StatusChange
+	if set.UndoStatus {
+		var last domain.StatusChange
+		err := tx.NewSelect().Model(&last).Where("application_id = ?", application.ID).OrderExpr("id DESC").Limit(1).Scan(ctx)
+		if errors.Is(err, sql.ErrNoRows) || err == nil && (last.From == "" || last.Status != application.Status) {
+			return nil, nil, domain.ErrNoStatusChange
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		application.Status = last.From
+		change = &last
+	}
+	var followUp *domain.FollowUp
+	if set.UndoFollowUp {
+		var last []domain.FollowUp
+		if err := tx.NewSelect().Model(&last).Where("application_id = ?", application.ID).OrderExpr("id DESC").Limit(2).Scan(ctx); err != nil {
+			return nil, nil, err
+		}
+		if len(last) == 0 {
+			return nil, nil, domain.ErrNoFollowUp
+		}
+		application.FollowedUpAt = time.Time{}
+		if len(last) == 2 {
+			application.FollowedUpAt = last[1].At
+		}
+		followUp = &last[0]
+	}
+	return change, followUp, nil
+}
+
 func check(op Op) error {
 	if err := op.Filter.Validate(); err != nil {
 		return err
@@ -165,6 +218,9 @@ func check(op Op) error {
 	}
 	if op.Set.Empty() {
 		return domain.ErrNoChanges
+	}
+	if op.Set.UndoStatus && op.Set.Status != nil || op.Set.UndoFollowUp && op.Set.FollowedUp {
+		return domain.ErrUndoConflict
 	}
 	return nil
 }

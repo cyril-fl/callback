@@ -1012,6 +1012,13 @@ export interface components {
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
+            /** @description UndoFollowUp forgets the last follow-up: followed_up_at goes back to the one before, if any. */
+            undo_follow_up?: boolean;
+            /**
+             * @description UndoStatus takes the status back to the one before its last change and forgets that change: a status set by
+             *     mistake leaves no step in the history.
+             */
+            undo_status?: boolean;
             website?: string;
         };
         "domain.NewApplication": {

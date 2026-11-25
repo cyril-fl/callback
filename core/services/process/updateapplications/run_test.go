@@ -161,3 +161,56 @@ func TestSourceCaseAndFrom(t *testing.T) {
 		t.Errorf("change = %+v, %v, want from applied", change, err)
 	}
 }
+
+func TestUndo(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	ids := seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	update := func(set domain.Changes) domain.BatchResult {
+		t.Helper()
+		process := updateapplications.Process(ctx, db, updateapplications.Input{Ops: []updateapplications.Op{{Filter: domain.Filter{IDs: ids}, Set: set}}})
+		process.Run()
+		if process.HasErr() {
+			t.Fatal(process.GetErr())
+		}
+		return process.GetResult()
+	}
+	read := func() (domain.Application, int64, int64) {
+		t.Helper()
+		var application domain.Application
+		if err := db.NewSelect().Model(&application).Where("id = ?", ids[0]).Scan(ctx); err != nil {
+			t.Fatal(err)
+		}
+		changes, _ := db.NewSelect().Model((*domain.StatusChange)(nil)).Where("application_id = ?", ids[0]).Count(ctx)
+		followUps, _ := db.NewSelect().Model((*domain.FollowUp)(nil)).Where("application_id = ?", ids[0]).Count(ctx)
+		return application, changes, followUps
+	}
+
+	// Nothing to undo yet: the creation is not a change, and no follow-up was made.
+	if got := update(domain.Changes{UndoStatus: true}); got.Count != 0 || len(got.Failed) != 1 || got.Failed[0].Error != domain.ErrNoStatusChange.Error() {
+		t.Fatalf("undo of the creation = %+v", got)
+	}
+	if got := update(domain.Changes{UndoFollowUp: true}); got.Count != 0 || len(got.Failed) != 1 {
+		t.Fatalf("undo without follow-up = %+v", got)
+	}
+	if got := update(domain.Changes{UndoStatus: true, Status: ptr(domain.StatusOffer)}); len(got.Failed) != 1 || got.Failed[0].Error != domain.ErrUndoConflict.Error() {
+		t.Fatalf("undo with a status = %+v", got)
+	}
+
+	update(domain.Changes{Status: ptr(domain.StatusInterview)})
+	update(domain.Changes{FollowedUp: true})
+	first, _, _ := read()
+	update(domain.Changes{FollowedUp: true})
+	update(domain.Changes{UndoStatus: true, UndoFollowUp: true})
+	application, changes, followUps := read()
+	if application.Status != domain.StatusApplied || changes != 1 {
+		t.Errorf("after the status undo: %s with %d changes, want applied with its creation only", application.Status, changes)
+	}
+	if !application.FollowedUpAt.Equal(first.FollowedUpAt) || followUps != 1 {
+		t.Errorf("after the follow-up undo: %v with %d follow-ups, want the first one %v", application.FollowedUpAt, followUps, first.FollowedUpAt)
+	}
+	update(domain.Changes{UndoFollowUp: true})
+	if application, _, followUps = read(); !application.FollowedUpAt.IsZero() || followUps != 0 {
+		t.Errorf("after the last follow-up undo: %v with %d follow-ups, want none", application.FollowedUpAt, followUps)
+	}
+}
