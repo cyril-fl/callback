@@ -449,6 +449,16 @@ components:
       required:
       - error
       type: object
+    restoreapplications.Input:
+      properties:
+        ids:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      required:
+      - ids
+      type: object
     updateapplications.Input:
       properties:
         dry_run:
@@ -755,6 +765,45 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Forbidden
       summary: Create applications
+      tags:
+      - applications
+  /api/applications/restore:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/restoreapplications.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.BatchResult'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+      summary: Restore deleted applications
       tags:
       - applications
   /api/data:

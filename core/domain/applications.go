@@ -310,3 +310,14 @@ func set[T any](field *T, value *T) {
 		*field = *value
 	}
 }
+
+// DeletedApplication is a deleted application, kept a day so a delete can be undone: the delete moves it here and a
+// restore moves it back. Its status history and follow-ups stay where they are, unread without their application.
+type DeletedApplication struct {
+	bun.BaseModel `bun:"table:deleted_applications,alias:da" json:"-"`
+
+	ID string `bun:",pk"`
+	// Application is the row as it was, in JSON: a column the applications gain needs nothing here.
+	Application Application `bun:"type:json,notnull"`
+	DeletedAt   time.Time   `bun:",notnull"`
+}

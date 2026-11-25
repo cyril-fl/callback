@@ -44,7 +44,7 @@ func (p *run) GetResult() int {
 
 func (p *run) purge() {
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil)} {
+		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil), (*domain.DeletedApplication)(nil)} {
 			if _, err := tx.NewDelete().Model(model).Where("1 = 1").Exec(ctx); err != nil {
 				return err
 			}

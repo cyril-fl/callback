@@ -93,6 +93,7 @@ func (p *run) createIndexes(tx bun.Tx) {
 
 var models = []any{
 	(*domain.Application)(nil),
+	(*domain.DeletedApplication)(nil),
 	(*domain.StatusChange)(nil),
 	(*domain.FollowUp)(nil),
 	(*domain.Setting)(nil),

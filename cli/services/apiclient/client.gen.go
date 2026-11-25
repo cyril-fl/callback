@@ -417,6 +417,11 @@ type RespondFailure struct {
 	Error string `json:"error"`
 }
 
+// RestoreapplicationsInput defines model for restoreapplications.Input.
+type RestoreapplicationsInput struct {
+	Ids []string `json:"ids"`
+}
+
 // UpdateapplicationsInput defines model for updateapplications.Input.
 type UpdateapplicationsInput struct {
 	// DryRun DryRun writes nothing: the result is what the call would write.
@@ -532,6 +537,9 @@ type PatchApiApplicationsJSONRequestBody = UpdateapplicationsInput
 
 // PostApiApplicationsJSONRequestBody defines body for PostApiApplications for application/json ContentType.
 type PostApiApplicationsJSONRequestBody = PostApiApplicationsJSONBody
+
+// PostApiApplicationsRestoreJSONRequestBody defines body for PostApiApplicationsRestore for application/json ContentType.
+type PostApiApplicationsRestoreJSONRequestBody = RestoreapplicationsInput
 
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = CreatesessionInput
@@ -662,6 +670,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 	PostApiApplications(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiApplicationsRestoreWithBody Restore deleted applications
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+	PostApiApplicationsRestoreWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiApplicationsRestore Restore deleted applications
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+	PostApiApplicationsRestore(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteApiData Delete every application
 	//
@@ -858,6 +880,40 @@ func (c *Client) PostApiApplicationsWithBody(ctx context.Context, contentType st
 // Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 func (c *Client) PostApiApplications(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiApplicationsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostApiApplicationsRestoreWithBody Restore deleted applications
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+func (c *Client) PostApiApplicationsRestoreWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiApplicationsRestoreRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostApiApplicationsRestore Restore deleted applications
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+func (c *Client) PostApiApplicationsRestore(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiApplicationsRestoreRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1435,6 +1491,46 @@ func NewPostApiApplicationsRequestWithBody(server string, contentType string, bo
 	return req, nil
 }
 
+// NewPostApiApplicationsRestoreRequest calls the generic PostApiApplicationsRestore builder with application/json body
+func NewPostApiApplicationsRestoreRequest(server string, body PostApiApplicationsRestoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiApplicationsRestoreRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiApplicationsRestoreRequestWithBody constructs an http.Request for the PostApiApplicationsRestore method, with any body, and a specified content type
+func NewPostApiApplicationsRestoreRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/applications/restore")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewDeleteApiDataRequest constructs an http.Request for the DeleteApiData method
 func NewDeleteApiDataRequest(server string) (*http.Request, error) {
 	var err error
@@ -1988,6 +2084,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 	PostApiApplicationsWithResponse(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiApplicationsResponse, error)
 
+	// PostApiApplicationsRestoreWithBodyWithResponse Restore deleted applications
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+	PostApiApplicationsRestoreWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiApplicationsRestoreResponse, error)
+
+	// PostApiApplicationsRestoreWithResponse Restore deleted applications
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+	PostApiApplicationsRestoreWithResponse(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiApplicationsRestoreResponse, error)
+
 	// DeleteApiDataWithResponse Delete every application
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -2343,6 +2453,68 @@ func (r PostApiApplicationsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostApiApplicationsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostApiApplicationsRestoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DomainBatchResult
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *RespondFailure
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostApiApplicationsRestoreResponse) GetJSON200() *DomainBatchResult {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PostApiApplicationsRestoreResponse) GetJSON400() *RespondFailure {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r PostApiApplicationsRestoreResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PostApiApplicationsRestoreResponse) GetJSON403() *RespondFailure {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r PostApiApplicationsRestoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiApplicationsRestoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiApplicationsRestoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostApiApplicationsRestoreResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -3079,6 +3251,32 @@ func (c *ClientWithResponses) PostApiApplicationsWithResponse(ctx context.Contex
 	return ParsePostApiApplicationsResponse(rsp)
 }
 
+// PostApiApplicationsRestoreWithBodyWithResponse Restore deleted applications
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+func (c *ClientWithResponses) PostApiApplicationsRestoreWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiApplicationsRestoreResponse, error) {
+	rsp, err := c.PostApiApplicationsRestoreWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiApplicationsRestoreResponse(rsp)
+}
+
+// PostApiApplicationsRestoreWithResponse Restore deleted applications
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
+func (c *ClientWithResponses) PostApiApplicationsRestoreWithResponse(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiApplicationsRestoreResponse, error) {
+	rsp, err := c.PostApiApplicationsRestore(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiApplicationsRestoreResponse(rsp)
+}
+
 // DeleteApiDataWithResponse Delete every application
 //
 // Returns a wrapper object for the known response body format(s).
@@ -3448,6 +3646,53 @@ func ParsePostApiApplicationsResponse(rsp *http.Response) (*PostApiApplicationsR
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiApplicationsRestoreResponse parses an HTTP response from a PostApiApplicationsRestoreWithResponse call
+func ParsePostApiApplicationsRestoreResponse(rsp *http.Response) (*PostApiApplicationsRestoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiApplicationsRestoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DomainBatchResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest RespondFailure

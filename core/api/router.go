@@ -14,6 +14,7 @@ import (
 	apireadsources "github.com/cyril-fl/callback/core/api/read-sources"
 	apireadstats "github.com/cyril-fl/callback/core/api/read-stats"
 	apireadstatuschanges "github.com/cyril-fl/callback/core/api/read-status-changes"
+	apirestoreapplications "github.com/cyril-fl/callback/core/api/restore-applications"
 	"github.com/cyril-fl/callback/core/api/services/auth"
 	"github.com/cyril-fl/callback/core/api/services/guard"
 	apitokens "github.com/cyril-fl/callback/core/api/tokens"
@@ -35,6 +36,7 @@ func New(db bun.IDB, origin string) http.Handler {
 	mux.Handle("POST /api/applications", apicreateapplications.Handler(db))
 	mux.Handle("PATCH /api/applications", apieditapplications.Handler(db))
 	mux.Handle("DELETE /api/applications", apideleteapplications.Handler(db))
+	mux.Handle("POST /api/applications/restore", apirestoreapplications.Handler(db))
 	mux.Handle("DELETE /api/data", apipurgeapplications.Handler(db))
 	mux.Handle("GET /api/stats", apireadstats.Handler(db))
 	mux.Handle("GET /api/sources", apireadsources.Handler(db))

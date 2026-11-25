@@ -1,12 +1,15 @@
-// Package deleteapplications deletes the applications of ids or filters, in one statement.
+// Package deleteapplications deletes the applications of ids or filters in one transaction: they go to the trash for
+// a day, then are gone with their history.
 package deleteapplications
 
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
+	"github.com/cyril-fl/callback/core/services/trash"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -73,13 +76,13 @@ func (p *run) deleteApplications() {
 	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		// SQLite's DELETE has no alias for the filter's a.: the rows are picked by a SELECT.
 		picked := tx.NewSelect().Model((*domain.Application)(nil)).Column("id").ApplyQueryBuilder(appfilter.Where(p.input.Filter))
-		for _, table := range []string{"status_changes", "follow_ups"} {
-			if _, err := tx.NewRaw("DELETE FROM ? WHERE application_id IN (?)", bun.Ident(table), picked).Exec(ctx); err != nil {
-				return err
-			}
+		now := time.Now().UTC()
+		ids, err := trash.Throw(ctx, tx, picked, now)
+		if err != nil {
+			return err
 		}
-		query := tx.NewRaw("DELETE FROM applications WHERE id IN (?) RETURNING id", picked)
-		if err := query.Scan(ctx, &p.cache.result.IDs); err != nil {
+		p.cache.result.IDs = ids
+		if err := trash.Empty(ctx, tx, now.Add(-trash.Keep)); err != nil {
 			return err
 		}
 		if p.input.DryRun {
