@@ -135,3 +135,29 @@ func TestFollowUp(t *testing.T) {
 		t.Errorf("%d follow-ups, want 1", count)
 	}
 }
+
+// The filter on source ignores case, a set source reuses the name in use, a status change records the status before.
+func TestSourceCaseAndFrom(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	ids := seed.Applications(t, db,
+		domain.NewApplication{Company: "A", Location: "Paris", Source: "LinkedIn"},
+		domain.NewApplication{Company: "B", Location: "Paris", Source: "Indeed"},
+	)
+	process := updateapplications.Process(ctx, db, updateapplications.Input{Ops: []updateapplications.Op{
+		{Filter: domain.Filter{Source: "LINKEDIN"}, Set: domain.Changes{Status: ptr(domain.StatusRejected)}},
+		{Filter: domain.Filter{IDs: []string{ids[1]}}, Set: domain.Changes{Source: ptr(domain.Source("linkedin"))}},
+	}})
+	process.Run()
+	if result := process.GetResult(); process.HasErr() || result.Count != 2 || len(result.Failed) != 0 {
+		t.Fatalf("result = %+v, %v", result, process.GetErr())
+	}
+	var b domain.Application
+	if err := db.NewSelect().Model(&b).Where("id = ?", ids[1]).Scan(ctx); err != nil || b.Source != "LinkedIn" {
+		t.Errorf("source = %q, %v, want LinkedIn", b.Source, err)
+	}
+	var change domain.StatusChange
+	if err := db.NewSelect().Model(&change).Where("application_id = ? AND status = ?", ids[0], domain.StatusRejected).Scan(ctx); err != nil || change.From != domain.StatusApplied {
+		t.Errorf("change = %+v, %v, want from applied", change, err)
+	}
+}

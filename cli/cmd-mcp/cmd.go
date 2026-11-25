@@ -56,7 +56,7 @@ func AddTools(server *mcp.Server, client *apiclient.ClientWithResponses, readOnl
 	addTool(server, readOnly, &mcp.Tool{
 		Name:        "application_stats",
 		Annotations: reads(),
-		Description: "Count the applications per status and per source (reuse these names), with the response rate.",
+		Description: "Count the applications per status and per source (reuse these names), with the response rate overall and per source.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, apiclient.ReadstatsStats, error) {
 		stats, err := apiclient.Decode[apiclient.ReadstatsStats](client.GetApiStats(ctx))
 		return nil, stats, err
@@ -65,7 +65,7 @@ func AddTools(server *mcp.Server, client *apiclient.ClientWithResponses, readOnl
 	addTool(server, readOnly, &mcp.Tool{
 		Name:        "status_history",
 		Annotations: reads(),
-		Description: "The statuses applications reached and when, oldest first: delays, what moved lately.",
+		Description: "The statuses applications reached and when, oldest first, with from the status before (none at creation): delays, what moved lately.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, args historyArgs) (*mcp.CallToolResult, historyResult, error) {
 		params := &apiclient.GetApiStatusChangesParams{Since: args.Since}
 		if len(args.IDs) > 0 {

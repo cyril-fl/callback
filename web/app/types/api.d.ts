@@ -1032,6 +1032,8 @@ export interface components {
         "domain.StatusChange": {
             application_id: string;
             at: string;
+            /** @description From is the status before the change, empty when the application was created with Status. */
+            from: components["schemas"]["domain.Status"];
             status: components["schemas"]["domain.Status"];
         };
         "domain.Token": {
@@ -1071,6 +1073,10 @@ export interface components {
             };
             /** @description ResponseRate is the share of applications that got past applied, 0 to 1. */
             response_rate: number;
+            /** @description ResponseRateBySource is ResponseRate for each source of BySource. */
+            response_rate_by_source: {
+                [key: string]: number;
+            };
             total: number;
         };
         "respond.Failure": {

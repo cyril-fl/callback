@@ -2,6 +2,7 @@
 package domain
 
 import (
+	"errors"
 	"net/mail"
 	"net/url"
 	"slices"
@@ -127,33 +128,60 @@ func (a *Application) Normalize() {
 	}
 }
 
-// Validate checks an application as it will be stored.
+// Validate checks an application as it will be stored, and returns every error it finds, joined.
 func (a *Application) Validate() error {
-	switch {
-	case a.Company == "":
-		return ErrNoCompany
-	case a.Location == "":
-		return ErrNoLocation
-	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment:
-		return ErrLong
-	case a.Website != "" && !isURL(a.Website) && !isEmail(a.Website):
-		return ErrInvalidWebsite
-	case runes(string(a.Source)) > MaxSource:
-		return ErrInvalidSource
-	case !validDetail(a.Source, a.SourceDetail):
-		return ErrInvalidDetail
-	case !slices.Contains(Statuses, a.Status):
-		return ErrInvalidStatus
-	case a.Rating < 0 || a.Rating > 5:
-		return ErrInvalidRating
-	case !IsDate(a.AppliedAt):
-		return ErrInvalidDate
-	case a.InterviewAt != "" && !isDateTime(a.InterviewAt):
-		return ErrInvalidInterview
-	case a.ContactEmail != "" && !isEmail(a.ContactEmail):
-		return ErrInvalidContact
+	checks := []struct {
+		bad bool
+		err error
+	}{
+		{a.Company == "", ErrNoCompany},
+		{a.Location == "", ErrNoLocation},
+		{runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment, ErrLong},
+		{a.Website != "" && !isURL(a.Website) && !isEmail(a.Website), ErrInvalidWebsite},
+		{runes(string(a.Source)) > MaxSource, ErrInvalidSource},
+		{!validDetail(a.Source, a.SourceDetail), ErrInvalidDetail},
+		{!slices.Contains(Statuses, a.Status), ErrInvalidStatus},
+		{a.Rating < 0 || a.Rating > 5, ErrInvalidRating},
+		{!IsDate(a.AppliedAt), ErrInvalidDate},
+		{a.InterviewAt != "" && !isDateTime(a.InterviewAt), ErrInvalidInterview},
+		{a.ContactEmail != "" && !isEmail(a.ContactEmail), ErrInvalidContact},
 	}
-	return nil
+	var errs []error
+	for _, check := range checks {
+		if check.bad {
+			errs = append(errs, check.err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// KnownSources are the source names in use, to write a source the way it is already written.
+type KnownSources struct {
+	exact  map[Source]bool
+	folded map[string]Source
+}
+
+// NewKnownSources knows the built-in sources and sources.
+func NewKnownSources(sources []Source) KnownSources {
+	known := KnownSources{exact: map[Source]bool{}, folded: map[string]Source{}}
+	for _, source := range append(slices.Clone(Sources), sources...) {
+		known.Match(source)
+	}
+	return known
+}
+
+// Match returns the known name that source equals but for case, else source, then knows it: "linkedin" reuses
+// "LinkedIn", and a batch agrees with itself. A name already in use as written is kept, so a case can be fixed.
+func (k KnownSources) Match(source Source) Source {
+	key := strings.ToLower(string(source))
+	if name, ok := k.folded[key]; ok && !k.exact[source] {
+		return name
+	}
+	k.exact[source] = true
+	if _, ok := k.folded[key]; !ok {
+		k.folded[key] = source
+	}
+	return source
 }
 
 // IsDate tells a date of DateLayout.

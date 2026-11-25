@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/appfilter"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -59,10 +60,16 @@ func (p *run) makeApplications() {
 	if p.HasErr() {
 		return
 	}
+	known, err := appfilter.KnownSources(p.ctx, p.db)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
 	now := time.Now().UTC()
 	for i, item := range p.items {
 		application := item.Application()
 		application.Normalize()
+		application.Source = known.Match(application.Source)
 		if err := application.Validate(); err != nil {
 			p.cache.result.Failed = append(p.cache.result.Failed, domain.BatchFailure{Index: &i, Error: err.Error()})
 			continue

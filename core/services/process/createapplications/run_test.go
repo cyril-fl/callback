@@ -3,6 +3,7 @@ package createapplications_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
@@ -75,5 +76,35 @@ func TestLimits(t *testing.T) {
 		if !errors.Is(process.GetErr(), domain.ErrInvalid) {
 			t.Errorf("%d items: err = %v, want invalid", len(items), process.GetErr())
 		}
+	}
+}
+
+// A source written with another case reuses the name in use, in the base and in the batch; an item reports all its errors.
+func TestSourceCaseAndErrors(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	first := createapplications.Process(ctx, db, []domain.NewApplication{{Company: "A", Location: "Paris", Source: "LinkedIn"}})
+	first.Run()
+	process := createapplications.Process(ctx, db, []domain.NewApplication{
+		{Company: "B", Location: "Paris", Source: "linkedin"},
+		{Company: "C", Location: "Paris", Source: "Job_Post", SourceDetail: "https://example.com"},
+		{Company: "D", Location: "Paris", Source: "Indeed"},
+		{Company: "E", Location: "Paris", Source: "INDEED"},
+		{Company: "F", Location: "Paris", Rating: 9, AppliedAt: "2026-13-45"},
+	})
+	process.Run()
+	result := process.GetResult()
+	if first.HasErr() || process.HasErr() || result.Count != 4 || len(result.Failed) != 1 {
+		t.Fatalf("result = %+v, %v %v", result, first.GetErr(), process.GetErr())
+	}
+	if msg := result.Failed[0].Error; !strings.Contains(msg, "rating") || !strings.Contains(msg, "date") {
+		t.Errorf("error = %q, want the rating and the date", msg)
+	}
+	var sources []domain.Source
+	if err := db.NewSelect().Model((*domain.Application)(nil)).Column("source").Order("company").Scan(ctx, &sources); err != nil {
+		t.Fatal(err)
+	}
+	if want := []domain.Source{"LinkedIn", "LinkedIn", domain.SourceJobPost, "Indeed", "Indeed"}; !slices.Equal(sources, want) {
+		t.Errorf("sources = %v, want %v", sources, want)
 	}
 }

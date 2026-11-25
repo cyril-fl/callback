@@ -18,6 +18,8 @@ type Stats struct {
 	BySource map[domain.Source]int `json:"by_source"`
 	// ResponseRate is the share of applications that got past applied, 0 to 1.
 	ResponseRate float64 `json:"response_rate"`
+	// ResponseRateBySource is ResponseRate for each source of BySource.
+	ResponseRateBySource map[domain.Source]float64 `json:"response_rate_by_source"`
 }
 
 type run struct {
@@ -60,7 +62,8 @@ func (p *run) count() {
 		p.SetErr(err)
 		return
 	}
-	stats := Stats{ByStatus: map[domain.Status]int{}, BySource: map[domain.Source]int{}}
+	stats := Stats{ByStatus: map[domain.Status]int{}, BySource: map[domain.Source]int{}, ResponseRateBySource: map[domain.Source]float64{}}
+	responded := map[domain.Source]int{}
 	for _, status := range domain.Statuses {
 		stats.ByStatus[status] = 0
 	}
@@ -68,6 +71,12 @@ func (p *run) count() {
 		stats.ByStatus[row.Status] += row.Count
 		stats.BySource[row.Source] += row.Count
 		stats.Total += row.Count
+		if row.Status != domain.StatusApplied {
+			responded[row.Source] += row.Count
+		}
+	}
+	for source, count := range stats.BySource {
+		stats.ResponseRateBySource[source] = float64(responded[source]) / float64(count)
 	}
 	if stats.Total > 0 {
 		stats.ResponseRate = float64(stats.Total-stats.ByStatus[domain.StatusApplied]) / float64(stats.Total)

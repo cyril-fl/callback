@@ -11,8 +11,10 @@ import (
 type StatusChange struct {
 	bun.BaseModel `bun:"table:status_changes,alias:sc" json:"-"`
 
-	ID            int64     `bun:",pk,autoincrement" json:"-"`
-	ApplicationID string    `bun:",notnull" json:"application_id"`
-	Status        Status    `bun:",notnull" json:"status" enums:"applied,responded,interview,offer,rejected"`
-	At            time.Time `bun:",notnull" json:"at"`
+	ID            int64  `bun:",pk,autoincrement" json:"-"`
+	ApplicationID string `bun:",notnull" json:"application_id"`
+	// From is the status before the change, empty when the application was created with Status.
+	From   Status    `bun:",nullzero" json:"from,omitempty" enums:"applied,responded,interview,offer,rejected"`
+	Status Status    `bun:",notnull" json:"status" enums:"applied,responded,interview,offer,rejected"`
+	At     time.Time `bun:",notnull" json:"at"`
 }

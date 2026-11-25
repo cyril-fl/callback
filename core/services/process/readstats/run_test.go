@@ -28,7 +28,8 @@ func TestRun(t *testing.T) {
 	process.Run()
 	got := process.GetResult()
 	if process.HasErr() || got.Total != 4 || got.ByStatus[domain.StatusApplied] != 2 || got.ByStatus[domain.StatusOffer] != 0 || got.ResponseRate != 0.5 ||
-		got.BySource["LinkedIn"] != 1 || got.BySource[domain.SourceSpontaneous] != 3 {
+		got.BySource["LinkedIn"] != 1 || got.BySource[domain.SourceSpontaneous] != 3 ||
+		got.ResponseRateBySource["LinkedIn"] != 0 || got.ResponseRateBySource[domain.SourceSpontaneous] != 2.0/3 {
 		t.Errorf("stats = %+v, %v", got, process.GetErr())
 	}
 }

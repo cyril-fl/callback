@@ -338,9 +338,12 @@ type DomainStatus string
 
 // DomainStatusChange defines model for domain.StatusChange.
 type DomainStatusChange struct {
-	ApplicationId string       `json:"application_id"`
-	At            string       `json:"at"`
-	Status        DomainStatus `json:"status"`
+	ApplicationId string `json:"application_id"`
+	At            string `json:"at"`
+
+	// From From is the status before the change, empty when the application was created with Status.
+	From   DomainStatus `json:"from"`
+	Status DomainStatus `json:"status"`
 }
 
 // DomainToken defines model for domain.Token.
@@ -390,7 +393,10 @@ type ReadstatsStats struct {
 
 	// ResponseRate ResponseRate is the share of applications that got past applied, 0 to 1.
 	ResponseRate float32 `json:"response_rate"`
-	Total        int     `json:"total"`
+
+	// ResponseRateBySource ResponseRateBySource is ResponseRate for each source of BySource.
+	ResponseRateBySource map[string]float32 `json:"response_rate_by_source"`
+	Total                int                `json:"total"`
 }
 
 // RespondFailure defines model for respond.Failure.

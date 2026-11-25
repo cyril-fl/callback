@@ -82,8 +82,8 @@ Tous en lot : **un appel d'outil = une requête à l'API = une transaction**, ja
 |---|---|---|
 | `list_applications` | Les candidatures des filtres (`status` liste, `source`, `q`, `applied_before`, `applied_after`, `untouched_since`), **compactes** : `id`, `company`, `status`, `applied_at`, et `total`. `fields` ajoute des colonnes, `count_only` ne rend que le total, `sort`, `limit` (50 par défaut, 0 pour toutes), `offset` | lecture |
 | `read_applications` | Les candidatures entières de `ids` (50 au plus), dans l'ordre demandé ; `max_chars` coupe les commentaires (`truncated`). Les champs identiques sur toutes sont dits une fois dans `common`, les ids introuvables dans `missing` | lecture |
-| `application_stats` | Le total, le nombre par statut et par source (`by_source`, pour réutiliser les noms existants) et le taux de réponse | lecture |
-| `status_history` | Les statuts atteints et quand, du plus ancien au plus récent (`changes`), des candidatures de `ids` et/ou depuis `since` (ce jour inclus) : délais de réponse, ce qui a bougé récemment | lecture |
+| `application_stats` | Le total, le nombre par statut et par source (`by_source`, pour réutiliser les noms existants), le taux de réponse global et par source (`response_rate_by_source`) | lecture |
+| `status_history` | Les statuts atteints et quand, du plus ancien au plus récent (`changes`, avec `from` le statut d'avant, absent à la création), des candidatures de `ids` et/ou depuis `since` (ce jour inclus) : délais de réponse, ce qui a bougé récemment | lecture |
 | `add_applications` | Crée `items` (500 au plus) ; rend seulement les `ids` créés et les éléments en échec (`failed`, avec leur `index`) : les valides sont écrits quand même | écriture |
 | `update_applications` | `ops`, chacun choisit des candidatures par `ids` ou par filtres et donne `set` (`status`, `rating`, `comment`…, `followed_up: true` enregistre une relance) ; `dry_run` n'écrit rien et rend ce qui changerait, `summary` retire les ids | écriture (non idempotent avec `followed_up`) |
 | `delete_applications` | Supprime **définitivement** les candidatures de `ids` ou des filtres ; `dry_run`, `summary`. Un filtre vide est refusé | destructif, idempotent |
@@ -115,7 +115,7 @@ recettes tiennent là, une fois, plutôt que dans les descriptions.
   `limit` et `offset`.
 - **Lire par lots** : `read_applications` prend 50 ids, avec `max_chars` pour les longs commentaires.
 - **L'historique filtré** : `status_history` avec `ids` ou `since`, pas tout l'historique.
-- **Réutiliser les sources** de `by_source` (`application_stats`) plutôt que créer un quasi-doublon.
+- **Réutiliser les sources** de `by_source` (`application_stats`) plutôt que créer un quasi-doublon. Une source qui ne diffère que par la casse reprend le nom existant, et le filtre `source` ignore la casse.
 - **Écrire par lots** : un `add_applications` pour toutes les nouvelles, un `update_applications` par lot, un groupe
   par élément de `ops`.
 - **`dry_run` d'abord** sur des filtres, puis le vrai appel ; `summary` quand les compteurs suffisent. Les écritures

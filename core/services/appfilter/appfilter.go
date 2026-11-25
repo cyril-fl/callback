@@ -3,6 +3,7 @@
 package appfilter
 
 import (
+	"context"
 	"strings"
 
 	"github.com/cyril-fl/callback/core/domain"
@@ -21,7 +22,7 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 			q = q.Where("a.status IN (?)", bun.List(filter.Status))
 		}
 		if filter.Source != "" {
-			q = q.Where("a.source = ?", filter.Source)
+			q = q.Where("a.source = ? COLLATE NOCASE", filter.Source)
 		}
 		if text := strings.TrimSpace(filter.Q); text != "" {
 			like := "%" + likeEscaper.Replace(text) + "%"
@@ -45,4 +46,11 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 		}
 		return q
 	}
+}
+
+// KnownSources reads the sources in use, for domain.KnownSources.Match: a write reuses their names whatever the case.
+func KnownSources(ctx context.Context, db bun.IDB) (domain.KnownSources, error) {
+	var sources []domain.Source
+	err := db.NewSelect().Model((*domain.Application)(nil)).Distinct().Column("source").Scan(ctx, &sources)
+	return domain.NewKnownSources(sources), err
 }

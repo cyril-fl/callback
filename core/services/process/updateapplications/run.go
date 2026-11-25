@@ -77,9 +77,13 @@ func (p *run) runOps() {
 		return
 	}
 	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		known, err := appfilter.KnownSources(ctx, tx)
+		if err != nil {
+			return err
+		}
 		now := time.Now().UTC()
 		for i, op := range p.input.Ops {
-			if err := p.runOp(ctx, tx, i, op, now); err != nil {
+			if err := p.runOp(ctx, tx, i, op, now, known); err != nil {
 				return err
 			}
 		}
@@ -104,7 +108,7 @@ func (p *run) makeResult() {
 
 // runOp writes one op. An op the input makes impossible fails whole, an application it makes invalid fails alone;
 // only an error of the base stops the batch.
-func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.Time) error {
+func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.Time, known domain.KnownSources) error {
 	fail := func(id string, err error) {
 		p.cache.result.Failed = append(p.cache.result.Failed, domain.BatchFailure{Op: &index, ID: id, Error: err.Error()})
 	}
@@ -124,6 +128,7 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 		before := application.Status
 		op.Set.Apply(&application)
 		application.Normalize()
+		application.Source = known.Match(application.Source)
 		if err := application.Validate(); err != nil {
 			fail(application.ID, err)
 			continue
@@ -139,7 +144,7 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 			return err
 		}
 		if application.Status != before {
-			change := domain.StatusChange{ApplicationID: application.ID, Status: application.Status, At: now}
+			change := domain.StatusChange{ApplicationID: application.ID, From: before, Status: application.Status, At: now}
 			if _, err := tx.NewInsert().Model(&change).Exec(ctx); err != nil {
 				return err
 			}
