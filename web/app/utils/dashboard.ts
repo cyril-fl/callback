@@ -116,6 +116,7 @@ export function upcomingInterviews(applications: Application[], now: Date) {
     .sort((a, b) => a.interview_at!.localeCompare(b.interview_at!));
 }
 
-/** Applied or responded and not followed up since the follow-up delay started (a YYYY-MM-DD day): the follow-up button shows. */
+/** Applied or responded and neither followed up nor created since the follow-up delay started (a YYYY-MM-DD day): the
+ * follow-up button shows. Never followed up, the delay runs from the creation. */
 export const canFollowUp = (a: Application, since: string) =>
-  (a.status === 'applied' || a.status === 'responded') && !(a.followed_up_at && a.followed_up_at.slice(0, 10) >= since);
+  (a.status === 'applied' || a.status === 'responded') && (a.followed_up_at ?? a.created_at ?? '').slice(0, 10) < since;

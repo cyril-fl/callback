@@ -4,6 +4,7 @@ import { parseDate } from '@internationalized/date';
 import type { Application, StatusChange } from '../app/types/items.ts';
 import {
   averageDaysToResponse,
+  canFollowUp,
   countBy,
   funnelOf,
   historyOf,
@@ -137,6 +138,18 @@ test('to follow up: applied or responded, no status change nor follow-up since t
   const followed = apps.map((a) => (a.id === 'a' ? { ...a, followed_up_at: '2026-01-25T10:00:00Z' } : a));
   assert.deepEqual(ids(followed, '2026-02-01T00:00:00Z'), ['c', 'a']);
   assert.deepEqual(ids(followed, '2026-01-22T00:00:00Z'), ['c']);
+});
+
+test('the follow-up button: applied or responded, and no follow-up, else no creation, since the delay started', () => {
+  const app: Application = { ...apps[0]!, created_at: '2026-01-05T10:00:00Z' };
+  // Just created: the delay runs from the creation.
+  assert.equal(canFollowUp(app, '2026-01-01'), false);
+  assert.equal(canFollowUp(app, '2026-01-06'), true);
+  // Followed up since the delay started: no button, created long ago or not.
+  assert.equal(canFollowUp({ ...app, followed_up_at: '2026-01-20T10:00:00Z' }, '2026-01-15'), false);
+  assert.equal(canFollowUp({ ...app, followed_up_at: '2026-01-10T10:00:00Z' }, '2026-01-15'), true);
+  // Past the follow-up statuses: never.
+  assert.equal(canFollowUp({ ...app, status: 'interview' }, '2026-01-06'), false);
 });
 
 test('the upcoming interviews are the ones from now on, the nearest first', () => {

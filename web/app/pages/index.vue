@@ -490,8 +490,6 @@ function exportCsv() {
             @click="markFollowedUp(row.original)"
           />
         </UTooltip>
-        <span v-else-if="row.original.followed_up_at">{{ day(row.original.followed_up_at) }}</span>
-        <span v-else />
       </template>
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
