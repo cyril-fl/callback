@@ -16,6 +16,8 @@ const links = computed(() => [
       <UContainer class="flex h-14 items-center justify-between">
         <NuxtLink to="/" class="font-semibold">{{ t('app.name') }}</NuxtLink>
         <nav class="flex items-center gap-1">
+          <!-- A page's own actions, teleported here (the list's view, export and add). -->
+          <div id="header-actions" class="contents" />
           <UButton
             v-for="link in links"
             :key="link.to"

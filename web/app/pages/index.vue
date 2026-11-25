@@ -340,17 +340,12 @@ function exportCsv() {
   >
     <StatsCards v-if="!pro" :stats="stats" />
 
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- The table resets from its header; the kanban has none. -->
-      <UButton
-        v-if="filtered && view === 'kanban'"
-        icon="i-lucide-rotate-ccw"
-        color="neutral"
-        variant="ghost"
-        :label="t('table.reset')"
-        @click="reset"
-      />
-      <div class="ml-auto flex items-center gap-2">
+    <!-- The table resets from its header; the kanban has none. -->
+    <div v-if="filtered && view === 'kanban'">
+      <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="ghost" :label="t('table.reset')" @click="reset" />
+    </div>
+    <Teleport defer to="#header-actions">
+      <div class="flex items-center gap-2">
         <UFieldGroup>
           <UButton
             icon="i-lucide-table"
@@ -378,9 +373,10 @@ function exportCsv() {
           :disabled="!applications?.length"
           @click="exportCsv"
         />
-        <UButton icon="i-lucide-plus" :label="t('common.add')" @click="openForm()" />
+        <UButton icon="i-lucide-plus" :label="t('common.add')" :ui="{ label: 'max-sm:sr-only' }" @click="openForm()" />
       </div>
-    </div>
+      <USeparator orientation="vertical" class="mx-1 h-5" />
+    </Teleport>
 
     <ApplicationKanban
       v-if="view === 'kanban'"
