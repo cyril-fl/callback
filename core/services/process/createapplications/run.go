@@ -88,7 +88,12 @@ func (p *run) saveApplications() {
 	}
 	changes := make([]domain.StatusChange, 0, len(p.cache.valid))
 	for _, application := range p.cache.valid {
-		changes = append(changes, domain.StatusChange{ApplicationID: application.ID, Status: application.Status, At: application.CreatedAt})
+		// The history starts on the day it applied, not when it was entered: the follow-up delay runs from there.
+		at, _ := time.Parse(domain.DateLayout, application.AppliedAt)
+		if at.After(application.CreatedAt) {
+			at = application.CreatedAt
+		}
+		changes = append(changes, domain.StatusChange{ApplicationID: application.ID, Status: application.Status, At: at})
 	}
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		if _, err := tx.NewInsert().Model(&p.cache.valid).Exec(ctx); err != nil {

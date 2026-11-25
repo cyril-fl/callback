@@ -140,9 +140,9 @@ test('to follow up: applied or responded, no status change nor follow-up since t
   assert.deepEqual(ids(followed, '2026-01-22T00:00:00Z'), ['c']);
 });
 
-test('the follow-up button: applied or responded, and no follow-up, else no creation, since the delay started', () => {
-  const app: Application = { ...apps[0]!, created_at: '2026-01-05T10:00:00Z' };
-  // Just created: the delay runs from the creation.
+test('the follow-up button: applied or responded, and no follow-up, else no application, since the delay started', () => {
+  // Applied on 2026-01-05, entered later: the delay runs from the day it applied.
+  const app: Application = { ...apps[0]!, created_at: '2026-01-20T10:00:00Z' };
   assert.equal(canFollowUp(app, '2026-01-01'), false);
   assert.equal(canFollowUp(app, '2026-01-06'), true);
   // Followed up since the delay started: no button, created long ago or not.

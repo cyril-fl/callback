@@ -11,6 +11,10 @@ var migrations = []migration{
 		SELECT id, 'applied', applied_at || ' 00:00:00+00:00' FROM applications
 		UNION ALL
 		SELECT id, status, updated_at FROM applications WHERE status <> 'applied'`},
+	// The first change of an application was dated when it was entered: it moves back to the day it applied.
+	{"status-changes-applied-at", `UPDATE status_changes SET at = (SELECT applied_at || ' 00:00:00+00:00' FROM applications a WHERE a.id = status_changes.application_id)
+		WHERE id = (SELECT MIN(id) FROM status_changes s WHERE s.application_id = status_changes.application_id)
+		AND at > (SELECT applied_at || ' 00:00:00+00:00' FROM applications a WHERE a.id = status_changes.application_id)`},
 }
 
 type migration struct {

@@ -96,7 +96,7 @@ export function averageDaysToResponse(applications: Application[], history: Map<
 
 /** The last news of an application: its last status change or follow-up, as the server's untouched_since. */
 export function lastNews(a: Application, history: Map<string, StatusChange[]>) {
-  const dates = [...(history.get(a.id) ?? []).map((c) => c.at), a.followed_up_at ?? a.created_at ?? ''];
+  const dates = [...(history.get(a.id) ?? []).map((c) => c.at), a.followed_up_at ?? a.applied_at ?? a.created_at ?? ''];
   return dates.reduce((last, d) => (new Date(d) > new Date(last) ? d : last));
 }
 
@@ -116,7 +116,8 @@ export function upcomingInterviews(applications: Application[], now: Date) {
     .sort((a, b) => a.interview_at!.localeCompare(b.interview_at!));
 }
 
-/** Applied or responded and neither followed up nor created since the follow-up delay started (a YYYY-MM-DD day): the
- * follow-up button shows. Never followed up, the delay runs from the creation. */
+/** Applied or responded and neither followed up nor applied since the follow-up delay started (a YYYY-MM-DD day): the
+ * follow-up button shows. Never followed up, the delay runs from the day it applied. */
 export const canFollowUp = (a: Application, since: string) =>
-  (a.status === 'applied' || a.status === 'responded') && (a.followed_up_at ?? a.created_at ?? '').slice(0, 10) < since;
+  (a.status === 'applied' || a.status === 'responded') &&
+  (a.followed_up_at ?? a.applied_at ?? a.created_at ?? '').slice(0, 10) < since;

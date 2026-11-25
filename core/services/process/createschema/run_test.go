@@ -77,3 +77,32 @@ func TestBackfillStatusChanges(t *testing.T) {
 		}
 	}
 }
+
+func TestFirstChangeOnAppliedAt(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	entered := time.Date(2026, 2, 3, 14, 30, 0, 0, time.UTC)
+	if _, err := db.NewInsert().Model(&domain.Application{ID: "a", Company: "Acme", Location: "Paris", Source: domain.SourceSpontaneous, Status: domain.StatusResponded, AppliedAt: "2026-01-05", CreatedAt: entered, UpdatedAt: entered}).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	// Entered after it applied, its first change dated then: moved back to the day it applied, the later ones kept.
+	changes := []domain.StatusChange{{ApplicationID: "a", Status: domain.StatusApplied, At: entered}, {ApplicationID: "a", From: domain.StatusApplied, Status: domain.StatusResponded, At: entered.Add(time.Hour)}}
+	if _, err := db.NewInsert().Model(&changes).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM migrations WHERE id = 'status-changes-applied-at'`); err != nil {
+		t.Fatal(err)
+	}
+	again := createschema.Process(ctx, db)
+	again.Run()
+	if again.HasErr() {
+		t.Fatal(again.GetErr())
+	}
+	changes = nil
+	if err := db.NewSelect().Model(&changes).Order("sc.id").Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(changes) != 2 || !changes[0].At.Equal(time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)) || !changes[1].At.Equal(entered.Add(time.Hour)) {
+		t.Errorf("changes = %+v", changes)
+	}
+}
