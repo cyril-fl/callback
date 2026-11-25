@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - run: go test ./...
+      - name: swagger.yaml and the CLI client match the code
+        run: |
+          make openapi
+          git diff --exit-code docs cli/services/apiclient
+      # The CLI stays off the server: no database layer, no core.
+      - name: jat links no server code
+        run: "! go list -deps ./cmd/jat | grep -E 'github.com/uptrace/bun|github.com/cyril-fl/jat/core'"
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run generate
+      - name: api.d.ts matches swagger.yaml
+        run: |
+          bun run types
+          git diff --exit-code app/types
+
+  # The image of image.yml, amd64 only and not pushed, run from compose.prod.yaml: a broken Dockerfile shows before the tag.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: jat:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # Not secrets: a throwaway base.
+      - name: Start the image
+        run: |
+          printf 'JAT_IMAGE=jat:ci\nJAT_PASSWORD=password-of-the-ci\nJAT_ORIGIN=http://localhost:8080\n' > .env
+          docker compose -f compose.prod.yaml up -d
+      # 401 on /api/me: the API answers, not the web app's fallback page.
+      - name: The web app and the API answer
+        run: |
+          curl -fs --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:8080/
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/me)" = 401
+      - if: failure()
+        run: docker compose -f compose.prod.yaml logs jat
