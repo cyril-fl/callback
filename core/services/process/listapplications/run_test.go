@@ -28,6 +28,7 @@ func TestRun(t *testing.T) {
 	}{
 		"all, newest first":   {listapplications.Input{}, []string{initech, globex, acme}, 3},
 		"by status":           {listapplications.Input{Filter: domain.Filter{Status: []domain.Status{domain.StatusInterview, domain.StatusRejected}}}, []string{initech, globex}, 2},
+		"location, any case":  {listapplications.Input{Filter: domain.Filter{Location: "PARIS"}}, []string{initech, acme}, 2},
 		"text, any case":      {listapplications.Input{Filter: domain.Filter{Q: "paris"}}, []string{initech, acme}, 2},
 		"text, % is literal":  {listapplications.Input{Filter: domain.Filter{Q: "100%"}}, []string{acme}, 1},
 		"text, contact":       {listapplications.Input{Filter: domain.Filter{Q: "jane"}}, []string{globex}, 1},

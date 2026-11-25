@@ -42,6 +42,7 @@ func writes(destructive, idempotent bool) *mcp.ToolAnnotations {
 type listArgs struct {
 	Status         []apiclient.GetApiApplicationsParamsStatus `json:"status,omitempty" jsonschema:"any of these"`
 	Source         *string                                    `json:"source,omitempty" jsonschema:"spontaneous, job_post, recruiter or any name"`
+	Location       *string                                    `json:"location,omitempty" jsonschema:"this city"`
 	Q              *string                                    `json:"q,omitempty" jsonschema:"text in company, address, website, source_detail, contact or comment"`
 	AppliedBefore  *string                                    `json:"applied_before,omitempty"`
 	AppliedAfter   *string                                    `json:"applied_after,omitempty"`
@@ -71,7 +72,7 @@ func list(ctx context.Context, client *apiclient.ClientWithResponses, args listA
 		limit = max(*args.Limit, 0)
 	}
 	params := &apiclient.GetApiApplicationsParams{
-		Source: args.Source, Q: args.Q, AppliedBefore: args.AppliedBefore, AppliedAfter: args.AppliedAfter, UntouchedSince: args.UntouchedSince,
+		Source: args.Source, Location: args.Location, Q: args.Q, AppliedBefore: args.AppliedBefore, AppliedAfter: args.AppliedAfter, UntouchedSince: args.UntouchedSince,
 		Sort: args.Sort, Limit: &limit, Offset: &args.Offset, CountOnly: &args.CountOnly,
 	}
 	if len(args.Status) > 0 {

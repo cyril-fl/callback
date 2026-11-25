@@ -22,6 +22,8 @@ type Filter struct {
 	// Status is any of these statuses.
 	Status []Status `json:"status,omitempty" binding:"optional"`
 	Source Source   `json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
+	// Location is this city, whatever the case.
+	Location string `json:"location,omitempty" binding:"optional" example:"Lyon"`
 	// Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive.
 	Q string `json:"q,omitempty" binding:"optional"`
 	// AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
@@ -33,7 +35,7 @@ type Filter struct {
 
 // Empty tells a filter that matches every application. A blank q adds no condition (appfilter trims it): empty too.
 func (f Filter) Empty() bool {
-	return len(f.IDs) == 0 && len(f.Status) == 0 && f.Source == "" && strings.TrimSpace(f.Q) == "" && f.AppliedBefore == "" && f.AppliedAfter == "" && f.UntouchedSince == ""
+	return len(f.IDs) == 0 && len(f.Status) == 0 && f.Source == "" && strings.TrimSpace(f.Location) == "" && strings.TrimSpace(f.Q) == "" && f.AppliedBefore == "" && f.AppliedAfter == "" && f.UntouchedSince == ""
 }
 
 // Validate checks the values of the filter.

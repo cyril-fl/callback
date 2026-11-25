@@ -20,6 +20,7 @@ import (
 // @Param    ids             query []string false "Applications by id, comma separated or repeated" collectionFormat(csv)
 // @Param    status          query []string false "Any of these statuses" collectionFormat(csv) Enums(applied,responded,interview,offer,rejected)
 // @Param    source          query string   false "Source: spontaneous, job_post, recruiter or a name given by the user"
+// @Param    location        query string   false "This city, whatever the case"
 // @Param    q               query string   false "Text in company, address, website, source, contact or comment"
 // @Param    applied_before  query string   false "applied_at < this day (2026-01-31)"
 // @Param    applied_after   query string   false "applied_at > this day (2026-01-31)"
@@ -60,6 +61,7 @@ func parse(query url.Values) (listapplications.Input, error) {
 		Filter: domain.Filter{
 			IDs:            list(query["ids"]),
 			Source:         domain.Source(query.Get("source")),
+			Location:       query.Get("location"),
 			Q:              query.Get("q"),
 			AppliedBefore:  query.Get("applied_before"),
 			AppliedAfter:   query.Get("applied_after"),

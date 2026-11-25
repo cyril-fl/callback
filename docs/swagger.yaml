@@ -69,6 +69,10 @@ components:
             type: string
           type: array
           uniqueItems: false
+        location:
+          description: Location is this city, whatever the case.
+          example: Lyon
+          type: string
         q:
           description: Q is text found in the company, the address, website, source_detail,
             contact or comment, case-insensitive.
@@ -469,6 +473,10 @@ components:
             type: string
           type: array
           uniqueItems: false
+        location:
+          description: Location is this city, whatever the case.
+          example: Lyon
+          type: string
         q:
           description: Q is text found in the company, the address, website, source_detail,
             contact or comment, case-insensitive.
@@ -567,6 +575,11 @@ paths:
           the user'
         in: query
         name: source
+        schema:
+          type: string
+      - description: This city, whatever the case
+        in: query
+        name: location
         schema:
           type: string
       - description: Text in company, address, website, source, contact or comment

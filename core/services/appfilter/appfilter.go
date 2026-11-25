@@ -24,6 +24,9 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 		if filter.Source != "" {
 			q = q.Where("a.source = ? COLLATE NOCASE", filter.Source)
 		}
+		if location := strings.TrimSpace(filter.Location); location != "" {
+			q = q.Where("a.location = ? COLLATE NOCASE", location)
+		}
 		if text := strings.TrimSpace(filter.Q); text != "" {
 			like := "%" + likeEscaper.Replace(text) + "%"
 			q = q.WhereGroup(" AND ", func(q bun.QueryBuilder) bun.QueryBuilder {

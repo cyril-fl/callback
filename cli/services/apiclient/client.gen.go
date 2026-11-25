@@ -200,6 +200,9 @@ type DeleteapplicationsInput struct {
 	// Ids IDs are the applications by id.
 	Ids *[]string `json:"ids,omitempty"`
 
+	// Location Location is this city, whatever the case.
+	Location *string `json:"location,omitempty"`
+
 	// Q Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive.
 	Q      *string `json:"q,omitempty"`
 	Source *string `json:"source,omitempty"`
@@ -427,6 +430,9 @@ type UpdateapplicationsOp struct {
 	// Ids IDs are the applications by id.
 	Ids *[]string `json:"ids,omitempty"`
 
+	// Location Location is this city, whatever the case.
+	Location *string `json:"location,omitempty"`
+
 	// Q Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive.
 	Q      *string       `json:"q,omitempty"`
 	Set    DomainChanges `json:"set"`
@@ -449,6 +455,9 @@ type GetApiApplicationsParams struct {
 
 	// Source Source: spontaneous, job_post, recruiter or a name given by the user
 	Source *string `form:"source,omitempty" json:"source,omitempty"`
+
+	// Location This city, whatever the case
+	Location *string `form:"location,omitempty" json:"location,omitempty"`
 
 	// Q Text in company, address, website, source, contact or comment
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
@@ -1184,6 +1193,18 @@ func NewGetApiApplicationsRequest(server string, params *GetApiApplicationsParam
 		if params.Source != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "source", *params.Source, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Location != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "location", *params.Location, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
