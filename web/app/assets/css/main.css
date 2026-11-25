@@ -6,57 +6,57 @@
   --font-sans: 'Merriweather Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* The themes of app/utils/themes.ts: the four accents of the previous app (red #F56470, purple #313CA3, blue #3F7BCF,
+/* The themes of app/utils/themes.ts: four accents after those of the previous app (pink #EC6FA8, lilac #A78BDA, blue #3F7BCF,
    green), each with greys tinted by its hue. 500, the buttons of the light mode, is the lightest shade white text
    reads on at WCAG AA (4.5:1). Static: Tailwind keeps them though no class names them. */
 @theme static {
-  --color-jat-red-50: #fef1f2;
-  --color-jat-red-100: #fddde0;
-  --color-jat-red-200: #fbbcc1;
-  --color-jat-red-300: #f88c95;
-  --color-jat-red-400: #f45360;
-  --color-jat-red-500: #e80f21;
-  --color-jat-red-600: #c70d1c;
-  --color-jat-red-700: #a50b17;
-  --color-jat-red-800: #840813;
-  --color-jat-red-900: #67070f;
-  --color-jat-red-950: #4a050b;
+  --color-jat-pink-50: #fdf1f7;
+  --color-jat-pink-100: #fbdfec;
+  --color-jat-pink-200: #f7c0d9;
+  --color-jat-pink-300: #f193be;
+  --color-jat-pink-400: #eb66a2;
+  --color-jat-pink-500: #dd1d75;
+  --color-jat-pink-600: #bd1964;
+  --color-jat-pink-700: #9e1553;
+  --color-jat-pink-800: #7e1143;
+  --color-jat-pink-900: #630d34;
+  --color-jat-pink-950: #480a26;
 
-  --color-jat-red-gray-50: #f9f6f6;
-  --color-jat-red-gray-100: #f0eaea;
-  --color-jat-red-gray-200: #e2d5d6;
-  --color-jat-red-gray-300: #cdb7b9;
-  --color-jat-red-gray-400: #b49395;
-  --color-jat-red-gray-500: #96696c;
-  --color-jat-red-gray-600: #815a5d;
-  --color-jat-red-gray-700: #51383b;
-  --color-jat-red-gray-800: #332425;
-  --color-jat-red-gray-900: #211718;
-  --color-jat-red-gray-950: #150f0f;
+  --color-jat-pink-gray-50: #f9f6f7;
+  --color-jat-pink-gray-100: #f0eaed;
+  --color-jat-pink-gray-200: #e2d5db;
+  --color-jat-pink-gray-300: #cdb7c1;
+  --color-jat-pink-gray-400: #b899a7;
+  --color-jat-pink-gray-500: #95687c;
+  --color-jat-pink-gray-600: #80596b;
+  --color-jat-pink-gray-700: #513844;
+  --color-jat-pink-gray-800: #33242b;
+  --color-jat-pink-gray-900: #21171c;
+  --color-jat-pink-gray-950: #150f12;
 
-  --color-jat-purple-50: #f3f4fb;
-  --color-jat-purple-100: #e4e5f7;
-  --color-jat-purple-200: #c8ccee;
-  --color-jat-purple-300: #a1a7e3;
-  --color-jat-purple-400: #727bd5;
-  --color-jat-purple-500: #606bcf;
-  --color-jat-purple-600: #4551c7;
-  --color-jat-purple-700: #3642b2;
-  --color-jat-purple-800: #2d3897;
-  --color-jat-purple-900: #262f7f;
-  --color-jat-purple-950: #1f2668;
+  --color-jat-lilac-50: #f6f3fb;
+  --color-jat-lilac-100: #eae4f6;
+  --color-jat-lilac-200: #d6c9ee;
+  --color-jat-lilac-300: #b9a2e1;
+  --color-jat-lilac-400: #9b7cd5;
+  --color-jat-lilac-500: #855fcc;
+  --color-jat-lilac-600: #7143c3;
+  --color-jat-lilac-700: #6037ac;
+  --color-jat-lilac-800: #512e91;
+  --color-jat-lilac-900: #44277a;
+  --color-jat-lilac-950: #371f63;
 
-  --color-jat-purple-gray-50: #f6f6f9;
-  --color-jat-purple-gray-100: #eaebf0;
-  --color-jat-purple-gray-200: #d5d6e2;
-  --color-jat-purple-gray-300: #b7b9cd;
-  --color-jat-purple-gray-400: #9396b4;
-  --color-jat-purple-gray-500: #6d719a;
-  --color-jat-purple-gray-600: #5d6186;
-  --color-jat-purple-gray-700: #383b51;
-  --color-jat-purple-gray-800: #242533;
-  --color-jat-purple-gray-900: #171821;
-  --color-jat-purple-gray-950: #0f0f15;
+  --color-jat-lilac-gray-50: #f7f6f9;
+  --color-jat-lilac-gray-100: #eceaf0;
+  --color-jat-lilac-gray-200: #d9d5e2;
+  --color-jat-lilac-gray-300: #bfb7cd;
+  --color-jat-lilac-gray-400: #a499b8;
+  --color-jat-lilac-gray-500: #7d6d9a;
+  --color-jat-lilac-gray-600: #6c5d86;
+  --color-jat-lilac-gray-700: #413851;
+  --color-jat-lilac-gray-800: #292433;
+  --color-jat-lilac-gray-900: #1b1721;
+  --color-jat-lilac-gray-950: #110f15;
 
   --color-jat-blue-50: #f3f7fc;
   --color-jat-blue-100: #e2ebf8;

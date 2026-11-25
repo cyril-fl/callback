@@ -88,7 +88,7 @@
     "title": "Réglages",
     "colorMode": "Mode",
     "theme": "Thème",
-    "themes": { "red": "Rouge", "purple": "Violet", "blue": "Bleu", "green": "Vert" },
+    "themes": { "pink": "Rose", "lilac": "Lilas", "blue": "Bleu", "green": "Vert" },
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système",
