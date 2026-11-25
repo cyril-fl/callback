@@ -47,10 +47,12 @@
     "activity": "Activité",
     "less": "Moins",
     "more": "Plus",
-    "activityTotal": "Aucune candidature en un an | {count} candidature en un an | {count} candidatures en un an",
+    "activityTotal": "Aucune candidature sur la période | {count} candidature sur la période | {count} candidatures sur la période",
     "dayCount": "Aucune candidature le {date} | {count} candidature le {date} | {count} candidatures le {date}",
     "period": "Période",
     "periods": {
+      "1w": "1 semaine",
+      "1m": "1 mois",
       "3m": "3 mois",
       "6m": "6 mois",
       "1y": "1 an",
