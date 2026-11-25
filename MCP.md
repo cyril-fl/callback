@@ -98,8 +98,8 @@ les lance sans demander ; `destructiveHint` sur `delete_applications` : le clien
 
 **Peu d'outils, des descriptions d'une phrase.** Chaque outil annoncé coûte du contexte à chaque requête.
 `TestToolListSize` (`cli/cmd-mcp/cmd_test.go`) mesure le nom, la description et le schéma d'entrée de chaque outil, et
-échoue au-delà de 8 outils ou 4 500 octets (6 outils et 4,1 Ko au départ) : optimiser l'existant avant d'ajouter.
-Les champs optionnels y sont des types simples, sans `null` : l'agent les omet.
+échoue au-delà de 8 outils ou 6 000 octets (6 outils et 4,1 Ko au départ, 4,8 Ko avec l'entretien et le contact) :
+des outils complets qui évitent des allers-retours valent quelques octets, mais optimiser l'existant avant d'ajouter.
 `go test -v -run Size ./cli/cmd-mcp/` affiche les chiffres.
 
 ## 4. Les consignes

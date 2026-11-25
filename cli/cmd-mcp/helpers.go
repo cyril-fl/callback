@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"github.com/cyril-fl/callback/cli/services/apiclient"
-	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -26,28 +25,7 @@ func addTool[In, Out any](server *mcp.Server, readOnly bool, tool *mcp.Tool, han
 	if readOnly && !tool.Annotations.ReadOnlyHint {
 		return
 	}
-	schema, err := jsonschema.For[In](nil)
-	if err != nil {
-		panic(err) // a type the SDK cannot infer: a bug of this package, caught by its tests
-	}
-	dropNull(schema)
-	tool.InputSchema = schema
 	mcp.AddTool(server, tool, handler)
-}
-
-// dropNull makes an optional field (a pointer, a slice) a plain type: an agent leaves it out rather than sending
-// null, and the "null" of each one cost the model bytes at every request.
-func dropNull(schema *jsonschema.Schema) {
-	if schema == nil {
-		return
-	}
-	if len(schema.Types) == 2 && schema.Types[0] == "null" {
-		schema.Type, schema.Types = schema.Types[1], nil
-	}
-	for _, property := range schema.Properties {
-		dropNull(property)
-	}
-	dropNull(schema.Items)
 }
 
 // reads marks a tool that changes nothing, so a client runs it without asking.
