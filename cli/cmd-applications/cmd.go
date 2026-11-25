@@ -222,7 +222,9 @@ func Stats(cobra *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	stats, err := apiclient.Decode[apiclient.ReadstatsStats](client.GetApiStats(cobra.Context()))
+	f := filters(cobra, "status", "source")
+	params := &apiclient.GetApiStatsParams{Source: f.Source, AppliedBefore: f.AppliedBefore, AppliedAfter: f.AppliedAfter}
+	stats, err := apiclient.Decode[apiclient.ReadstatsStats](client.GetApiStats(cobra.Context(), params))
 	if err != nil {
 		return err
 	}

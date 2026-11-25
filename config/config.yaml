@@ -295,7 +295,17 @@ commands:
   stats:
     use: "stats"
     short: "Count the applications per status, with the response rate"
+    example: "{name} stats --applied-after 2026-09-01 --source LinkedIn"
     args:
+      - name: "source"
+        type: "string"
+        usage: "spontaneous, job_post, recruiter or any name, any case"
+      - name: "applied-before"
+        type: "string"
+        usage: "Applied before this day, 2026-01-31"
+      - name: "applied-after"
+        type: "string"
+        usage: "Applied after this day, 2026-01-31"
       - name: "json"
         type: "bool"
         usage: "Print JSON"

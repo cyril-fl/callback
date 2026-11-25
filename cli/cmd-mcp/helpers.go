@@ -53,6 +53,12 @@ type listArgs struct {
 	Offset         int                                        `json:"offset,omitempty"`
 }
 
+type statsArgs struct {
+	Source        *string `json:"source,omitempty"`
+	AppliedBefore *string `json:"applied_before,omitempty"`
+	AppliedAfter  *string `json:"applied_after,omitempty"`
+}
+
 type listResult struct {
 	Total        int                           `json:"total"`
 	Applications []apiclient.DomainApplication `json:"applications,omitempty"`

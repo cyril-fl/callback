@@ -605,7 +605,14 @@ export interface paths {
         /** Count the applications */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Source: spontaneous, job_post, recruiter or a name given by the user, any case */
+                    source?: string;
+                    /** @description applied_at < this day (2026-01-31) */
+                    applied_before?: string;
+                    /** @description applied_at > this day (2026-01-31) */
+                    applied_after?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -619,6 +626,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["readstats.Stats"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
                     };
                 };
                 /** @description Unauthorized */

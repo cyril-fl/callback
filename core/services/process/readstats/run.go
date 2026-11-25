@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/appfilter"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -26,22 +27,29 @@ type run struct {
 	plumprimitive.Process
 	cache
 
-	ctx context.Context
-	db  bun.IDB
+	ctx    context.Context
+	db     bun.IDB
+	filter domain.Filter
 }
 
 type cache struct {
 	result Stats
 }
 
-func Process(ctx context.Context, db bun.IDB) *run {
+// Process counts the applications filter picks, all of them when it is empty.
+func Process(ctx context.Context, db bun.IDB, filter domain.Filter) *run {
 	return &run{
-		ctx: ctx,
-		db:  db,
+		ctx:    ctx,
+		db:     db,
+		filter: filter,
 	}
 }
 
 func (p *run) Run() {
+	p.SetErr(p.filter.Validate())
+	if p.HasErr() {
+		return
+	}
 	p.count()
 }
 
@@ -57,7 +65,7 @@ func (p *run) count() {
 		Source domain.Source
 		Count  int
 	}
-	err := p.db.NewSelect().Model((*domain.Application)(nil)).Column("status", "source").ColumnExpr("count(*) AS count").Group("status", "source").Scan(p.ctx, &rows)
+	err := p.db.NewSelect().Model((*domain.Application)(nil)).Column("status", "source").ColumnExpr("count(*) AS count").Group("status", "source").ApplyQueryBuilder(appfilter.Where(p.filter)).Scan(p.ctx, &rows)
 	if err != nil {
 		p.SetErr(err)
 		return
