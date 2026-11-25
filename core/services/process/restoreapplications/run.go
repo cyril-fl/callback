@@ -1,5 +1,5 @@
 // Package restoreapplications brings deleted applications back from the trash, with their history: the undo of a
-// delete, within a day.
+// delete, within the preferences' trash_days.
 package restoreapplications
 
 import (
@@ -58,13 +58,13 @@ func (p *run) ensureIDs() {
 	}
 }
 
-// restore forgets the expired ones first: an application deleted more than a day ago is gone.
+// restore forgets the expired ones first: one deleted more than trash_days ago is gone.
 func (p *run) restore() {
 	if p.HasErr() {
 		return
 	}
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if err := trash.Empty(ctx, tx, time.Now().UTC().Add(-trash.Keep)); err != nil {
+		if err := trash.Empty(ctx, tx, time.Now().UTC()); err != nil {
 			return err
 		}
 		ids, err := trash.Restore(ctx, tx, p.input.IDs)

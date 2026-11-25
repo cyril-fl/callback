@@ -254,6 +254,51 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/applications/deleted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List deleted applications */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.DeletedApplication"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/restore": {
         parameters: {
             query?: never;
@@ -1089,6 +1134,12 @@ export interface components {
             undo_status?: boolean;
             website?: string;
         };
+        "domain.DeletedApplication": {
+            /** @description Application is the row as it was, in JSON: a column the applications gain needs nothing here. */
+            application: components["schemas"]["domain.Application"];
+            deleted_at: string;
+            id: string;
+        };
         "domain.NewApplication": {
             /** @example 2026-01-31 */
             applied_at?: string;
@@ -1115,6 +1166,7 @@ export interface components {
             follow_up_days?: number;
             /** @enum {string} */
             plan?: "base" | "pro";
+            trash_days?: number;
         };
         "domain.Preferences": {
             default_country: string;
@@ -1124,6 +1176,8 @@ export interface components {
             follow_up_days: number;
             /** @enum {string} */
             plan: "base" | "pro";
+            /** @description TrashDays is how long a deleted application can be restored, before it is gone with its history. */
+            trash_days: number;
         };
         /** @enum {string} */
         "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected";

@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// Handler brings back applications deleted within the last day, with their history. Ids not in the trash are
+// Handler brings back applications still in the trash (trash_days), with their history. Ids not in the trash are
 // listed in failed.
 // @Summary  Restore deleted applications
 // @Tags     applications

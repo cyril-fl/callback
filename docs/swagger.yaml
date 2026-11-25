@@ -233,6 +233,21 @@ components:
         website:
           type: string
       type: object
+    domain.DeletedApplication:
+      properties:
+        application:
+          $ref: '#/components/schemas/domain.Application'
+          description: 'Application is the row as it was, in JSON: a column the applications
+            gain needs nothing here.'
+        deleted_at:
+          type: string
+        id:
+          type: string
+      required:
+      - application
+      - deleted_at
+      - id
+      type: object
     domain.NewApplication:
       properties:
         applied_at:
@@ -285,6 +300,8 @@ components:
           - base
           - pro
           type: string
+        trash_days:
+          type: integer
       type: object
     domain.Preferences:
       properties:
@@ -303,11 +320,16 @@ components:
           - base
           - pro
           type: string
+        trash_days:
+          description: TrashDays is how long a deleted application can be restored,
+            before it is gone with its history.
+          type: integer
       required:
       - default_country
       - default_location
       - follow_up_days
       - plan
+      - trash_days
       type: object
     domain.Status:
       enum:
@@ -765,6 +787,26 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Forbidden
       summary: Create applications
+      tags:
+      - applications
+  /api/applications/deleted:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.DeletedApplication'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: List deleted applications
       tags:
       - applications
   /api/applications/restore:

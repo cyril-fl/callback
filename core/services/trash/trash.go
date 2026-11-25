@@ -1,5 +1,5 @@
-// Package trash moves deleted applications aside for a day, so a delete can be undone, then forgets them with their
-// history. The reads never see them: they read applications, and the history through its application.
+// Package trash moves deleted applications aside for the preferences' trash_days, so a delete can be undone, then
+// forgets them with their history. The reads never see them: they read applications, and the history through its application.
 package trash
 
 import (
@@ -7,11 +7,18 @@ import (
 	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/readpreferences"
 	"github.com/uptrace/bun"
 )
 
-// Keep is how long a deleted application can be restored.
-const Keep = 24 * time.Hour
+// Since is the oldest deletion still kept at now: before it, the trash is emptied.
+func Since(ctx context.Context, db bun.IDB, now time.Time) (time.Time, error) {
+	preferences := readpreferences.Process(ctx, db)
+	if preferences.Run(); preferences.HasErr() {
+		return time.Time{}, preferences.GetErr()
+	}
+	return now.AddDate(0, 0, -preferences.GetResult().TrashDays), nil
+}
 
 // Throw moves the applications of picked, a SELECT of their ids, to the trash, and returns their ids.
 func Throw(ctx context.Context, tx bun.IDB, picked *bun.SelectQuery, now time.Time) ([]string, error) {
@@ -51,14 +58,18 @@ func Restore(ctx context.Context, tx bun.IDB, ids []string) ([]string, error) {
 	return restored, err
 }
 
-// Empty forgets for good the applications deleted before before, with their history.
-func Empty(ctx context.Context, tx bun.IDB, before time.Time) error {
+// Empty forgets for good the applications deleted before Since, with their history.
+func Empty(ctx context.Context, tx bun.IDB, now time.Time) error {
+	before, err := Since(ctx, tx, now)
+	if err != nil {
+		return err
+	}
 	expired := tx.NewSelect().Model((*domain.DeletedApplication)(nil)).Column("id").Where("deleted_at < ?", before)
 	for _, table := range []string{"status_changes", "follow_ups"} {
 		if _, err := tx.NewRaw("DELETE FROM ? WHERE application_id IN (?)", bun.Ident(table), expired).Exec(ctx); err != nil {
 			return err
 		}
 	}
-	_, err := tx.NewDelete().Model((*domain.DeletedApplication)(nil)).Where("deleted_at < ?", before).Exec(ctx)
+	_, err = tx.NewDelete().Model((*domain.DeletedApplication)(nil)).Where("deleted_at < ?", before).Exec(ctx)
 	return err
 }

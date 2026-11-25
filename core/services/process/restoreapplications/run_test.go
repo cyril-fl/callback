@@ -8,10 +8,10 @@ import (
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/process/deleteapplications"
+	"github.com/cyril-fl/callback/core/services/process/listdeletedapplications"
 	"github.com/cyril-fl/callback/core/services/process/restoreapplications"
 	"github.com/cyril-fl/callback/core/services/seed"
 	"github.com/cyril-fl/callback/core/services/testdb"
-	"github.com/cyril-fl/callback/core/services/trash"
 )
 
 func TestRun(t *testing.T) {
@@ -34,6 +34,11 @@ func TestRun(t *testing.T) {
 		t.Fatalf("%d applications left after the delete", count)
 	}
 
+	list := listdeletedapplications.Process(ctx, db)
+	if list.Run(); list.HasErr() || len(list.GetResult()) != 2 || list.GetResult()[0].Application.Company == "" {
+		t.Fatalf("trash = %v %+v", list.GetErr(), list.GetResult())
+	}
+
 	missing := "00000000-0000-0000-0000-000000000000"
 	process := restoreapplications.Process(ctx, db, restoreapplications.Input{IDs: []string{ids[0], missing}})
 	process.Run()
@@ -54,9 +59,12 @@ func TestRun(t *testing.T) {
 		t.Errorf("the restored application has %d status changes, want its creation's", count)
 	}
 
-	// A day later the trash is emptied, the history with it, and nothing comes back.
-	if _, err := db.NewUpdate().Model((*domain.DeletedApplication)(nil)).Set("deleted_at = ?", time.Now().UTC().Add(-trash.Keep-time.Minute)).Where("1 = 1").Exec(ctx); err != nil {
+	// trash_days later the trash is emptied, the history with it, and nothing comes back.
+	if _, err := db.NewUpdate().Model((*domain.DeletedApplication)(nil)).Set("deleted_at = ?", time.Now().UTC().AddDate(0, 0, -domain.DefaultPreferences.TrashDays).Add(-time.Minute)).Where("1 = 1").Exec(ctx); err != nil {
 		t.Fatal(err)
+	}
+	if list.Run(); len(list.GetResult()) != 0 {
+		t.Errorf("the trash lists %d expired applications", len(list.GetResult()))
 	}
 	process = restoreapplications.Process(ctx, db, restoreapplications.Input{IDs: []string{ids[1]}})
 	process.Run()

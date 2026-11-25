@@ -1,5 +1,5 @@
 // Package deleteapplications deletes the applications of ids or filters in one transaction: they go to the trash for
-// a day, then are gone with their history.
+// the preferences' trash_days, then are gone with their history.
 package deleteapplications
 
 import (
@@ -82,7 +82,7 @@ func (p *run) deleteApplications() {
 			return err
 		}
 		p.cache.result.IDs = ids
-		if err := trash.Empty(ctx, tx, now.Add(-trash.Keep)); err != nil {
+		if err := trash.Empty(ctx, tx, now); err != nil {
 			return err
 		}
 		if p.input.DryRun {

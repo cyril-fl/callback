@@ -298,6 +298,14 @@ type DomainChanges struct {
 	Website    *string `json:"website,omitempty"`
 }
 
+// DomainDeletedApplication defines model for domain.DeletedApplication.
+type DomainDeletedApplication struct {
+	// Application Application is the row as it was, in JSON: a column the applications gain needs nothing here.
+	Application DomainApplication `json:"application"`
+	DeletedAt   string            `json:"deleted_at"`
+	Id          string            `json:"id"`
+}
+
 // DomainNewApplication defines model for domain.NewApplication.
 type DomainNewApplication struct {
 	AppliedAt    *string       `json:"applied_at,omitempty"`
@@ -323,6 +331,7 @@ type DomainPreferenceChanges struct {
 	DefaultLocation *string                      `json:"default_location,omitempty"`
 	FollowUpDays    *int                         `json:"follow_up_days,omitempty"`
 	Plan            *DomainPreferenceChangesPlan `json:"plan,omitempty"`
+	TrashDays       *int                         `json:"trash_days,omitempty"`
 }
 
 // DomainPreferenceChangesPlan defines model for DomainPreferenceChanges.Plan.
@@ -338,6 +347,9 @@ type DomainPreferences struct {
 	// FollowUpDays FollowUpDays is how long an application waits without news before it is to follow up.
 	FollowUpDays int                   `json:"follow_up_days"`
 	Plan         DomainPreferencesPlan `json:"plan"`
+
+	// TrashDays TrashDays is how long a deleted application can be restored, before it is gone with its history.
+	TrashDays int `json:"trash_days"`
 }
 
 // DomainPreferencesPlan defines model for DomainPreferences.Plan.
@@ -671,6 +683,11 @@ type ClientInterface interface {
 	// Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 	PostApiApplications(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiApplicationsDeleted List deleted applications
+	//
+	// Corresponds with GET /api/applications/deleted (the `GetApiApplicationsDeleted` operationId).
+	GetApiApplicationsDeleted(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiApplicationsRestoreWithBody Restore deleted applications
 	//
 	// Takes any type of body and a specified content type.
@@ -880,6 +897,21 @@ func (c *Client) PostApiApplicationsWithBody(ctx context.Context, contentType st
 // Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 func (c *Client) PostApiApplications(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiApplicationsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetApiApplicationsDeleted List deleted applications
+//
+// Corresponds with GET /api/applications/deleted (the `GetApiApplicationsDeleted` operationId).
+func (c *Client) GetApiApplicationsDeleted(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiApplicationsDeletedRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1491,6 +1523,33 @@ func NewPostApiApplicationsRequestWithBody(server string, contentType string, bo
 	return req, nil
 }
 
+// NewGetApiApplicationsDeletedRequest constructs an http.Request for the GetApiApplicationsDeleted method
+func NewGetApiApplicationsDeletedRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/applications/deleted")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPostApiApplicationsRestoreRequest calls the generic PostApiApplicationsRestore builder with application/json body
 func NewPostApiApplicationsRestoreRequest(server string, body PostApiApplicationsRestoreJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -2084,6 +2143,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/applications (the `PostApiApplications` operationId).
 	PostApiApplicationsWithResponse(ctx context.Context, body PostApiApplicationsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiApplicationsResponse, error)
 
+	// GetApiApplicationsDeletedWithResponse List deleted applications
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/applications/deleted (the `GetApiApplicationsDeleted` operationId).
+	GetApiApplicationsDeletedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiApplicationsDeletedResponse, error)
+
 	// PostApiApplicationsRestoreWithBodyWithResponse Restore deleted applications
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -2453,6 +2519,54 @@ func (r PostApiApplicationsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostApiApplicationsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetApiApplicationsDeletedResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]DomainDeletedApplication
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetApiApplicationsDeletedResponse) GetJSON200() *[]DomainDeletedApplication {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetApiApplicationsDeletedResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetApiApplicationsDeletedResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiApplicationsDeletedResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiApplicationsDeletedResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetApiApplicationsDeletedResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -3251,6 +3365,19 @@ func (c *ClientWithResponses) PostApiApplicationsWithResponse(ctx context.Contex
 	return ParsePostApiApplicationsResponse(rsp)
 }
 
+// GetApiApplicationsDeletedWithResponse List deleted applications
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/applications/deleted (the `GetApiApplicationsDeleted` operationId).
+func (c *ClientWithResponses) GetApiApplicationsDeletedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiApplicationsDeletedResponse, error) {
+	rsp, err := c.GetApiApplicationsDeleted(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiApplicationsDeletedResponse(rsp)
+}
+
 // PostApiApplicationsRestoreWithBodyWithResponse Restore deleted applications
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -3667,6 +3794,39 @@ func ParsePostApiApplicationsResponse(rsp *http.Response) (*PostApiApplicationsR
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiApplicationsDeletedResponse parses an HTTP response from a GetApiApplicationsDeletedWithResponse call
+func ParseGetApiApplicationsDeletedResponse(rsp *http.Response) (*GetApiApplicationsDeletedResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiApplicationsDeletedResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []DomainDeletedApplication
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 

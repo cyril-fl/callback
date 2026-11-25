@@ -13,11 +13,14 @@ const (
 const (
 	MinFollowUpDays = 1
 	MaxFollowUpDays = 90
+	MinTrashDays    = 1
+	MaxTrashDays    = 365
 )
 
 var (
 	ErrInvalidPlan     = Invalid("plan is base or pro")
 	ErrInvalidFollowUp = Invalid("follow_up_days is between 1 and 90")
+	ErrInvalidTrash    = Invalid("trash_days is between 1 and 365")
 	ErrLongDefault     = Invalid("default_location and default_country have at most 200 characters")
 )
 
@@ -29,10 +32,12 @@ type Preferences struct {
 	DefaultCountry  string `json:"default_country"`
 	// FollowUpDays is how long an application waits without news before it is to follow up.
 	FollowUpDays int `json:"follow_up_days"`
+	// TrashDays is how long a deleted application can be restored, before it is gone with its history.
+	TrashDays int `json:"trash_days"`
 }
 
 // DefaultPreferences are the preferences of a base that never saved any.
-var DefaultPreferences = Preferences{Plan: PlanBase, FollowUpDays: 7}
+var DefaultPreferences = Preferences{Plan: PlanBase, FollowUpDays: 7, TrashDays: 30}
 
 // Validate checks preferences as they will be stored.
 func (p Preferences) Validate() error {
@@ -41,6 +46,8 @@ func (p Preferences) Validate() error {
 		return ErrInvalidPlan
 	case p.FollowUpDays < MinFollowUpDays || p.FollowUpDays > MaxFollowUpDays:
 		return ErrInvalidFollowUp
+	case p.TrashDays < MinTrashDays || p.TrashDays > MaxTrashDays:
+		return ErrInvalidTrash
 	case runes(p.DefaultLocation) > MaxShort || runes(p.DefaultCountry) > MaxShort:
 		return ErrLongDefault
 	}
@@ -53,6 +60,7 @@ type PreferenceChanges struct {
 	DefaultLocation *string `json:"default_location,omitempty" binding:"optional"`
 	DefaultCountry  *string `json:"default_country,omitempty" binding:"optional"`
 	FollowUpDays    *int    `json:"follow_up_days,omitempty" binding:"optional"`
+	TrashDays       *int    `json:"trash_days,omitempty" binding:"optional"`
 }
 
 // Apply writes the changes into p.
@@ -61,4 +69,5 @@ func (c PreferenceChanges) Apply(p *Preferences) {
 	set(&p.DefaultLocation, c.DefaultLocation)
 	set(&p.DefaultCountry, c.DefaultCountry)
 	set(&p.FollowUpDays, c.FollowUpDays)
+	set(&p.TrashDays, c.TrashDays)
 }
