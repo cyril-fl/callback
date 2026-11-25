@@ -13,7 +13,7 @@ const api = useApi();
 const toast = useToast();
 const sources = useSources();
 const places = usePlaces();
-const { preferences } = usePreferences();
+const { preferences, pro } = usePreferences();
 const loading = ref(false);
 
 const schema = computed(() => {
@@ -32,6 +32,9 @@ const schema = computed(() => {
       rating: z.number().int().min(0).max(5),
       comment: z.string(),
       applied_at: z.string().min(1, t('form.required')),
+      interview_at: z.string(),
+      contact_name: z.string(),
+      contact_email: z.union([z.literal(''), z.email()], { error: t('form.invalidEmail') }),
     })
     .superRefine((v, ctx) => {
       if (v.source === 'job_post' && !z.url().safeParse(v.source_detail).success)
@@ -61,8 +64,9 @@ const blank = (): State => ({
   contact_email: '',
 });
 const state = reactive(blank());
-// The street and postal code stay folded until asked for, or filled.
+// The street and postal code, and the contact, stay folded until asked for, or filled.
 const fullAddress = ref(false);
+const contact = ref(false);
 
 // Reload the form each time the slideover opens, from the edited row or empty.
 watch(open, (isOpen) => {
@@ -79,6 +83,7 @@ watch(open, (isOpen) => {
   if (a) for (const key of Object.keys(next) as (keyof State)[]) Object.assign(next, { [key]: a[key] ?? next[key] });
   Object.assign(state, next);
   fullAddress.value = !!(state.street || state.postal_code);
+  contact.value = !!(state.contact_name || state.contact_email);
   sources.refresh();
   places.refresh();
 });
@@ -99,6 +104,17 @@ function createSource(name: string) {
   state.source = value;
 }
 
+// Picking a known company fills the website and the address left empty from its last application.
+const previous = computed(() => places.lastTo(state.company, props.application?.id));
+function pickCompany(company: string) {
+  state.company = company;
+  const last = places.lastTo(company, props.application?.id);
+  if (!last) return;
+  for (const key of ['website', 'location', 'street', 'postal_code', 'country'] as const)
+    state[key] ||= last[key] ?? '';
+  fullAddress.value ||= !!(state.street || state.postal_code);
+}
+
 // Picking a known city fills its country if empty.
 function pickCity(city: string) {
   state.location = city.trim();
@@ -117,6 +133,8 @@ const detail = computed(() => {
       return { label: t('form.sourceOther'), type: 'text', required: false, placeholder: t('form.sourceOtherHint') };
   }
 });
+
+const day = (v: string) => new Date(`${v}T00:00:00`).toLocaleDateString('fr-FR');
 
 const statusItems = STATUSES.map((value) => ({ value, label: t(`status.${value}`) }));
 
@@ -154,8 +172,18 @@ async function submit() {
   >
     <template #body>
       <UForm id="application-form" :schema="schema" :state="state" class="space-y-4" @submit="submit">
-        <UFormField name="company" :label="t('form.company')" required>
-          <UInput v-model="state.company" class="w-full" />
+        <UFormField
+          name="company"
+          :label="t('form.company')"
+          :help="previous?.applied_at ? t('form.appliedBefore', { date: day(previous.applied_at) }) : undefined"
+          required
+        >
+          <SuggestInput
+            :model-value="state.company"
+            :suggestions="places.companies.value"
+            class="w-full"
+            @update:model-value="pickCompany"
+          />
         </UFormField>
         <UFormField name="website" :label="t('form.website')">
           <UInput v-model="state.website" placeholder="https://" class="w-full" />
@@ -231,6 +259,31 @@ async function submit() {
             </UInputDate>
           </UFormField>
         </div>
+
+        <UFormField v-if="state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
+          <UInput v-model="state.interview_at" type="datetime-local" class="w-full" />
+        </UFormField>
+
+        <template v-if="pro">
+          <div v-if="contact" class="grid grid-cols-2 gap-3">
+            <UFormField name="contact_name" :label="t('form.contactName')">
+              <UInput v-model="state.contact_name" class="w-full" />
+            </UFormField>
+            <UFormField name="contact_email" :label="t('form.contactEmail')">
+              <UInput v-model="state.contact_email" type="email" class="w-full" />
+            </UFormField>
+          </div>
+          <UButton
+            v-else
+            variant="link"
+            color="neutral"
+            size="sm"
+            icon="i-lucide-user-plus"
+            :label="t('form.contact')"
+            class="-mt-2 px-0"
+            @click="contact = true"
+          />
+        </template>
 
         <UFormField name="rating" :label="t('form.rating')">
           <UInputRating v-model="state.rating" clearable size="lg" />

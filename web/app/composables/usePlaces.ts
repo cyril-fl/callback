@@ -1,12 +1,15 @@
 import type { Application } from '~/types/items';
 
-// The cities and countries the applications name, most used first: the form and the settings suggest them.
+// The cities, countries and companies the applications name, most used first: the form and the settings suggest them.
 // shortcut: reads every application's address, an API route like /api/sources once there are thousands.
 export function usePlaces() {
   const api = useApi();
   const { data, refresh } = useAsyncData(
     'places',
-    () => api<Application[]>('/api/applications', { query: { fields: 'location,country' } }),
+    () =>
+      api<Application[]>('/api/applications', {
+        query: { fields: 'company,location,street,postal_code,country,website,applied_at' },
+      }),
     { default: () => [] },
   );
   const byUse = (values: (string | undefined)[]) => {
@@ -16,7 +19,11 @@ export function usePlaces() {
   };
   const cities = computed(() => byUse(data.value.map((a) => a.location)));
   const countries = computed(() => byUse(data.value.map((a) => a.country)));
+  const companies = computed(() => byUse(data.value.map((a) => a.company)));
   // The list comes newest first: a city's country is the one it had last.
   const countryOf = (city: string) => data.value.find((a) => a.location === city && a.country)?.country;
-  return { cities, countries, countryOf, refresh };
+  // The newest application to company, but the one excluded (the one being edited).
+  const lastTo = (company: string, excluded?: string) =>
+    data.value.find((a) => a.company === company && a.id !== excluded);
+  return { cities, countries, companies, countryOf, lastTo, refresh };
 }
