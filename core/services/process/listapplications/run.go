@@ -18,11 +18,11 @@ import (
 const DefaultSort = "-applied_at"
 
 // Sorts are the columns a list sorts on, - first for the descending order.
-var Sorts = []string{"applied_at", "company", "status", "rating", "created_at", "updated_at"}
+var Sorts = []string{"applied_at", "company", "source", "status", "rating", "created_at", "updated_at"}
 
 var (
 	ErrInvalidField  = domain.Invalid("fields are among id, company, location, website, source, source_detail, status, rating, comment, applied_at, created_at, updated_at")
-	ErrInvalidSort   = domain.Invalid("sort is one of applied_at, company, status, rating, created_at, updated_at, - first to reverse it")
+	ErrInvalidSort   = domain.Invalid("sort is one of applied_at, company, source, status, rating, created_at, updated_at, - first to reverse it")
 	ErrInvalidPaging = domain.Invalid("limit, offset and max_chars are 0 or more")
 )
 
@@ -124,7 +124,13 @@ func (p *run) loadApplications() {
 	if descending {
 		order = " DESC"
 	}
-	query = query.OrderExpr("a.?"+order, bun.Ident(column)).OrderExpr("a.created_at DESC, a.id")
+	if column == "status" {
+		// The pipeline's order, not the alphabet's.
+		query = query.OrderExpr("CASE a.status WHEN 'applied' THEN 0 WHEN 'responded' THEN 1 WHEN 'interview' THEN 2 WHEN 'offer' THEN 3 ELSE 4 END" + order)
+	} else {
+		query = query.OrderExpr("a.?"+order, bun.Ident(column))
+	}
+	query = query.OrderExpr("a.created_at DESC, a.id")
 	if p.input.Limit > 0 {
 		query = query.Limit(int64(p.input.Limit))
 	}

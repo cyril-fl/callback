@@ -34,6 +34,7 @@ func TestRun(t *testing.T) {
 		"dates are strict":    {listapplications.Input{Filter: domain.Filter{AppliedAfter: "2026-01-10", AppliedBefore: "2026-03-10"}}, []string{globex}, 1},
 		"ids":                 {listapplications.Input{Filter: domain.Filter{IDs: []string{acme, initech}}}, []string{initech, acme}, 2},
 		"sort by company":     {listapplications.Input{Sort: "company"}, []string{acme, globex, initech}, 3},
+		"sort by status":      {listapplications.Input{Sort: "status"}, []string{acme, globex, initech}, 3},
 		"sort by rating desc": {listapplications.Input{Sort: "-rating", Limit: 1}, []string{globex}, 3},
 		"page":                {listapplications.Input{Limit: 1, Offset: 1}, []string{globex}, 3},
 		"offset alone":        {listapplications.Input{Offset: 2}, []string{acme}, 3},
@@ -89,5 +90,19 @@ func TestInvalid(t *testing.T) {
 		if !errors.Is(process.GetErr(), domain.ErrInvalid) {
 			t.Errorf("%s: err = %v, want invalid", name, process.GetErr())
 		}
+	}
+}
+
+// status sorts in the pipeline's order: responded comes before interview, though not in the alphabet.
+func TestSortStatus(t *testing.T) {
+	db := testdb.New(t)
+	ids := seed.Applications(t, db,
+		domain.NewApplication{Company: "A", Location: "Paris", Status: domain.StatusInterview},
+		domain.NewApplication{Company: "B", Location: "Paris", Status: domain.StatusResponded},
+	)
+	process := listapplications.Process(context.Background(), db, listapplications.Input{Sort: "status"})
+	process.Run()
+	if got := process.GetResult().Applications; process.HasErr() || len(got) != 2 || got[0].ID != ids[1] {
+		t.Errorf("got %+v, %v; want responded first", got, process.GetErr())
 	}
 }

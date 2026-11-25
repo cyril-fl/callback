@@ -26,7 +26,7 @@ import (
 // @Param    untouched_since query string   false "Not updated since this day (2026-01-31)"
 // @Param    fields          query []string false "Columns returned, all when empty; id always comes" collectionFormat(csv)
 // @Param    max_chars       query int      false "Cut each comment to this many characters (truncated: true)"
-// @Param    sort            query string   false "applied_at, company, status, rating, created_at, updated_at; - first to reverse; -applied_at by default"
+// @Param    sort            query string   false "applied_at, company, source, status, rating, created_at, updated_at; - first to reverse; -applied_at by default"
 // @Param    limit           query int      false "Most applications returned, all when 0"
 // @Param    offset          query int      false "Applications skipped"
 // @Param    count_only      query bool     false "No application, X-Total-Count only"

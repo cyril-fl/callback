@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Application, BatchResult, Stats, Status } from '~/types/items';
 import { SOURCES, STATUSES } from '~/types/items';
 
@@ -10,7 +10,23 @@ const q = ref('');
 const qDebounced = refDebounced(q, 300);
 const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
-const sorting = ref<{ id: string; desc: boolean }[]>([{ id: 'applied_at', desc: true }]);
+const defaultSorting = [{ id: 'applied_at', desc: true }];
+const sorting = ref<{ id: string; desc: boolean }[]>([...defaultSorting]);
+const view = useLocalStorage<'table' | 'kanban'>('jat-view', 'table');
+
+const filtered = computed(
+  () =>
+    q.value !== '' ||
+    statusFilter.value.length > 0 ||
+    sourceFilter.value !== 'all' ||
+    JSON.stringify(sorting.value) !== JSON.stringify(defaultSorting),
+);
+function reset() {
+  q.value = '';
+  statusFilter.value = [];
+  sourceFilter.value = 'all';
+  sorting.value = [...defaultSorting];
+}
 
 const sort = computed(() => {
   const s = sorting.value[0];
@@ -37,11 +53,6 @@ const {
 );
 const refresh = () => Promise.all([refreshList(), refreshStats()]);
 
-const statusItems = STATUSES.map((value) => ({ value, label: t(`status.${value}`) }));
-const sourceItems = [
-  { value: 'all', label: t('common.all') },
-  ...SOURCES.map((value) => ({ value, label: t(`source.${value}`) })),
-];
 const statusColor: Record<Status, 'neutral' | 'info' | 'primary' | 'success' | 'error'> = {
   applied: 'neutral',
   responded: 'info',
@@ -51,11 +62,50 @@ const statusColor: Record<Status, 'neutral' | 'info' | 'primary' | 'success' | '
 };
 
 const UButton = resolveComponent('UButton');
-const sortable =
-  (id: string, label: string): TableColumn<Application>['header'] =>
+const UDropdownMenu = resolveComponent('UDropdownMenu');
+
+// The menu stays open while ticking: preventDefault keeps it from closing on select.
+const keepOpen = (fn: () => void) => (e: Event) => {
+  e.preventDefault();
+  fn();
+};
+
+const statusFilterMenu = computed<DropdownMenuItem[][]>(() => [
+  [
+    {
+      label: t('common.all'),
+      type: 'checkbox',
+      checked: statusFilter.value.length === 0,
+      onSelect: keepOpen(() => (statusFilter.value = [])),
+    },
+  ],
+  STATUSES.map((s) => ({
+    label: t(`status.${s}`),
+    type: 'checkbox' as const,
+    checked: statusFilter.value.includes(s),
+    onSelect: keepOpen(() => {
+      statusFilter.value = statusFilter.value.includes(s)
+        ? statusFilter.value.filter((x) => x !== s)
+        : [...statusFilter.value, s];
+    }),
+  })),
+]);
+
+const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
+  ['all', ...SOURCES].map((s) => ({
+    label: s === 'all' ? t('common.all') : t(`source.${s}`),
+    type: 'checkbox' as const,
+    checked: sourceFilter.value === s,
+    onSelect: () => (sourceFilter.value = s),
+  })),
+]);
+
+// A column header: its label sorts asc then desc, the funnel beside it filters.
+const header =
+  (label: string, filter?: { menu: DropdownMenuItem[][]; active: boolean }): TableColumn<Application>['header'] =>
   ({ column }) => {
     const dir = column.getIsSorted();
-    return h(UButton, {
+    const sort = h(UButton, {
       color: 'neutral',
       variant: 'ghost',
       label,
@@ -66,18 +116,41 @@ const sortable =
           : 'i-lucide-arrow-down-wide-narrow'
         : 'i-lucide-arrow-up-down',
       onClick: () => column.toggleSorting(dir === 'asc'),
-      'aria-label': label,
-      id,
+      'aria-label': `${t('table.sortBy')} ${label}`,
     });
+    if (!filter) return sort;
+    return h('div', { class: 'flex items-center gap-1' }, [
+      sort,
+      h(
+        UDropdownMenu,
+        { items: filter.menu, content: { align: 'start' } },
+        {
+          default: () =>
+            h(UButton, {
+              icon: 'i-lucide-list-filter',
+              color: filter.active ? 'primary' : 'neutral',
+              variant: filter.active ? 'soft' : 'ghost',
+              size: 'xs',
+              'aria-label': `${t('table.filterBy')} ${label}`,
+            }),
+        },
+      ),
+    ]);
   };
 
 const columns = computed<TableColumn<Application>[]>(() => [
-  { accessorKey: 'company', header: sortable('company', t('table.company')) },
+  { accessorKey: 'company', header: header(t('table.company')) },
   { accessorKey: 'location', header: t('table.location') },
-  { id: 'source', header: t('table.source') },
-  { accessorKey: 'status', header: sortable('status', t('table.status')) },
-  { accessorKey: 'rating', header: sortable('rating', t('table.rating')) },
-  { accessorKey: 'applied_at', header: sortable('applied_at', t('table.appliedAt')) },
+  {
+    accessorKey: 'source',
+    header: header(t('table.source'), { menu: sourceFilterMenu.value, active: sourceFilter.value !== 'all' }),
+  },
+  {
+    accessorKey: 'status',
+    header: header(t('table.status'), { menu: statusFilterMenu.value, active: statusFilter.value.length > 0 }),
+  },
+  { accessorKey: 'rating', header: header(t('table.rating')) },
+  { accessorKey: 'applied_at', header: header(t('table.appliedAt')) },
   { id: 'actions', header: () => h('span', { class: 'sr-only' }, t('table.actions')) },
 ]);
 
@@ -146,20 +219,46 @@ async function doDelete() {
 
     <div class="flex flex-wrap items-center gap-2">
       <UInput v-model="q" icon="i-lucide-search" :placeholder="t('table.search')" :aria-label="t('table.search')" />
-      <USelectMenu
-        v-model="statusFilter"
-        multiple
-        value-key="value"
-        :items="statusItems"
-        :placeholder="t('table.statusFilter')"
-        :aria-label="t('table.statusFilter')"
-        class="w-48"
+      <UButton
+        v-if="filtered"
+        icon="i-lucide-rotate-ccw"
+        color="neutral"
+        variant="ghost"
+        :label="t('table.reset')"
+        @click="reset"
       />
-      <USelect v-model="sourceFilter" :items="sourceItems" :aria-label="t('table.sourceFilter')" class="w-40" />
-      <UButton class="ml-auto" icon="i-lucide-plus" :label="t('form.add')" @click="openForm()" />
+      <div class="ml-auto flex items-center gap-2">
+        <UFieldGroup>
+          <UButton
+            icon="i-lucide-table"
+            :color="view === 'table' ? 'primary' : 'neutral'"
+            :variant="view === 'table' ? 'soft' : 'outline'"
+            :aria-label="t('view.table')"
+            :aria-pressed="view === 'table'"
+            @click="view = 'table'"
+          />
+          <UButton
+            icon="i-lucide-columns-3"
+            :color="view === 'kanban' ? 'primary' : 'neutral'"
+            :variant="view === 'kanban' ? 'soft' : 'outline'"
+            :aria-label="t('view.kanban')"
+            :aria-pressed="view === 'kanban'"
+            @click="view = 'kanban'"
+          />
+        </UFieldGroup>
+        <UButton icon="i-lucide-plus" :label="t('form.add')" @click="openForm()" />
+      </div>
     </div>
 
+    <ApplicationKanban
+      v-if="view === 'kanban'"
+      :applications="applications ?? []"
+      :status-color="statusColor"
+      @move="setStatus"
+      @edit="openForm"
+    />
     <UTable
+      v-else
       v-model:sorting="sorting"
       :data="applications ?? []"
       :columns="columns"

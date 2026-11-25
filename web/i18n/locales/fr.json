@@ -50,10 +50,15 @@
     "created": "Créée le {date}",
     "updated": "Modifiée le {date}",
     "search": "Rechercher",
-    "statusFilter": "Statuts",
-    "sourceFilter": "Source",
     "stars": "{n} sur 5",
-    "changeStatus": "Changer le statut"
+    "changeStatus": "Changer le statut",
+    "sortBy": "Trier par",
+    "filterBy": "Filtrer par",
+    "reset": "Réinitialiser"
+  },
+  "view": {
+    "table": "Vue tableau",
+    "kanban": "Vue kanban"
   },
   "form": {
     "add": "Ajouter une candidature",
