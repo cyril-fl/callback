@@ -124,22 +124,29 @@ const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
 
 // A column header: its label sorts asc then desc, the funnel beside it filters.
 const header =
-  (label: string, filter?: { menu: DropdownMenuItem[][]; active: boolean }): TableColumn<Application>['header'] =>
+  (
+    label: string,
+    filter?: { menu: DropdownMenuItem[][]; active: boolean },
+    sortable = true,
+  ): TableColumn<Application>['header'] =>
   ({ column }) => {
     const dir = column.getIsSorted();
-    const sort = h(UButton, {
-      color: 'neutral',
-      variant: 'ghost',
-      label,
-      class: '-mx-2.5',
-      icon: dir
-        ? dir === 'asc'
-          ? 'i-lucide-arrow-up-narrow-wide'
-          : 'i-lucide-arrow-down-wide-narrow'
-        : 'i-lucide-arrow-up-down',
-      onClick: () => column.toggleSorting(dir === 'asc'),
-      'aria-label': `${t('table.sortBy')} ${label}`,
-    });
+    // The API does not sort on every column: those show their label only.
+    const sort = !sortable
+      ? h('span', label)
+      : h(UButton, {
+          color: 'neutral',
+          variant: 'ghost',
+          label,
+          class: '-mx-2.5',
+          icon: dir
+            ? dir === 'asc'
+              ? 'i-lucide-arrow-up-narrow-wide'
+              : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+          onClick: () => column.toggleSorting(dir === 'asc'),
+          'aria-label': `${t('table.sortBy')} ${label}`,
+        });
     if (!filter) return sort;
     return h('div', { class: 'flex items-center gap-1' }, [
       sort,
@@ -160,7 +167,7 @@ const header =
     ]);
   };
 
-// The actions column filters on its follow-up button: all rows, or those that show it.
+// The follow-up column filters on its button: all rows, or those that show it.
 const followUpFilterMenu = computed<DropdownMenuItem[][]>(() => [
   [
     { label: t('common.all'), type: 'checkbox', checked: !followUp.value, onSelect: () => (followUp.value = false) },
@@ -173,24 +180,6 @@ const followUpFilterMenu = computed<DropdownMenuItem[][]>(() => [
     },
   ],
 ]);
-const actionsHeader = () =>
-  h('div', { class: 'flex justify-end' }, [
-    h(
-      UDropdownMenu,
-      { items: followUpFilterMenu.value, content: { align: 'end' } },
-      {
-        default: () =>
-          h(UButton, {
-            icon: 'i-lucide-list-filter',
-            color: followUp.value ? 'primary' : 'neutral',
-            variant: followUp.value ? 'soft' : 'ghost',
-            size: 'xs',
-            'aria-label': `${t('table.filterBy')} ${t('table.followUp')}`,
-          }),
-      },
-    ),
-  ]);
-
 // Pro: rows are picked by id for the batch bar.
 const selection = ref<Record<string, boolean>>({});
 const selected = computed(() => Object.keys(selection.value).filter((id) => selection.value[id]));
@@ -225,7 +214,11 @@ const columns = computed<TableColumn<Application>[]>(() => [
   },
   { accessorKey: 'rating', header: header(t('table.rating')) },
   { accessorKey: 'applied_at', header: header(t('table.appliedAt')) },
-  { id: 'actions', header: actionsHeader },
+  {
+    id: 'followUp',
+    header: header(t('table.followUp'), { menu: followUpFilterMenu.value, active: followUp.value }, false),
+  },
+  { id: 'actions', header: () => h('span', { class: 'sr-only' }, t('table.actions')) },
 ]);
 
 // "2026-01-31" is a day, not an instant: no timezone shift.
@@ -476,24 +469,26 @@ function exportCsv() {
           <span>{{ day(row.original.applied_at) }}</span>
         </UTooltip>
       </template>
+      <template #followUp-cell="{ row }">
+        <UTooltip
+          v-if="canFollowUp(row.original, followUpSince)"
+          :text="
+            row.original.followed_up_at
+              ? t('table.followedUpOn', { date: day(row.original.followed_up_at) })
+              : t('table.markFollowedUp')
+          "
+        >
+          <UButton
+            icon="i-lucide-bell-ring"
+            color="neutral"
+            variant="ghost"
+            :aria-label="t('table.markFollowedUp')"
+            @click="markFollowedUp(row.original)"
+          />
+        </UTooltip>
+      </template>
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
-          <UTooltip
-            v-if="canFollowUp(row.original, followUpSince)"
-            :text="
-              row.original.followed_up_at
-                ? t('table.followedUpOn', { date: day(row.original.followed_up_at) })
-                : t('table.markFollowedUp')
-            "
-          >
-            <UButton
-              icon="i-lucide-bell-ring"
-              color="neutral"
-              variant="ghost"
-              :aria-label="t('table.markFollowedUp')"
-              @click="markFollowedUp(row.original)"
-            />
-          </UTooltip>
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
