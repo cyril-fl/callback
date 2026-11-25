@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui';
+import type { CommandPaletteItem, DropdownMenuItem } from '@nuxt/ui';
 
 // A column header: the label opens the column's filter (a menu, a list of values with a search, or a text search),
 // the arrow after it sorts asc then desc.
@@ -26,6 +26,12 @@ const trigger = computed(
       trailingIcon: 'i-lucide-chevron-down',
     }) as const,
 );
+const open = ref(false);
+function pick(item?: CommandPaletteItem) {
+  if (!item?.value) return;
+  model.value = item.value === 'all' ? undefined : item.value;
+  open.value = false;
+}
 const items = computed(() => [
   { label: t('common.all'), value: 'all' },
   ...(props.options ?? []).map((v) => ({ label: v, value: v })),
@@ -38,22 +44,20 @@ const items = computed(() => [
     <UDropdownMenu v-if="menu" :items="menu" :content="{ align: 'start' }">
       <UButton v-bind="trigger" />
     </UDropdownMenu>
-    <USelectMenu
-      v-else-if="options"
-      :model-value="model ?? 'all'"
-      :items="items"
-      value-key="value"
-      :color="trigger.color"
-      :variant="trigger.variant"
-      :trailing-icon="trigger.trailingIcon"
-      :search-input="{ placeholder: t('table.search') }"
-      :content="{ align: 'start' }"
-      :ui="{ content: 'min-w-48', trailingIcon: 'text-current' }"
-      class="w-auto font-medium"
-      @update:model-value="(v: string) => (model = v === 'all' ? undefined : v)"
-    >
-      {{ label }}
-    </USelectMenu>
+    <!-- A button like the other headers (a USelectMenu trigger is an input: no active color, its own focus). -->
+    <UPopover v-else-if="options" v-model:open="open" :content="{ align: 'start' }">
+      <UButton v-bind="trigger" />
+      <template #content>
+        <UCommandPalette
+          :model-value="items.find((i) => i.value === (model ?? 'all'))"
+          :groups="[{ id: 'options', items }]"
+          by="value"
+          :placeholder="t('table.search')"
+          class="max-h-80 w-56"
+          @update:model-value="pick"
+        />
+      </template>
+    </UPopover>
     <UPopover v-else-if="search" :content="{ align: 'start' }">
       <UButton v-bind="trigger" />
       <template #content>
