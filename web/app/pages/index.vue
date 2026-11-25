@@ -287,13 +287,8 @@ const csvColumns = [
   'updated_at',
 ] as const;
 function exportCsv() {
-  const cell = (v: unknown) => `"${String(v ?? '').replaceAll('"', '""')}"`;
-  const lines = [
-    csvColumns.join(','),
-    ...(applications.value ?? []).map((a) => csvColumns.map((c) => cell(a[c])).join(',')),
-  ];
-  // The BOM tells a spreadsheet the file is UTF-8.
-  const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  const csv = toCsv(csvColumns, applications.value ?? []);
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   const link = Object.assign(document.createElement('a'), {
     href: url,
     download: `candidatures-${todayDate(getLocalTimeZone())}.csv`,
