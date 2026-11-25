@@ -105,17 +105,17 @@ const statusFilterMenu = computed<DropdownMenuItem[][]>(() => [
       checked: statusFilter.value.length === 0,
       onSelect: keepOpen(() => (statusFilter.value = [])),
     },
+    ...STATUSES.map((s) => ({
+      label: t(`status.${s}`),
+      type: 'checkbox' as const,
+      checked: statusFilter.value.includes(s),
+      onSelect: keepOpen(() => {
+        statusFilter.value = statusFilter.value.includes(s)
+          ? statusFilter.value.filter((x) => x !== s)
+          : [...statusFilter.value, s];
+      }),
+    })),
   ],
-  STATUSES.map((s) => ({
-    label: t(`status.${s}`),
-    type: 'checkbox' as const,
-    checked: statusFilter.value.includes(s),
-    onSelect: keepOpen(() => {
-      statusFilter.value = statusFilter.value.includes(s)
-        ? statusFilter.value.filter((x) => x !== s)
-        : [...statusFilter.value, s];
-    }),
-  })),
 ]);
 
 const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
