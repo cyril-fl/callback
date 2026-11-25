@@ -11,14 +11,24 @@ const links = computed(() => [
 
 <template>
   <div class="min-h-dvh">
-    <UHeader :title="t('app.name')" to="/">
-      <UNavigationMenu :items="links" variant="link" />
+    <!-- Three icons fit any width: no burger menu. -->
+    <UHeader :toggle="false">
+      <template #left>
+        <NuxtLink to="/" class="mr-3 font-semibold">{{ t('app.name') }}</NuxtLink>
+        <UTooltip v-for="link in links" :key="link.to" :text="link.label">
+          <UButton
+            :to="link.to"
+            :icon="link.icon"
+            :aria-label="link.label"
+            variant="ghost"
+            color="neutral"
+            active-variant="soft"
+          />
+        </UTooltip>
+      </template>
       <template #right>
         <!-- A page's own actions, teleported here (the list's view, export and add). -->
         <div id="header-actions" class="flex items-center gap-2" />
-      </template>
-      <template #body>
-        <UNavigationMenu :items="links" orientation="vertical" class="-mx-2.5" />
       </template>
     </UHeader>
     <UContainer class="py-6">
