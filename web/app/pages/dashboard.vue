@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { getLocalTimeZone, parseDate, startOfWeek, today as todayDate } from '@internationalized/date';
-import type { Application, Stats, Status, StatusChange } from '~/types/items';
-import { STATUSES } from '~/types/items';
+import { getLocalTimeZone, today as todayDate } from '@internationalized/date';
+import type { Application, StatusChange } from '~/types/items';
 
 // The pro mode's page: in base the stats stay above the list.
 definePageMeta({ middleware: 'pro' });
@@ -11,7 +10,6 @@ const api = useApi();
 const sources = useSources();
 const { preferences } = usePreferences();
 
-// shortcut: counts in the browser from every application and every status change, API routes once there are thousands.
 const { data: applications, refresh: refreshApplications } = await useAsyncData(
   'dashboard',
   () => api<Application[]>('/api/applications'),
@@ -42,113 +40,30 @@ const since = computed(() => {
   const duration = periods[period.value];
   return duration ? today.subtract(duration).toString() : '';
 });
-const filtered = computed(() =>
-  applications.value.filter(
-    (a) => (a.applied_at ?? '') >= since.value && (city.value === 'all' || a.location === city.value),
-  ),
-);
-
-const stats = computed<Stats>(() => {
-  const by_status = Object.fromEntries(STATUSES.map((s) => [s, 0])) as Record<Status, number>;
-  for (const a of filtered.value) by_status[a.status ?? 'applied']++;
-  const total = filtered.value.length;
-  return { total, by_status, response_rate: total ? (total - by_status.applied) / total : 0 };
-});
-
-const count = (values: string[], top = 8) => {
-  const counts = new Map<string, number>();
-  for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
-  return [...counts]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, top);
-};
+const filtered = computed(() => inPeriod(applications.value, since.value, city.value));
+const stats = computed(() => statsOf(filtered.value));
 const days = computed(() => filtered.value.flatMap((a) => (a.applied_at ? [a.applied_at] : [])));
 const cities = computed(() =>
-  count(filtered.value.flatMap((a) => (a.location ? [[a.location, a.country].filter(Boolean).join(', ')] : []))),
+  countBy(filtered.value.flatMap((a) => (a.location ? [[a.location, a.country].filter(Boolean).join(', ')] : []))),
 );
-const bySource = computed(() => count(filtered.value.map((a) => sources.label(a.source))));
-
-// A bar a week from the period's start (or the first application) to this week, empty weeks included.
-const weeks = computed(() => {
-  const counts = new Map<string, number>();
-  for (const d of days.value) {
-    const week = startOfWeek(parseDate(d), 'fr-FR').toString();
-    counts.set(week, (counts.get(week) ?? 0) + 1);
-  }
-  const first = since.value || [...counts.keys()].sort()[0];
-  if (!first) return [];
-  const out = [];
-  for (let w = startOfWeek(parseDate(first), 'fr-FR'); w.compare(today) <= 0; w = w.add({ weeks: 1 })) {
-    const date = w.toDate(getLocalTimeZone()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-    out.push({ label: date, count: counts.get(w.toString()) ?? 0 });
-  }
-  return out;
-});
-
-// The share of each source's applications that got past applied, in percent.
-const rateBySource = computed(() => {
-  const totals = new Map<string, { all: number; answered: number }>();
-  for (const a of filtered.value) {
-    const label = sources.label(a.source);
-    const total = totals.get(label) ?? { all: 0, answered: 0 };
-    total.all++;
-    if (a.status !== 'applied') total.answered++;
-    totals.set(label, total);
-  }
-  return [...totals]
-    .map(([label, { all, answered }]) => ({ label, count: Math.round((answered / all) * 100) }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-});
-
-// The history of each application of the filters, oldest first as the API gives it.
-const history = computed(() => {
-  const ids = new Set(filtered.value.map((a) => a.id));
-  const byApplication = new Map<string, StatusChange[]>();
-  for (const c of changes.value) {
-    if (!ids.has(c.application_id)) continue;
-    byApplication.set(c.application_id, [...(byApplication.get(c.application_id) ?? []), c]);
-  }
-  return byApplication;
-});
-
-// How many applications ever reached each status.
-const funnel = computed(() =>
-  STATUSES.map((s) => ({
-    label: t(`status.${s}`),
-    count: [...history.value.values()].filter((list) => list.some((c) => c.status === s)).length,
+const bySource = computed(() => countBy(filtered.value.map((a) => sources.label(a.source))));
+const weeks = computed(() =>
+  weeksOf(days.value, since.value, today).map((w) => ({
+    label: w.start.toDate(getLocalTimeZone()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+    count: w.count,
   })),
 );
-
-// The days from applying to the first status past applied, on average over the applications that got one.
-const daysToResponse = computed(() => {
-  const delays = filtered.value.flatMap((a) => {
-    const first = history.value.get(a.id)?.find((c) => c.status !== 'applied');
-    if (!first || !a.applied_at) return [];
-    const applied = new Date(`${a.applied_at}T00:00:00`).getTime();
-    return [Math.max(0, (new Date(first.at).getTime() - applied) / 86_400_000)];
-  });
-  return delays.length ? Math.round((delays.reduce((n, d) => n + d, 0) / delays.length) * 10) / 10 : undefined;
-});
-
-// Applied or responded, untouched for the follow-up delay: the list's « À relancer ».
-const toFollowUp = computed(() => {
-  const limit = today.subtract({ days: preferences.value?.follow_up_days ?? 7 }).toDate(getLocalTimeZone());
-  return filtered.value
-    .filter(
-      (a) => (a.status === 'applied' || a.status === 'responded') && a.updated_at && new Date(a.updated_at) < limit,
-    )
-    .sort((a, b) => (a.updated_at ?? '').localeCompare(b.updated_at ?? ''));
-});
-
-// The interviews from now on, the nearest first; interview_at is a local "2026-01-31T14:30".
-const upcoming = computed(() => {
-  const now = new Date();
-  return filtered.value
-    .filter((a) => a.interview_at && new Date(a.interview_at) >= now)
-    .sort((a, b) => a.interview_at!.localeCompare(b.interview_at!));
-});
+const rateBySource = computed(() => responseRates(filtered.value, sources.label));
+const history = computed(() => historyOf(changes.value, filtered.value));
+const funnel = computed(() => funnelOf(history.value).map((s) => ({ label: t(`status.${s.status}`), count: s.count })));
+const daysToResponse = computed(() => averageDaysToResponse(filtered.value, history.value));
+const followUps = computed(() =>
+  toFollowUp(
+    filtered.value,
+    today.subtract({ days: preferences.value?.follow_up_days ?? 7 }).toDate(getLocalTimeZone()),
+  ),
+);
+const upcoming = computed(() => upcomingInterviews(filtered.value, new Date()));
 
 const day = (v?: string) => (v ? new Date(v.length === 10 ? `${v}T00:00:00` : v).toLocaleDateString('fr-FR') : '');
 const stamp = (v?: string) =>
@@ -188,8 +103,8 @@ function openForm(app: Application) {
     <div class="grid gap-8 md:grid-cols-2">
       <section>
         <h2 class="mb-3 text-sm font-semibold">{{ t('stats.toFollowUp') }}</h2>
-        <ul v-if="toFollowUp.length" class="divide-y divide-default rounded-lg border border-default">
-          <li v-for="a in toFollowUp.slice(0, 8)" :key="a.id">
+        <ul v-if="followUps.length" class="divide-y divide-default rounded-lg border border-default">
+          <li v-for="a in followUps.slice(0, 8)" :key="a.id">
             <button
               type="button"
               class="flex w-full items-center gap-4 px-4 py-2.5 text-left hover:bg-elevated"

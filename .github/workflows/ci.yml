@@ -36,6 +36,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run typecheck
+      - run: bun run test
       - run: bun run generate
       - name: api.d.ts matches swagger.yaml
         run: |

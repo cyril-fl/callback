@@ -9,6 +9,7 @@
     "postinstall": "nuxt prepare",
     "types": "openapi-typescript ../docs/swagger.yaml -o app/types/api.d.ts",
     "typecheck": "nuxt typecheck",
+    "test": "bun test test/*.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

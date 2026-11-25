@@ -4,7 +4,7 @@ Nuxt 4 (`ssr: false`), Nuxt UI 4 (Tailwind 4), `@nuxtjs/i18n` (fr only), VueUse,
 
 ## Commands
 
-`bun run dev`, `bun run generate`, `bun run typecheck`, `bun run lint` (ESLint, `@nuxt/eslint`), `bun run format` (Prettier), `bun run types` (API types from `../docs/swagger.yaml` into `app/types/api.d.ts`, committed).
+`bun run dev`, `bun run generate`, `bun run test` (unit tests in `test/*.test.ts`, `node:test` under bun, on the pure code of `app/utils/`), `bun run typecheck`, `bun run lint` (ESLint, `@nuxt/eslint`), `bun run format` (Prettier), `bun run types` (API types from `../docs/swagger.yaml` into `app/types/api.d.ts`, committed).
 
 Dev API: `CALLBACK_PASSWORD=... go run ./cmd/callback-server serve --db <file> --origin http://localhost:3000`.
 
@@ -15,4 +15,5 @@ Dev API: `CALLBACK_PASSWORD=... go run ./cmd/callback-server serve --db <file> -
 - Values are stored raw by the API: never `v-html`.
 - Icon buttons carry an `aria-label`. Confirmations use a modal (`ConfirmModal`), never `window.confirm`.
 - Use Nuxt UI components and tokens (`text-muted`, `bg-elevated`), not raw colors.
+- Logic worth a test (computations, parsing, escaping) goes to `app/utils/` as plain functions, auto-imported by Nuxt and imported by the tests; pages keep the wiring.
 - The API is the contract: if a change is needed there, report it, do not work around it here.
