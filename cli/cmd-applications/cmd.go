@@ -280,7 +280,7 @@ func batch(cobra *cobra.Command, done string) func(apiclient.DomainBatchResult, 
 // filter is the filter flags, nil when not given: the API reads a missing filter as matching all.
 type filter struct {
 	Status                                         *[]apiclient.DomainStatus
-	Source                                         *apiclient.DomainSource
+	Source                                         *string
 	Q, AppliedBefore, AppliedAfter, UntouchedSince *string
 }
 
@@ -288,7 +288,7 @@ type filter struct {
 func filters(cobra *cobra.Command, statusFlag, sourceFlag string) filter {
 	flags := cobra.Flags()
 	f := filter{
-		Source: (*apiclient.DomainSource)(opt(flags.GetString(sourceFlag))),
+		Source: (*string)(opt(flags.GetString(sourceFlag))),
 		Q:      opt(flags.GetString("query")), AppliedBefore: opt(flags.GetString("applied-before")),
 		AppliedAfter: opt(flags.GetString("applied-after")), UntouchedSince: opt(flags.GetString("untouched-since")),
 	}
@@ -314,7 +314,7 @@ func changes(cobra *cobra.Command) apiclient.DomainChanges {
 		return &value
 	}
 	set := apiclient.DomainChanges{
-		Website: text("website"), Street: text("street"), PostalCode: text("postal-code"), Country: text("country"), Source: (*apiclient.DomainSource)(text("source")), SourceDetail: text("source-detail"),
+		Website: text("website"), Street: text("street"), PostalCode: text("postal-code"), Country: text("country"), Source: (*string)(text("source")), SourceDetail: text("source-detail"),
 		Status: (*apiclient.DomainStatus)(text("status")), Comment: text("comment"), AppliedAt: text("applied-at"),
 	}
 	if flags.Changed("rating") {

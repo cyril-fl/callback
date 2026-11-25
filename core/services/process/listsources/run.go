@@ -11,7 +11,7 @@ import (
 
 // Source is a source and how many applications have it.
 type Source struct {
-	Source domain.Source `json:"source"`
+	Source domain.Source `json:"source" swaggertype:"string"`
 	Count  int           `json:"count"`
 }
 

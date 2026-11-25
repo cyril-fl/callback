@@ -76,7 +76,7 @@ type Application struct {
 	PostalCode   string    `bun:",nullzero" json:"postal_code,omitempty" binding:"optional"`
 	Country      string    `bun:",nullzero" json:"country,omitempty" binding:"optional"`
 	Website      string    `bun:",notnull" json:"website,omitempty" binding:"optional"`
-	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post"`
+	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail string    `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
 	Status       Status    `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
 	Rating       int       `bun:",notnull" json:"rating,omitempty" binding:"optional"`
@@ -174,7 +174,7 @@ type NewApplication struct {
 	PostalCode   string `json:"postal_code,omitempty" binding:"optional"`
 	Country      string `json:"country,omitempty" binding:"optional"`
 	Website      string `json:"website,omitempty" binding:"optional"`
-	Source       Source `json:"source,omitempty" binding:"optional" example:"job_post"`
+	Source       Source `json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail string `json:"source_detail,omitempty" binding:"optional"`
 	Status       Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
 	Rating       int    `json:"rating,omitempty" binding:"optional"`
@@ -195,7 +195,7 @@ type Changes struct {
 	PostalCode   *string `json:"postal_code,omitempty" binding:"optional"`
 	Country      *string `json:"country,omitempty" binding:"optional"`
 	Website      *string `json:"website,omitempty" binding:"optional"`
-	Source       *Source `json:"source,omitempty" binding:"optional" example:"job_post"`
+	Source       *Source `json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
 	SourceDetail *string `json:"source_detail,omitempty" binding:"optional"`
 	Status       *Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
 	Rating       *int    `json:"rating,omitempty" binding:"optional"`

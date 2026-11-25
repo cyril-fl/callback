@@ -43,27 +43,6 @@ func (e CreateapitokenInputExpiresIn) Valid() bool {
 	}
 }
 
-// Defines values for DomainSource.
-const (
-	SourceJobPost     DomainSource = "job_post"
-	SourceRecruiter   DomainSource = "recruiter"
-	SourceSpontaneous DomainSource = "spontaneous"
-)
-
-// Valid indicates whether the value is a known member of the DomainSource enum.
-func (e DomainSource) Valid() bool {
-	switch e {
-	case SourceJobPost:
-		return true
-	case SourceRecruiter:
-		return true
-	case SourceSpontaneous:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for DomainStatus.
 const (
 	StatusApplied   DomainStatus = "applied"
@@ -186,8 +165,8 @@ type DeleteapplicationsInput struct {
 	Ids *[]string `json:"ids,omitempty"`
 
 	// Q Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
-	Q      *string       `json:"q,omitempty"`
-	Source *DomainSource `json:"source,omitempty"`
+	Q      *string `json:"q,omitempty"`
+	Source *string `json:"source,omitempty"`
 
 	// Status Status is any of these statuses.
 	Status *[]DomainStatus `json:"status,omitempty"`
@@ -212,7 +191,7 @@ type DomainApplication struct {
 	Location     *string       `json:"location,omitempty"`
 	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
-	Source       *DomainSource `json:"source,omitempty"`
+	Source       *string       `json:"source,omitempty"`
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
@@ -248,7 +227,7 @@ type DomainChanges struct {
 	Location     *string       `json:"location,omitempty"`
 	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
-	Source       *DomainSource `json:"source,omitempty"`
+	Source       *string       `json:"source,omitempty"`
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
@@ -264,15 +243,12 @@ type DomainNewApplication struct {
 	Location     string        `json:"location"`
 	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
-	Source       *DomainSource `json:"source,omitempty"`
+	Source       *string       `json:"source,omitempty"`
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
 	Website      *string       `json:"website,omitempty"`
 }
-
-// DomainSource defines model for domain.Source.
-type DomainSource string
 
 // DomainStatus defines model for domain.Status.
 type DomainStatus string
@@ -297,8 +273,8 @@ type DomainTokenKind string
 
 // ListsourcesSource defines model for listsources.Source.
 type ListsourcesSource struct {
-	Count  int          `json:"count"`
-	Source DomainSource `json:"source"`
+	Count  int    `json:"count"`
+	Source string `json:"source"`
 }
 
 // LoginMeResult defines model for login.MeResult.
@@ -347,7 +323,7 @@ type UpdateapplicationsOp struct {
 	// Q Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
 	Q      *string       `json:"q,omitempty"`
 	Set    DomainChanges `json:"set"`
-	Source *DomainSource `json:"source,omitempty"`
+	Source *string       `json:"source,omitempty"`
 
 	// Status Status is any of these statuses.
 	Status *[]DomainStatus `json:"status,omitempty"`

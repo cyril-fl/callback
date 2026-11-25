@@ -21,11 +21,12 @@ const dot: Record<string, string> = {
   success: 'bg-success',
   error: 'bg-error',
 };
-const sourceIcon: Record<string, string> = {
-  spontaneous: 'i-lucide-send',
-  job_post: 'i-lucide-briefcase',
-  recruiter: 'i-lucide-user-round',
-};
+// A source the user named gets a tag.
+const sourceIcon = (source?: string) =>
+  ({ spontaneous: 'i-lucide-send', job_post: 'i-lucide-briefcase', recruiter: 'i-lucide-user-round' })[
+    source ?? 'spontaneous'
+  ] ?? 'i-lucide-tag';
+const sources = useSources();
 
 // A drag moves a card to another column; a click opens it. The form changes the status from the keyboard.
 const dragged = ref<Application>();
@@ -81,17 +82,15 @@ const day = (v?: string) =>
         >
           <p class="truncate text-sm font-medium">{{ app.company }}</p>
           <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
-            <UIcon name="i-lucide-map-pin" class="size-3 shrink-0" />{{ app.location }}
+            <UIcon name="i-lucide-map-pin" class="size-3 shrink-0" />{{
+              [app.location, app.country].filter(Boolean).join(', ')
+            }}
           </p>
           <div class="mt-3 flex items-center gap-2 text-xs text-muted">
-            <UIcon
-              :name="sourceIcon[app.source ?? 'spontaneous']"
-              class="size-3.5"
-              :aria-label="t(`source.${app.source ?? 'spontaneous'}`)"
-            />
-            <span v-if="app.rating" role="img" class="flex" :aria-label="t('table.stars', { n: app.rating })">
-              <UIcon v-for="n in app.rating" :key="n" name="i-lucide-star" class="size-3 text-primary" />
-            </span>
+            <UTooltip :text="sources.label(app.source)">
+              <UIcon :name="sourceIcon(app.source)" class="size-3.5" :aria-label="sources.label(app.source)" />
+            </UTooltip>
+            <UInputRating v-if="app.rating" :model-value="app.rating" readonly size="xs" />
             <span class="ml-auto tabular-nums">{{ day(app.applied_at) }}</span>
           </div>
         </div>

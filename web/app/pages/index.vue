@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Application, BatchResult, Stats, Status } from '~/types/items';
-import { SOURCES, STATUSES } from '~/types/items';
+import { STATUSES } from '~/types/items';
 
 const { t } = useI18n();
 const api = useApi();
+const sources = useSources();
 
 const q = ref('');
 const qDebounced = refDebounced(q, 300);
@@ -53,7 +54,7 @@ const {
     }),
   { watch: [qDebounced, statusFilter, sourceFilter, sort] },
 );
-const refresh = () => Promise.all([refreshList(), refreshStats()]);
+const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh()]);
 
 // The statuses never take primary: it marks the actions, and the blue theme's info is close to it.
 const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | 'error'> = {
@@ -95,8 +96,8 @@ const statusFilterMenu = computed<DropdownMenuItem[][]>(() => [
 ]);
 
 const sourceFilterMenu = computed<DropdownMenuItem[][]>(() => [
-  ['all', ...SOURCES].map((s) => ({
-    label: s === 'all' ? t('common.all') : t(`source.${s}`),
+  [{ value: 'all', label: t('common.all') }, ...sources.items.value].map(({ value: s, label }) => ({
+    label,
     type: 'checkbox' as const,
     checked: sourceFilter.value === s,
     onSelect: () => (sourceFilter.value = s),
@@ -298,7 +299,7 @@ async function doDelete() {
         >
           {{ t('source.recruiter') }}
         </a>
-        <span v-else>{{ t(`source.${row.original.source ?? 'spontaneous'}`) }}</span>
+        <span v-else>{{ sources.label(row.original.source) }}</span>
       </template>
       <template #status-cell="{ row }">
         <UDropdownMenu :items="statusMenu(row.original)">
@@ -314,14 +315,10 @@ async function doDelete() {
         </UDropdownMenu>
       </template>
       <template #rating-cell="{ row }">
-        <span role="img" class="flex" :aria-label="t('table.stars', { n: row.original.rating ?? 0 })">
-          <UIcon
-            v-for="n in 5"
-            :key="n"
-            name="i-lucide-star"
-            :class="n <= (row.original.rating ?? 0) ? 'text-primary' : 'text-muted/40'"
-          />
-        </span>
+        <UInputRating :model-value="row.original.rating ?? 0" readonly size="xs" />
+      </template>
+      <template #location-cell="{ row }">
+        {{ [row.original.location, row.original.country].filter(Boolean).join(', ') }}
       </template>
       <template #applied_at-cell="{ row }">
         <UTooltip

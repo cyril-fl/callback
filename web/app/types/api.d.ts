@@ -710,7 +710,7 @@ export interface components {
             /** @description Q is text found in the company, the address, website, source_detail or comment, case-insensitive. */
             q?: string;
             /** @example job_post */
-            source?: components["schemas"]["domain.Source"];
+            source?: string;
             /** @description Status is any of these statuses. */
             status?: components["schemas"]["domain.Status"][];
             /** @description Summary leaves the ids out of the result: the counts and failures only. */
@@ -734,7 +734,7 @@ export interface components {
             postal_code?: string;
             rating?: number;
             /** @example job_post */
-            source?: components["schemas"]["domain.Source"];
+            source?: string;
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
@@ -765,7 +765,7 @@ export interface components {
             postal_code?: string;
             rating?: number;
             /** @example job_post */
-            source?: components["schemas"]["domain.Source"];
+            source?: string;
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
@@ -781,14 +781,12 @@ export interface components {
             postal_code?: string;
             rating?: number;
             /** @example job_post */
-            source?: components["schemas"]["domain.Source"];
+            source?: string;
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
             website?: string;
         };
-        /** @enum {string} */
-        "domain.Source": "spontaneous" | "job_post" | "recruiter";
         /** @enum {string} */
         "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected";
         "domain.Token": {
@@ -806,7 +804,7 @@ export interface components {
         "domain.TokenKind": "session" | "api" | "oauth";
         "listsources.Source": {
             count: number;
-            source: components["schemas"]["domain.Source"];
+            source: string;
         };
         "login.MeResult": {
             kind: components["schemas"]["domain.TokenKind"];
@@ -847,7 +845,7 @@ export interface components {
             q?: string;
             set: components["schemas"]["domain.Changes"];
             /** @example job_post */
-            source?: components["schemas"]["domain.Source"];
+            source?: string;
             /** @description Status is any of these statuses. */
             status?: components["schemas"]["domain.Status"][];
             /**

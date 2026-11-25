@@ -74,8 +74,8 @@ components:
             or comment, case-insensitive.
           type: string
         source:
-          $ref: '#/components/schemas/domain.Source'
           example: job_post
+          type: string
         status:
           description: Status is any of these statuses.
           items:
@@ -115,8 +115,8 @@ components:
         rating:
           type: integer
         source:
-          $ref: '#/components/schemas/domain.Source'
           example: job_post
+          type: string
         source_detail:
           type: string
         status:
@@ -183,8 +183,8 @@ components:
         rating:
           type: integer
         source:
-          $ref: '#/components/schemas/domain.Source'
           example: job_post
+          type: string
         source_detail:
           type: string
         status:
@@ -212,8 +212,8 @@ components:
         rating:
           type: integer
         source:
-          $ref: '#/components/schemas/domain.Source'
           example: job_post
+          type: string
         source_detail:
           type: string
         status:
@@ -226,16 +226,6 @@ components:
       - company
       - location
       type: object
-    domain.Source:
-      enum:
-      - spontaneous
-      - job_post
-      - recruiter
-      type: string
-      x-enum-varnames:
-      - SourceSpontaneous
-      - SourceJobPost
-      - SourceRecruiter
     domain.Status:
       enum:
       - applied
@@ -290,7 +280,7 @@ components:
         count:
           type: integer
         source:
-          $ref: '#/components/schemas/domain.Source'
+          type: string
       required:
       - count
       - source
@@ -375,8 +365,8 @@ components:
         set:
           $ref: '#/components/schemas/domain.Changes'
         source:
-          $ref: '#/components/schemas/domain.Source'
           example: job_post
+          type: string
         status:
           description: Status is any of these statuses.
           items:
