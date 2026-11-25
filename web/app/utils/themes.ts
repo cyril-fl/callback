@@ -9,7 +9,7 @@ const own = (id: string) => ({
   error: `callback-${id}-error`,
 });
 
-export const themes = [own('pink'), own('lilac'), own('blue'), own('green')];
+export const themes = [own('lilac'), own('pink'), own('blue'), own('green')];
 
 export type Theme = (typeof themes)[number];
 

@@ -1,13 +1,13 @@
 export default defineAppConfig({
-  // The default theme, pink; app.vue applies the one picked in the settings.
+  // The default theme, lilac; app.vue applies the one picked in the settings.
   ui: {
     colors: {
-      primary: 'callback-pink',
-      neutral: 'callback-pink-gray',
-      info: 'callback-pink-info',
-      success: 'callback-pink-success',
-      warning: 'callback-pink-warning',
-      error: 'callback-pink-error',
+      primary: 'callback-lilac',
+      neutral: 'callback-lilac-gray',
+      info: 'callback-lilac-info',
+      success: 'callback-lilac-success',
+      warning: 'callback-lilac-warning',
+      error: 'callback-lilac-error',
     },
   },
 });
