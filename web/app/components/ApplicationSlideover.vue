@@ -12,6 +12,8 @@ const { t } = useI18n();
 const api = useApi();
 const toast = useToast();
 const sources = useSources();
+const places = usePlaces();
+const defaults = useDefaults();
 const loading = ref(false);
 
 const schema = computed(() => {
@@ -63,11 +65,15 @@ const fullAddress = ref(false);
 watch(open, (isOpen) => {
   if (!isOpen) return;
   const a = props.application;
-  const next = blank();
+  // A new application starts at the default city and country of the settings.
+  const next = a
+    ? blank()
+    : { ...blank(), location: defaults.value.location || '', country: defaults.value.country || '' };
   if (a) for (const key of Object.keys(next) as (keyof State)[]) Object.assign(next, { [key]: a[key] ?? next[key] });
   Object.assign(state, next);
   fullAddress.value = !!(state.street || state.postal_code);
   sources.refresh();
+  places.refresh();
 });
 
 // The date picker works on a CalendarDate, the API on "2026-01-31".
@@ -84,6 +90,15 @@ function createSource(name: string) {
   if (!value) return;
   if (!sourceItems.value.some((item) => item.value === value)) sourceItems.value.push({ value, label: value });
   state.source = value;
+}
+
+// The cities and countries already used, the typed one included: picking a known city fills its country if empty.
+const withTyped = (typed: string, known: string[]) => (typed && !known.includes(typed) ? [typed, ...known] : known);
+const cityItems = computed(() => withTyped(state.location, places.cities.value));
+const countryItems = computed(() => withTyped(state.country, places.countries.value));
+function pickCity(city: string) {
+  state.location = city.trim();
+  state.country ||= places.countryOf(state.location) ?? '';
 }
 
 const detail = computed(() => {
@@ -144,10 +159,23 @@ async function submit() {
 
         <div class="grid grid-cols-2 gap-3">
           <UFormField name="location" :label="t('form.city')" required>
-            <UInput v-model="state.location" class="w-full" />
+            <UInputMenu
+              :model-value="state.location"
+              :items="cityItems"
+              create-item
+              class="w-full"
+              @update:model-value="pickCity"
+              @create="pickCity"
+            />
           </UFormField>
           <UFormField name="country" :label="t('form.country')">
-            <UInput v-model="state.country" class="w-full" />
+            <UInputMenu
+              v-model="state.country"
+              :items="countryItems"
+              create-item
+              class="w-full"
+              @create="(v: string) => (state.country = v.trim())"
+            />
           </UFormField>
         </div>
         <div v-if="fullAddress" class="grid grid-cols-3 gap-3">

@@ -6,6 +6,9 @@ const api = useApi();
 const toast = useToast();
 const theme = useTheme();
 const plan = usePlan();
+const defaults = useDefaults();
+const places = usePlaces();
+const withTyped = (typed: string, known: string[]) => (typed && !known.includes(typed) ? [typed, ...known] : known);
 const planItems = plans.map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 const colorMode = useColorMode();
 const mode = computed({
@@ -79,6 +82,36 @@ async function revoke() {
             <p class="text-xs text-muted">{{ t(`settings.planHelp.${plan}`) }}</p>
           </div>
           <UTabs v-model="plan" :items="planItems" :content="false" size="sm" :aria-label="t('settings.plan')" />
+        </li>
+        <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+          <div class="flex-1 basis-48">
+            <p class="text-sm">{{ t('settings.defaultPlace') }}</p>
+            <p class="text-xs text-muted">{{ t('settings.defaultPlaceHelp') }}</p>
+          </div>
+          <div class="flex gap-2">
+            <UInputMenu
+              :model-value="defaults.location"
+              clear
+              :items="withTyped(defaults.location, places.cities.value)"
+              :placeholder="t('form.city')"
+              :aria-label="t('form.city')"
+              create-item
+              class="w-40"
+              @update:model-value="(v: string | null) => (defaults.location = v ?? '')"
+              @create="(v: string) => (defaults.location = v.trim())"
+            />
+            <UInputMenu
+              :model-value="defaults.country"
+              clear
+              :items="withTyped(defaults.country, places.countries.value)"
+              :placeholder="t('form.country')"
+              :aria-label="t('form.country')"
+              create-item
+              class="w-40"
+              @update:model-value="(v: string | null) => (defaults.country = v ?? '')"
+              @create="(v: string) => (defaults.country = v.trim())"
+            />
+          </div>
         </li>
       </ul>
     </section>

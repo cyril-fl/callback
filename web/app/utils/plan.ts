@@ -5,3 +5,6 @@ export const plans = ['base', 'pro'] as const;
 export type Plan = (typeof plans)[number];
 
 export const usePlan = () => useLocalStorage<Plan>('callback-plan', 'base');
+
+// The city and country a new application starts with, both optional; on this device too.
+export const useDefaults = () => useLocalStorage('callback-defaults', { location: '', country: '' });

@@ -160,6 +160,8 @@
     "revoke": "Révoquer",
     "revokeTitle": "Révoquer",
     "revokeMessage": "Révoquer « {name} » ?",
-    "noTokens": "Aucun jeton"
+    "noTokens": "Aucun jeton",
+    "defaultPlace": "Lieu par défaut",
+    "defaultPlaceHelp": "Pour une nouvelle candidature."
   }
 }
