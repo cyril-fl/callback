@@ -81,13 +81,10 @@ function openForm(app: Application) {
 
 <template>
   <div class="space-y-8">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-xl font-semibold">{{ t('nav.dashboard') }}</h1>
-      <div class="flex flex-wrap items-center gap-2">
-        <UTabs v-model="period" :items="periodItems" :content="false" size="sm" :aria-label="t('stats.period')" />
-        <USelect v-model="city" :items="cityItems" :aria-label="t('form.city')" class="w-44" />
-      </div>
-    </div>
+    <Teleport defer to="#header-actions">
+      <UTabs v-model="period" :items="periodItems" :content="false" size="sm" :aria-label="t('stats.period')" />
+      <USelect v-model="city" :items="cityItems" :aria-label="t('form.city')" class="w-44" />
+    </Teleport>
 
     <StatsCards :stats="stats" />
 
