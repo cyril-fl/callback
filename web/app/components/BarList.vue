@@ -8,9 +8,7 @@ const most = computed(() => props.max ?? Math.max(1, ...props.items.map((i) => i
   <ul class="divide-y divide-default rounded-lg border border-default">
     <li v-for="item in items" :key="item.label" class="flex items-center gap-4 px-4 py-2.5">
       <p class="w-32 shrink-0 truncate text-sm">{{ item.label }}</p>
-      <div class="h-2 flex-1 overflow-hidden rounded-full bg-elevated">
-        <div class="h-full rounded-full bg-primary" :style="{ width: `${(item.count / most) * 100}%` }" />
-      </div>
+      <UProgress :model-value="item.count" :max="most" size="sm" class="flex-1" :aria-label="item.label" />
       <span class="w-12 shrink-0 text-right text-sm text-muted">{{ item.count }}{{ unit }}</span>
     </li>
   </ul>
