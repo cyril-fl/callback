@@ -84,7 +84,6 @@
     "sortBy": "Trier par",
     "filterBy": "Filtrer par",
     "reset": "Réinitialiser",
-    "followUp": "À relancer",
     "markFollowedUp": "Marquer comme relancée",
     "followedUp": "Relance de {company} enregistrée",
     "followedUpOn": "Relancée le {date}, marquer une nouvelle relance",

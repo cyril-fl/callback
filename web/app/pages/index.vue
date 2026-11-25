@@ -13,8 +13,6 @@ const q = ref('');
 const qDebounced = refDebounced(q, 300);
 const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
-// Pro: the applications without news for the follow-up delay, applied or responded.
-const followUp = ref(false);
 const defaultSorting = [{ id: 'applied_at', desc: true }];
 const sorting = ref<{ id: string; desc: boolean }[]>([...defaultSorting]);
 // On the kanban the page is the window's height (less the layout's header, h-14 and its border, and its padding,
@@ -24,14 +22,12 @@ const view = useLocalStorage<'table' | 'kanban'>('callback-view', 'table');
 const filtered = computed(
   () =>
     q.value !== '' ||
-    followUp.value ||
     statusFilter.value.length > 0 ||
     sourceFilter.value !== 'all' ||
     JSON.stringify(sorting.value) !== JSON.stringify(defaultSorting),
 );
 function reset() {
   q.value = '';
-  followUp.value = false;
   statusFilter.value = [];
   sourceFilter.value = 'all';
   sorting.value = [...defaultSorting];
@@ -59,17 +55,12 @@ const {
     api<Application[]>('/api/applications', {
       query: {
         q: qDebounced.value || undefined,
-        status: followUp.value
-          ? 'applied,responded'
-          : statusFilter.value.length
-            ? statusFilter.value.join(',')
-            : undefined,
-        untouched_since: followUp.value ? followUpSince.value : undefined,
+        status: statusFilter.value.length ? statusFilter.value.join(',') : undefined,
         source: sourceFilter.value === 'all' ? undefined : sourceFilter.value,
         sort: sort.value,
       },
     }),
-  { watch: [qDebounced, followUp, statusFilter, sourceFilter, sort] },
+  { watch: [qDebounced, statusFilter, sourceFilter, sort] },
 );
 const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh()]);
 
@@ -318,15 +309,6 @@ function exportCsv() {
 
     <div class="flex flex-wrap items-center gap-2">
       <UInput v-model="q" icon="i-lucide-search" :placeholder="t('table.search')" :aria-label="t('table.search')" />
-      <UButton
-        v-if="pro"
-        icon="i-lucide-bell-ring"
-        :color="followUp ? 'primary' : 'neutral'"
-        :variant="followUp ? 'soft' : 'outline'"
-        :label="t('table.followUp')"
-        :aria-pressed="followUp"
-        @click="followUp = !followUp"
-      />
       <UButton
         v-if="filtered"
         icon="i-lucide-rotate-ccw"
