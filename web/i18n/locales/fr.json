@@ -201,10 +201,17 @@
     "version": "Version",
     "danger": "Zone de danger",
     "purge": "Repartir de zéro",
-    "purgeHelp": "Supprime toutes les candidatures et leur historique, pour une nouvelle recherche. Les réglages et les jetons restent.",
+    "purgeHelp": "Supprime toutes les candidatures, corbeille comprise, et leur historique, pour une nouvelle recherche. Les réglages et les jetons restent.",
     "purgeAction": "Tout supprimer",
     "purgeMessage": "Toutes les candidatures sont supprimées pour de bon. Faites d'abord une sauvegarde (callback-server backup) pour garder une copie.",
     "purgeWord": "supprimer",
-    "purged": "{count} candidatures supprimées"
+    "purged": "{count} candidatures supprimées",
+    "trash": "Corbeille",
+    "trashDays": "Durée de conservation",
+    "trashDaysHelp": "Une candidature supprimée se restaure pendant ce délai, puis disparaît avec son historique.",
+    "trashEmpty": "La corbeille est vide",
+    "deletedAt": "Supprimée le",
+    "restore": "Restaurer",
+    "restored": "{company} restaurée"
   }
 }
