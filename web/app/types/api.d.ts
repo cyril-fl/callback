@@ -293,7 +293,59 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete applications from the trash for good */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description body */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["forgetapplications.Input"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.BatchResult"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1203,6 +1255,11 @@ export interface components {
         };
         /** @enum {string} */
         "domain.TokenKind": "session" | "api" | "oauth";
+        "forgetapplications.Input": {
+            /** @description All empties the trash; without it, ids are required. */
+            all?: boolean;
+            ids?: string[];
+        };
         "listsources.Source": {
             count: number;
             source: string;

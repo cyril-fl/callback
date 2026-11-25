@@ -402,6 +402,17 @@ components:
       - TokenSession
       - TokenAPI
       - TokenOAuth
+    forgetapplications.Input:
+      properties:
+        all:
+          description: All empties the trash; without it, ids are required.
+          type: boolean
+        ids:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      type: object
     listsources.Source:
       properties:
         count:
@@ -790,6 +801,44 @@ paths:
       tags:
       - applications
   /api/applications/deleted:
+    delete:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/forgetapplications.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.BatchResult'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+      summary: Delete applications from the trash for good
+      tags:
+      - applications
     get:
       responses:
         "200":

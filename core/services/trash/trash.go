@@ -64,12 +64,21 @@ func Empty(ctx context.Context, tx bun.IDB, now time.Time) error {
 	if err != nil {
 		return err
 	}
-	expired := tx.NewSelect().Model((*domain.DeletedApplication)(nil)).Column("id").Where("deleted_at < ?", before)
+	_, err = Forget(ctx, tx, tx.NewSelect().Model((*domain.DeletedApplication)(nil)).Column("id").Where("deleted_at < ?", before))
+	return err
+}
+
+// Forget deletes for good the applications of picked, a SELECT of their ids in the trash, with their history, and
+// returns their ids.
+func Forget(ctx context.Context, tx bun.IDB, picked *bun.SelectQuery) ([]string, error) {
+	var ids []string
+	if err := tx.NewRaw("DELETE FROM deleted_applications WHERE id IN (?) RETURNING id", picked).Scan(ctx, &ids); err != nil || len(ids) == 0 {
+		return nil, err
+	}
 	for _, table := range []string{"status_changes", "follow_ups"} {
-		if _, err := tx.NewRaw("DELETE FROM ? WHERE application_id IN (?)", bun.Ident(table), expired).Exec(ctx); err != nil {
-			return err
+		if _, err := tx.NewRaw("DELETE FROM ? WHERE application_id IN (?)", bun.Ident(table), bun.List(ids)).Exec(ctx); err != nil {
+			return nil, err
 		}
 	}
-	_, err = tx.NewDelete().Model((*domain.DeletedApplication)(nil)).Where("deleted_at < ?", before).Exec(ctx)
-	return err
+	return ids, nil
 }
