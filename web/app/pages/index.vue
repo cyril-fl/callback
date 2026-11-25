@@ -403,24 +403,18 @@ function exportCsv() {
     </div>
     <Teleport defer to="#header-actions">
       <div class="flex items-center gap-2">
-        <UFieldGroup>
-          <UButton
-            icon="i-lucide-table"
-            :color="view === 'table' ? 'primary' : 'neutral'"
-            :variant="view === 'table' ? 'soft' : 'outline'"
-            :aria-label="t('view.table')"
-            :aria-pressed="view === 'table'"
-            @click="view = 'table'"
-          />
-          <UButton
-            icon="i-lucide-columns-3"
-            :color="view === 'kanban' ? 'primary' : 'neutral'"
-            :variant="view === 'kanban' ? 'soft' : 'outline'"
-            :aria-label="t('view.kanban')"
-            :aria-pressed="view === 'kanban'"
-            @click="view = 'kanban'"
-          />
-        </UFieldGroup>
+        <!-- Clicking the pressed view would empty the group: it is ignored. -->
+        <UToggleGroup
+          :model-value="view"
+          :items="[
+            { value: 'table', icon: 'i-lucide-table', 'aria-label': t('view.table') },
+            { value: 'kanban', icon: 'i-lucide-columns-3', 'aria-label': t('view.kanban') },
+          ]"
+          color="neutral"
+          variant="outline"
+          attached
+          @update:model-value="(v) => v && (view = v as 'table' | 'kanban')"
+        />
         <UButton
           v-if="pro"
           icon="i-lucide-download"
