@@ -15,6 +15,8 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ sort: [] }>();
 const model = defineModel<string>();
+// The filter's popover, open from outside too (a shortcut).
+const open = defineModel<boolean>('open', { default: false });
 const { t } = useI18n();
 
 const trigger = computed(
@@ -26,7 +28,6 @@ const trigger = computed(
       trailingIcon: 'i-lucide-chevron-down',
     }) as const,
 );
-const open = ref(false);
 function pick(item?: CommandPaletteItem) {
   if (!item?.value) return;
   model.value = item.value === 'all' ? undefined : item.value;
@@ -58,7 +59,7 @@ const items = computed(() => [
         />
       </template>
     </UPopover>
-    <UPopover v-else-if="search" :content="{ align: 'start' }">
+    <UPopover v-else-if="search" v-model:open="open" :content="{ align: 'start' }">
       <UButton v-bind="trigger" />
       <template #content>
         <!-- The input of the UCommandPalette above, so both searches look alike. -->

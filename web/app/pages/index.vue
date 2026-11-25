@@ -9,6 +9,7 @@ const api = useApi();
 const sources = useSources();
 const places = usePlaces();
 const { pro, preferences } = usePreferences();
+const { shortcuts, key } = useShortcuts();
 
 const q = ref('');
 const qDebounced = refDebounced(q, 300);
@@ -134,6 +135,8 @@ const followUpFilterMenu = computed<DropdownMenuItem[][]>(() => [
     { label: t('table.followUp'), type: 'checkbox', checked: followUp.value, onSelect: () => (followUp.value = true) },
   ],
 ]);
+// The company search, opened by its shortcut: the table's only.
+const searchOpen = ref(false);
 // Pro: rows are picked by id for the batch bar.
 const selection = ref<Record<string, boolean>>({});
 const selected = computed(() => Object.keys(selection.value).filter((id) => selection.value[id]));
@@ -171,6 +174,8 @@ const dataColumns: TableColumn<Application>[] = [
     accessorKey: 'company',
     header: header('table.company', () => ({
       search: true,
+      open: searchOpen.value,
+      'onUpdate:open': (v: boolean) => (searchOpen.value = v),
       modelValue: q.value,
       'onUpdate:modelValue': (v?: string) => (q.value = v ?? ''),
       active: q.value !== '',
@@ -301,6 +306,19 @@ const selectedStatusMenu = computed(() =>
   STATUSES.map((s) => ({ label: t(`status.${s}`), onSelect: () => setSelectedStatus(s) })),
 );
 
+// Not in an open menu: its keys are its own.
+const outsideMenu = (handler: () => unknown) => () => document.activeElement?.closest('[role="menu"]') || handler();
+defineShortcuts({
+  [key('search')]: outsideMenu(() => view.value === 'table' && (searchOpen.value = true)),
+  [key('add')]: outsideMenu(() => openForm()),
+  [key('selectAll')]: outsideMenu(
+    () =>
+      pro.value &&
+      view.value === 'table' &&
+      (selection.value = Object.fromEntries((applications.value ?? []).map((a) => [a.id, true]))),
+  ),
+});
+
 // The list as shown, filters and sort included, to a CSV file.
 const csvColumns = [
   'company',
@@ -373,7 +391,14 @@ function exportCsv() {
           :disabled="!applications?.length"
           @click="exportCsv"
         />
-        <UButton icon="i-lucide-plus" :label="t('common.add')" :ui="{ label: 'max-sm:sr-only' }" @click="openForm()" />
+        <UTooltip :text="t('common.add')" :kbds="shortcuts.add">
+          <UButton
+            icon="i-lucide-plus"
+            :label="t('common.add')"
+            :ui="{ label: 'max-sm:sr-only' }"
+            @click="openForm()"
+          />
+        </UTooltip>
       </div>
     </Teleport>
 
