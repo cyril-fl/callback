@@ -94,6 +94,7 @@ func (p *run) createIndexes(tx bun.Tx) {
 var models = []any{
 	(*domain.Application)(nil),
 	(*domain.StatusChange)(nil),
+	(*domain.FollowUp)(nil),
 	(*domain.Setting)(nil),
 	(*domain.Token)(nil),
 	(*domain.OAuthCode)(nil),
@@ -104,5 +105,6 @@ var indexes = []string{
 	`CREATE INDEX IF NOT EXISTS idx_applications_status ON applications (status)`,
 	`CREATE INDEX IF NOT EXISTS idx_applications_applied_at ON applications (applied_at)`,
 	`CREATE INDEX IF NOT EXISTS idx_status_changes_application ON status_changes (application_id, at)`,
+	`CREATE INDEX IF NOT EXISTS idx_follow_ups_application ON follow_ups (application_id, at)`,
 	`CREATE UNIQUE INDEX IF NOT EXISTS ux_tokens_refresh_hash ON tokens (refresh_hash) WHERE refresh_hash IS NOT NULL`,
 }

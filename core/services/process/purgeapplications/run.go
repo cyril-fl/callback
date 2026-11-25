@@ -44,8 +44,10 @@ func (p *run) GetResult() int {
 
 func (p *run) purge() {
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if _, err := tx.NewDelete().Model((*domain.StatusChange)(nil)).Where("1 = 1").Exec(ctx); err != nil {
-			return err
+		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil)} {
+			if _, err := tx.NewDelete().Model(model).Where("1 = 1").Exec(ctx); err != nil {
+				return err
+			}
 		}
 		result, err := tx.NewDelete().Model((*domain.Application)(nil)).Where("1 = 1").Exec(ctx)
 		if err != nil {

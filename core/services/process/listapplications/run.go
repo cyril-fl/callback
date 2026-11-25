@@ -21,7 +21,7 @@ const DefaultSort = "-applied_at"
 var Sorts = []string{"applied_at", "company", "source", "status", "rating", "created_at", "updated_at"}
 
 var (
-	ErrInvalidField  = domain.Invalid("fields are among id, company, location, website, source, source_detail, status, rating, comment, applied_at, created_at, updated_at")
+	ErrInvalidField  = domain.Invalid("fields are among id, company, location, website, source, source_detail, status, rating, comment, applied_at, created_at, updated_at, followed_up_at")
 	ErrInvalidSort   = domain.Invalid("sort is one of applied_at, company, source, status, rating, created_at, updated_at, - first to reverse it")
 	ErrInvalidPaging = domain.Invalid("limit, offset and max_chars are 0 or more")
 )

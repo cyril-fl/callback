@@ -39,7 +39,9 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 			q = q.Where("a.applied_at > ?", filter.AppliedAfter)
 		}
 		if filter.UntouchedSince != "" {
-			q = q.Where("a.updated_at < ?", filter.UntouchedTime())
+			since := filter.UntouchedTime()
+			q = q.Where("(a.followed_up_at IS NULL OR a.followed_up_at < ?)", since).
+				Where("NOT EXISTS (SELECT 1 FROM status_changes WHERE application_id = a.id AND at >= ?)", since)
 		}
 		return q
 	}

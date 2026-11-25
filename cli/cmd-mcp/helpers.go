@@ -45,8 +45,8 @@ type listArgs struct {
 	Q              *string                                    `json:"q,omitempty" jsonschema:"text in company, address, website, source_detail, contact or comment"`
 	AppliedBefore  *string                                    `json:"applied_before,omitempty"`
 	AppliedAfter   *string                                    `json:"applied_after,omitempty"`
-	UntouchedSince *string                                    `json:"untouched_since,omitempty" jsonschema:"not updated since this day"`
-	Fields         []string                                   `json:"fields,omitempty" jsonschema:"columns added: location, street, postal_code, country, website, source, source_detail, rating, comment, interview_at, contact_name, contact_email, created_at, updated_at"`
+	UntouchedSince *string                                    `json:"untouched_since,omitempty" jsonschema:"no status change nor follow-up since this day"`
+	Fields         []string                                   `json:"fields,omitempty" jsonschema:"columns added: location, street, postal_code, country, website, source, source_detail, rating, comment, interview_at, contact_name, contact_email, created_at, updated_at, followed_up_at"`
 	CountOnly      bool                                       `json:"count_only,omitempty" jsonschema:"the total only"`
 	Sort           *string                                    `json:"sort,omitempty" jsonschema:"applied_at, company, source, status, rating, created_at or updated_at; - first to reverse"`
 	Limit          *int                                       `json:"limit,omitempty" jsonschema:"50 by default, 0 for all"`

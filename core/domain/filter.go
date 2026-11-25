@@ -27,7 +27,7 @@ type Filter struct {
 	// AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
 	AppliedBefore string `json:"applied_before,omitempty" binding:"optional" example:"2026-01-31"`
 	AppliedAfter  string `json:"applied_after,omitempty" binding:"optional" example:"2026-01-01"`
-	// UntouchedSince is the applications not updated since this day.
+	// UntouchedSince is the applications without news since this day: no status change nor follow-up.
 	UntouchedSince string `json:"untouched_since,omitempty" binding:"optional" example:"2026-01-01"`
 }
 

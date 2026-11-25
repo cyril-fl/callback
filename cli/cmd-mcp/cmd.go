@@ -85,7 +85,7 @@ func AddTools(server *mcp.Server, client *apiclient.ClientWithResponses, readOnl
 
 	addTool(server, readOnly, &mcp.Tool{
 		Name:        "update_applications",
-		Annotations: writes(false, true),
+		Annotations: writes(false, false),
 		Description: "Change applications in one batch, each op picking them by ids or filters and giving the fields to set.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, args apiclient.UpdateapplicationsInput) (*mcp.CallToolResult, apiclient.DomainBatchResult, error) {
 		result, err := apiclient.Decode[apiclient.DomainBatchResult](client.PatchApiApplications(ctx, args))

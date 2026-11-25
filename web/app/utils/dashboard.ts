@@ -91,13 +91,19 @@ export function averageDaysToResponse(applications: Application[], history: Map<
   return delays.length ? Math.round((delays.reduce((n, d) => n + d, 0) / delays.length) * 10) / 10 : undefined;
 }
 
-/** Applied or responded and untouched since limit, as the list's « À relancer »: the oldest news first. */
-export function toFollowUp(applications: Application[], limit: Date) {
+/** The last news of an application: its last status change or follow-up, as the server's untouched_since. */
+export function lastNews(a: Application, history: Map<string, StatusChange[]>) {
+  const dates = [...(history.get(a.id) ?? []).map((c) => c.at), a.followed_up_at ?? a.created_at ?? ''];
+  return dates.reduce((last, d) => (new Date(d) > new Date(last) ? d : last));
+}
+
+/** Applied or responded and without news since limit, as the list's « À relancer »: the oldest news first. */
+export function toFollowUp(applications: Application[], history: Map<string, StatusChange[]>, limit: Date) {
   return applications
-    .filter(
-      (a) => (a.status === 'applied' || a.status === 'responded') && a.updated_at && new Date(a.updated_at) < limit,
-    )
-    .sort((a, b) => (a.updated_at ?? '').localeCompare(b.updated_at ?? ''));
+    .filter((a) => a.status === 'applied' || a.status === 'responded')
+    .map((a) => ({ ...a, news: lastNews(a, history) }))
+    .filter((a) => new Date(a.news) < limit)
+    .sort((a, b) => new Date(a.news).getTime() - new Date(b.news).getTime());
 }
 
 /** The interviews from now on, the nearest first; interview_at is a local "2026-01-31T14:30". */

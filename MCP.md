@@ -83,7 +83,7 @@ Tous en lot : **un appel d'outil = une requête à l'API = une transaction**, ja
 | `application_stats` | Le total, le nombre par statut et par source (`by_source`, pour réutiliser les noms existants) et le taux de réponse | lecture |
 | `status_history` | Les statuts atteints et quand, du plus ancien au plus récent (`changes`), des candidatures de `ids` et/ou depuis `since` (ce jour inclus) : délais de réponse, ce qui a bougé récemment | lecture |
 | `add_applications` | Crée `items` (500 au plus) ; rend seulement les `ids` créés et les éléments en échec (`failed`, avec leur `index`) : les valides sont écrits quand même | écriture |
-| `update_applications` | `ops`, chacun choisit des candidatures par `ids` ou par filtres et donne `set` (`status`, `rating`, `comment`…) ; `dry_run` n'écrit rien et rend ce qui changerait, `summary` retire les ids | écriture, idempotent |
+| `update_applications` | `ops`, chacun choisit des candidatures par `ids` ou par filtres et donne `set` (`status`, `rating`, `comment`…, `followed_up: true` enregistre une relance) ; `dry_run` n'écrit rien et rend ce qui changerait, `summary` retire les ids | écriture (non idempotent avec `followed_up`) |
 | `delete_applications` | Supprime **définitivement** les candidatures de `ids` ou des filtres ; `dry_run`, `summary`. Un filtre vide est refusé | destructif, idempotent |
 
 Les valeurs : `status` parmi `applied`, `responded`, `interview`, `offer`, `rejected` ; `source` : `spontaneous`

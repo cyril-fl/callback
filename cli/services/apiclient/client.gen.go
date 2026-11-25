@@ -210,7 +210,7 @@ type DeleteapplicationsInput struct {
 	// Summary Summary leaves the ids out of the result: the counts and failures only.
 	Summary *bool `json:"summary,omitempty"`
 
-	// UntouchedSince UntouchedSince is the applications not updated since this day.
+	// UntouchedSince UntouchedSince is the applications without news since this day: no status change nor follow-up.
 	UntouchedSince *string `json:"untouched_since,omitempty"`
 }
 
@@ -223,6 +223,9 @@ type DomainApplication struct {
 	ContactName  *string `json:"contact_name,omitempty"`
 	Country      *string `json:"country,omitempty"`
 	CreatedAt    *string `json:"created_at,omitempty"`
+
+	// FollowedUpAt FollowedUpAt is the last follow-up, set by an update with followed_up.
+	FollowedUpAt *string `json:"followed_up_at,omitempty"`
 	Id           string  `json:"id"`
 
 	// InterviewAt InterviewAt is the next interview's local date and time.
@@ -269,6 +272,9 @@ type DomainChanges struct {
 	ContactEmail *string `json:"contact_email,omitempty"`
 	ContactName  *string `json:"contact_name,omitempty"`
 	Country      *string `json:"country,omitempty"`
+
+	// FollowedUp FollowedUp records a follow-up now: followed_up_at becomes now, and the status counts as news again.
+	FollowedUp *bool `json:"followed_up,omitempty"`
 
 	// InterviewAt InterviewAt, ContactName and ContactEmail are cleared by "".
 	InterviewAt  *string       `json:"interview_at,omitempty"`
@@ -420,7 +426,7 @@ type UpdateapplicationsOp struct {
 	// Status Status is any of these statuses.
 	Status *[]DomainStatus `json:"status,omitempty"`
 
-	// UntouchedSince UntouchedSince is the applications not updated since this day.
+	// UntouchedSince UntouchedSince is the applications without news since this day: no status change nor follow-up.
 	UntouchedSince *string `json:"untouched_since,omitempty"`
 }
 

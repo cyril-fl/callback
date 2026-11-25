@@ -85,6 +85,8 @@
     "filterBy": "Filtrer par",
     "reset": "Réinitialiser",
     "followUp": "À relancer",
+    "markFollowedUp": "Marquer comme relancée",
+    "followedUpOn": "Relancée le {date}, marquer une nouvelle relance",
     "export": "Exporter en CSV",
     "select": "Sélectionner",
     "selectAll": "Tout sélectionner",

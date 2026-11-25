@@ -61,6 +61,7 @@ const daysToResponse = computed(() => averageDaysToResponse(filtered.value, hist
 const followUps = computed(() =>
   toFollowUp(
     filtered.value,
+    history.value,
     today.subtract({ days: preferences.value?.follow_up_days ?? 7 }).toDate(getLocalTimeZone()),
   ),
 );
@@ -112,7 +113,7 @@ function openForm(app: Application) {
               @click="openForm(a)"
             >
               <span class="flex-1 truncate text-sm">{{ a.company }}</span>
-              <span class="text-xs text-muted">{{ t('stats.untouchedSince', { date: day(a.updated_at) }) }}</span>
+              <span class="text-xs text-muted">{{ t('stats.untouchedSince', { date: day(a.news) }) }}</span>
             </button>
           </li>
         </ul>

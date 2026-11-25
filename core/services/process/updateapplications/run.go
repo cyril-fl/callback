@@ -129,6 +129,12 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 			continue
 		}
 		application.UpdatedAt = now
+		if op.Set.FollowedUp {
+			application.FollowedUpAt = now
+			if _, err := tx.NewInsert().Model(&domain.FollowUp{ApplicationID: application.ID, At: now}).Exec(ctx); err != nil {
+				return err
+			}
+		}
 		if _, err := tx.NewUpdate().Model(&application).WherePK().ExcludeColumn("id", "created_at").Exec(ctx); err != nil {
 			return err
 		}

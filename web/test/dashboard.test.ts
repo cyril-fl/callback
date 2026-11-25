@@ -127,13 +127,15 @@ test('the days to a first response average the applications that got one', () =>
   assert.equal(averageDaysToResponse([apps[0]!], historyOf(changes, apps)), undefined);
 });
 
-test('to follow up: applied or responded, untouched since the limit, the oldest first', () => {
-  const ids = toFollowUp(apps, new Date('2026-02-01T00:00:00Z')).map((a) => a.id);
-  assert.deepEqual(ids, ['a', 'c']);
-  assert.deepEqual(
-    toFollowUp(apps, new Date('2026-01-10T00:00:00Z')).map((a) => a.id),
-    ['a'],
-  );
+test('to follow up: applied or responded, no status change nor follow-up since the limit, the oldest news first', () => {
+  const history = historyOf(changes, apps);
+  const ids = (list: Application[], limit: string) => toFollowUp(list, history, new Date(limit)).map((a) => a.id);
+  assert.deepEqual(ids(apps, '2026-02-01T00:00:00Z'), ['a', 'c']);
+  assert.deepEqual(ids(apps, '2026-01-10T00:00:00Z'), ['a']);
+  // A follow-up is news.
+  const followed = apps.map((a) => (a.id === 'a' ? { ...a, followed_up_at: '2026-01-25T10:00:00Z' } : a));
+  assert.deepEqual(ids(followed, '2026-02-01T00:00:00Z'), ['c', 'a']);
+  assert.deepEqual(ids(followed, '2026-01-22T00:00:00Z'), ['c']);
 });
 
 test('the upcoming interviews are the ones from now on, the nearest first', () => {

@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/appfilter"
 	"github.com/cyril-fl/callback/core/services/process/updateapplications"
 	"github.com/cyril-fl/callback/core/services/seed"
 	"github.com/cyril-fl/callback/core/services/testdb"
@@ -94,5 +96,42 @@ func TestBlankQuery(t *testing.T) {
 	process.Run()
 	if got := process.GetResult(); process.HasErr() || got.Count != 0 || len(got.Failed) != 1 || got.Failed[0].Error != domain.ErrNoFilter.Error() {
 		t.Errorf("result = %+v, %v; want the op refused", got, process.GetErr())
+	}
+}
+
+// A follow-up is news: the application leaves untouched_since until the delay passes again.
+func TestFollowUp(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	ids := seed.Applications(t, db,
+		domain.NewApplication{Company: "Acme", Location: "Paris"},
+		domain.NewApplication{Company: "Globex", Location: "Lyon"},
+	)
+	// Both reached their status long ago.
+	if _, err := db.NewUpdate().Model((*domain.StatusChange)(nil)).Set("at = ?", time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)).Where("1 = 1").Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	process := updateapplications.Process(ctx, db, updateapplications.Input{Ops: []updateapplications.Op{
+		{Filter: domain.Filter{IDs: []string{ids[0]}}, Set: domain.Changes{FollowedUp: true}},
+	}})
+	process.Run()
+	if process.HasErr() || process.GetResult().Count != 1 {
+		t.Fatal(process.GetErr(), process.GetResult())
+	}
+
+	var quiet []domain.Application
+	since := domain.Filter{UntouchedSince: time.Now().UTC().Format(domain.DateLayout)}
+	if err := db.NewSelect().Model(&quiet).ApplyQueryBuilder(appfilter.Where(since)).Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(quiet) != 1 || quiet[0].ID != ids[1] {
+		t.Errorf("untouched since today = %+v, want Globex only", quiet)
+	}
+	var acme domain.Application
+	if err := db.NewSelect().Model(&acme).Where("id = ?", ids[0]).Scan(ctx); err != nil || acme.FollowedUpAt.IsZero() {
+		t.Errorf("acme = %+v, %v", acme, err)
+	}
+	if count, _ := db.NewSelect().Model((*domain.FollowUp)(nil)).Where("application_id = ?", ids[0]).Count(ctx); count != 1 {
+		t.Errorf("%d follow-ups, want 1", count)
 	}
 }

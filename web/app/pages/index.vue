@@ -37,7 +37,7 @@ function reset() {
   sorting.value = [...defaultSorting];
 }
 
-// The day the follow-up delay started: an application untouched since then is to follow up.
+// The day the follow-up delay started: an application without news (status, follow-up) since then is to follow up.
 const followUpSince = computed(() => {
   const since = todayDate(getLocalTimeZone()).subtract({ days: preferences.value?.follow_up_days ?? 7 });
   return since.toString();
@@ -207,6 +207,18 @@ async function setStatus(app: Application, status: Status) {
     await api<BatchResult>('/api/applications', {
       method: 'PATCH',
       body: { ops: [{ ids: [app.id], set: { status } }] },
+    });
+    await refresh();
+  } catch {
+    // useApi already toasted.
+  }
+}
+
+async function markFollowedUp(app: Application) {
+  try {
+    await api<BatchResult>('/api/applications', {
+      method: 'PATCH',
+      body: { ops: [{ ids: [app.id], set: { followed_up: true } }] },
     });
     await refresh();
   } catch {
@@ -443,6 +455,22 @@ function exportCsv() {
       </template>
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
+          <UTooltip
+            v-if="row.original.status === 'applied' || row.original.status === 'responded'"
+            :text="
+              row.original.followed_up_at
+                ? t('table.followedUpOn', { date: day(row.original.followed_up_at) })
+                : t('table.markFollowedUp')
+            "
+          >
+            <UButton
+              icon="i-lucide-bell-ring"
+              color="neutral"
+              variant="ghost"
+              :aria-label="t('table.markFollowedUp')"
+              @click="markFollowedUp(row.original)"
+            />
+          </UTooltip>
           <UButton
             icon="i-lucide-pencil"
             color="neutral"

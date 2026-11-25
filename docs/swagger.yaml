@@ -87,7 +87,8 @@ components:
             only.'
           type: boolean
         untouched_since:
-          description: UntouchedSince is the applications not updated since this day.
+          description: 'UntouchedSince is the applications without news since this
+            day: no status change nor follow-up.'
           example: "2026-01-01"
           type: string
       type: object
@@ -107,6 +108,9 @@ components:
         country:
           type: string
         created_at:
+          type: string
+        followed_up_at:
+          description: FollowedUpAt is the last follow-up, set by an update with followed_up.
           type: string
         id:
           type: string
@@ -190,6 +194,10 @@ components:
           type: string
         country:
           type: string
+        followed_up:
+          description: 'FollowedUp records a follow-up now: followed_up_at becomes
+            now, and the status counts as news again.'
+          type: boolean
         interview_at:
           description: InterviewAt, ContactName and ContactEmail are cleared by "".
           example: 2026-01-31T14:30
@@ -463,7 +471,8 @@ components:
           type: array
           uniqueItems: false
         untouched_since:
-          description: UntouchedSince is the applications not updated since this day.
+          description: 'UntouchedSince is the applications without news since this
+            day: no status change nor follow-up.'
           example: "2026-01-01"
           type: string
       required:

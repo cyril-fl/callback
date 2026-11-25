@@ -94,12 +94,14 @@ type Application struct {
 	ContactEmail string    `bun:",nullzero" json:"contact_email,omitempty" binding:"optional"`
 	CreatedAt    time.Time `bun:",notnull" json:"created_at,omitzero" binding:"optional"`
 	UpdatedAt    time.Time `bun:",notnull" json:"updated_at,omitzero" binding:"optional"`
+	// FollowedUpAt is the last follow-up, set by an update with followed_up.
+	FollowedUpAt time.Time `bun:",nullzero" json:"followed_up_at,omitzero" binding:"optional"`
 	// Truncated tells that comment was cut at max_chars.
 	Truncated bool `bun:"-" json:"truncated,omitempty" binding:"optional"`
 }
 
 // Columns are the columns ?fields= may ask for.
-var Columns = []string{"id", "company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at"}
+var Columns = []string{"id", "company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at", "followed_up_at"}
 
 // Normalize trims the text and fills the defaults: status applied, applied today.
 func (a *Application) Normalize() {
@@ -235,6 +237,8 @@ type Changes struct {
 	InterviewAt  *string `json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
 	ContactName  *string `json:"contact_name,omitempty" binding:"optional"`
 	ContactEmail *string `json:"contact_email,omitempty" binding:"optional"`
+	// FollowedUp records a follow-up now: followed_up_at becomes now, and the status counts as news again.
+	FollowedUp bool `json:"followed_up,omitempty" binding:"optional"`
 }
 
 var ErrNoChanges = Invalid("set changes nothing: give at least one field")

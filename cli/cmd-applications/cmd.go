@@ -21,7 +21,7 @@ import (
 var defaultColumns = []string{"company", "status", "applied_at"}
 
 // showColumns is the order of show, every field.
-var showColumns = []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "applied_at", "interview_at", "contact_name", "contact_email", "comment", "truncated", "created_at", "updated_at"}
+var showColumns = []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "applied_at", "interview_at", "contact_name", "contact_email", "comment", "truncated", "created_at", "updated_at", "followed_up_at"}
 
 // Add creates the application of the flags, or the batch of --file, in one request.
 func Add(cobra *cobra.Command, _ []string) error {
@@ -322,6 +322,9 @@ func changes(cobra *cobra.Command) apiclient.DomainChanges {
 	if flags.Changed("rating") {
 		rating, _ := flags.GetInt("rating")
 		set.Rating = &rating
+	}
+	if followed, _ := flags.GetBool("followed-up"); followed {
+		set.FollowedUp = &followed
 	}
 	return set
 }
