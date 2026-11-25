@@ -96,6 +96,8 @@ const appliedAt = computed<CalendarDate | undefined>({
 
 // A source typed in the combobox that is not offered yet becomes one.
 const sourceItems = ref(sources.items.value);
+// Typed and left without picking "Create", it is taken all the same.
+const sourceSearch = ref('');
 watch(sources.items, (items) => (sourceItems.value = items));
 function createSource(name: string) {
   const value = name.trim();
@@ -224,11 +226,13 @@ async function submit() {
         <UFormField name="source" :label="t('form.source')">
           <UInputMenu
             v-model="state.source"
+            v-model:search-term="sourceSearch"
             :items="sourceItems"
             value-key="value"
             create-item
             class="w-full"
             @create="createSource"
+            @blur="sourceSearch && createSource(sourceSearch)"
           />
         </UFormField>
         <UFormField v-if="detail" name="source_detail" :label="detail.label" :required="detail.required">
