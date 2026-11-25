@@ -439,23 +439,27 @@ function exportCsv() {
         <span v-else class="font-medium">{{ row.original.company }}</span>
       </template>
       <template #source-cell="{ row }">
-        <a
+        <UBadge
           v-if="row.original.source === 'job_post' && row.original.source_detail"
+          as="a"
           :href="row.original.source_detail"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-primary hover:underline"
-        >
-          {{ t('source.job_post') }}
-        </a>
-        <a
+          :label="t('source.job_post')"
+          trailing-icon="i-lucide-external-link"
+          variant="subtle"
+          class="hover:underline"
+        />
+        <UBadge
           v-else-if="row.original.source === 'recruiter' && row.original.source_detail"
+          as="a"
           :href="`mailto:${row.original.source_detail}`"
-          class="text-primary hover:underline"
-        >
-          {{ t('source.recruiter') }}
-        </a>
-        <span v-else>{{ sources.label(row.original.source) }}</span>
+          :label="t('source.recruiter')"
+          trailing-icon="i-lucide-mail"
+          variant="subtle"
+          class="hover:underline"
+        />
+        <UBadge v-else :label="sources.label(row.original.source)" color="neutral" variant="subtle" />
       </template>
       <template #status-cell="{ row }">
         <UDropdownMenu :items="statusMenu(row.original)">
