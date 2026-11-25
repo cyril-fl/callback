@@ -16,7 +16,7 @@ func TestRun(t *testing.T) {
 	db := testdb.New(t)
 	ids := seed.Applications(t, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris", AppliedAt: "2026-01-10", Comment: "Called back 100% sure"},
-		domain.NewApplication{Company: "Globex", Location: "Lyon", AppliedAt: "2026-02-10", Status: domain.StatusInterview, Rating: 4},
+		domain.NewApplication{Company: "Globex", Location: "Lyon", AppliedAt: "2026-02-10", Status: domain.StatusInterview, Rating: 4, ContactName: "Jane Doe"},
 		domain.NewApplication{Company: "Initech", Location: "Paris", AppliedAt: "2026-03-10", Status: domain.StatusRejected},
 	)
 	acme, globex, initech := ids[0], ids[1], ids[2]
@@ -30,6 +30,7 @@ func TestRun(t *testing.T) {
 		"by status":           {listapplications.Input{Filter: domain.Filter{Status: []domain.Status{domain.StatusInterview, domain.StatusRejected}}}, []string{initech, globex}, 2},
 		"text, any case":      {listapplications.Input{Filter: domain.Filter{Q: "paris"}}, []string{initech, acme}, 2},
 		"text, % is literal":  {listapplications.Input{Filter: domain.Filter{Q: "100%"}}, []string{acme}, 1},
+		"text, contact":       {listapplications.Input{Filter: domain.Filter{Q: "jane"}}, []string{globex}, 1},
 		"text, % alone":       {listapplications.Input{Filter: domain.Filter{Q: "%%"}}, nil, 0},
 		"dates are strict":    {listapplications.Input{Filter: domain.Filter{AppliedAfter: "2026-01-10", AppliedBefore: "2026-03-10"}}, []string{globex}, 1},
 		"ids":                 {listapplications.Input{Filter: domain.Filter{IDs: []string{acme, initech}}}, []string{initech, acme}, 2},

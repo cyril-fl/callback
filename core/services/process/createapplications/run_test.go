@@ -22,11 +22,13 @@ func TestRun(t *testing.T) {
 		{Company: "Initech", Location: "Nantes", Source: domain.SourceRecruiter, SourceDetail: "not an e-mail"},
 		{Company: "Umbrella", Location: "Brest", Rating: 6},
 		{Company: "Hooli", Location: "Rennes", Source: domain.SourceRecruiter, SourceDetail: "jane@hooli.example", Comment: "<b>raw</b>"},
-		{Company: "Vandelay", Location: "Lyon", Street: " 1 rue de la Paix ", PostalCode: "69001", Country: "France", Source: " Agence intérim Adecco ", SourceDetail: "Marie, 06 00 00 00 00"},
+		{Company: "Vandelay", Location: "Lyon", Street: " 1 rue de la Paix ", PostalCode: "69001", Country: "France", Source: " Agence intérim Adecco ", SourceDetail: "Marie, 06 00 00 00 00", InterviewAt: "2026-02-03T14:30", ContactName: " Marie ", ContactEmail: "marie@adecco.example"},
 		{Company: "Pied Piper", Location: "Paris", Source: domain.Source(strings.Repeat("x", domain.MaxSource+1))},
 		{Company: "Dunder", Location: "Scranton", Source: domain.SourceSpontaneous, SourceDetail: "not for spontaneous"},
 		{Company: "Wonka", Location: "Paris", Website: "jobs@wonka.example"},
 		{Company: "Krusty", Location: "Paris", Website: "not a site"},
+		{Company: "Soylent", Location: "Paris", InterviewAt: "2026-02-03 14:30"},
+		{Company: "Tyrell", Location: "Paris", ContactEmail: "Rachel <rachel@tyrell.example>"},
 	}
 	process := createapplications.Process(ctx, db, items)
 	process.Run()
@@ -37,7 +39,7 @@ func TestRun(t *testing.T) {
 	if result.Count != 5 || len(result.IDs) != 5 {
 		t.Fatalf("count = %d, ids = %v; want 5", result.Count, result.IDs)
 	}
-	wants := map[int]error{1: domain.ErrNoCompany, 3: domain.ErrInvalidDetail, 4: domain.ErrInvalidRating, 7: domain.ErrInvalidSource, 8: domain.ErrInvalidDetail, 10: domain.ErrInvalidWebsite}
+	wants := map[int]error{1: domain.ErrNoCompany, 3: domain.ErrInvalidDetail, 4: domain.ErrInvalidRating, 7: domain.ErrInvalidSource, 8: domain.ErrInvalidDetail, 10: domain.ErrInvalidWebsite, 11: domain.ErrInvalidInterview, 12: domain.ErrInvalidContact}
 	if len(result.Failed) != len(wants) {
 		t.Fatalf("failed = %+v", result.Failed)
 	}
@@ -56,7 +58,7 @@ func TestRun(t *testing.T) {
 	}
 	// A source the user names is kept as given, trimmed, its detail free; the address is trimmed too.
 	var vandelay domain.Application
-	if err := db.NewSelect().Model(&vandelay).Where("id = ?", result.IDs[3]).Scan(ctx); err != nil || vandelay.Source != "Agence intérim Adecco" || vandelay.Street != "1 rue de la Paix" || vandelay.Country != "France" {
+	if err := db.NewSelect().Model(&vandelay).Where("id = ?", result.IDs[3]).Scan(ctx); err != nil || vandelay.Source != "Agence intérim Adecco" || vandelay.Street != "1 rue de la Paix" || vandelay.Country != "France" || vandelay.InterviewAt != "2026-02-03T14:30" || vandelay.ContactName != "Marie" {
 		t.Errorf("vandelay = %+v, %v", vandelay, err)
 	}
 	var hooli domain.Application

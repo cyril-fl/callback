@@ -9,7 +9,8 @@ Track job applications from a web app, a CLI and an MCP server for AI agents. Si
 
 Each application has a company, an address (location is the city, plus an optional street, postal code and country),
 a website, a source (spontaneous, job post with its URL, recruiter with their e-mail, or any name you give), a status
-(applied → responded → interview → offer / rejected), a rating out of 5, a comment and the day it was sent. Every write is a batch: one request adds, changes or deletes many applications in one transaction.
+(applied → responded → interview → offer / rejected), a rating out of 5, a comment, the day it was sent, and optionally
+the interview's date and time and a contact (name, e-mail). Every write is a batch: one request adds, changes or deletes many applications in one transaction.
 
 The previous Vue/Express/Mongo app is at the `deprecated` tag.
 

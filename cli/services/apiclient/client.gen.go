@@ -200,7 +200,7 @@ type DeleteapplicationsInput struct {
 	// Ids IDs are the applications by id.
 	Ids *[]string `json:"ids,omitempty"`
 
-	// Q Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
+	// Q Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive.
 	Q      *string `json:"q,omitempty"`
 	Source *string `json:"source,omitempty"`
 
@@ -216,12 +216,17 @@ type DeleteapplicationsInput struct {
 
 // DomainApplication defines model for domain.Application.
 type DomainApplication struct {
-	AppliedAt *string `json:"applied_at,omitempty"`
-	Comment   *string `json:"comment,omitempty"`
-	Company   *string `json:"company,omitempty"`
-	Country   *string `json:"country,omitempty"`
-	CreatedAt *string `json:"created_at,omitempty"`
-	Id        string  `json:"id"`
+	AppliedAt    *string `json:"applied_at,omitempty"`
+	Comment      *string `json:"comment,omitempty"`
+	Company      *string `json:"company,omitempty"`
+	ContactEmail *string `json:"contact_email,omitempty"`
+	ContactName  *string `json:"contact_name,omitempty"`
+	Country      *string `json:"country,omitempty"`
+	CreatedAt    *string `json:"created_at,omitempty"`
+	Id           string  `json:"id"`
+
+	// InterviewAt InterviewAt is the next interview's local date and time.
+	InterviewAt *string `json:"interview_at,omitempty"`
 
 	// Location Location is the city; Street, PostalCode and Country complete the address when known.
 	Location     *string       `json:"location,omitempty"`
@@ -258,10 +263,15 @@ type DomainBatchResult struct {
 
 // DomainChanges defines model for domain.Changes.
 type DomainChanges struct {
-	AppliedAt    *string       `json:"applied_at,omitempty"`
-	Comment      *string       `json:"comment,omitempty"`
-	Company      *string       `json:"company,omitempty"`
-	Country      *string       `json:"country,omitempty"`
+	AppliedAt    *string `json:"applied_at,omitempty"`
+	Comment      *string `json:"comment,omitempty"`
+	Company      *string `json:"company,omitempty"`
+	ContactEmail *string `json:"contact_email,omitempty"`
+	ContactName  *string `json:"contact_name,omitempty"`
+	Country      *string `json:"country,omitempty"`
+
+	// InterviewAt InterviewAt, ContactName and ContactEmail are cleared by "".
+	InterviewAt  *string       `json:"interview_at,omitempty"`
 	Location     *string       `json:"location,omitempty"`
 	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
@@ -277,7 +287,10 @@ type DomainNewApplication struct {
 	AppliedAt    *string       `json:"applied_at,omitempty"`
 	Comment      *string       `json:"comment,omitempty"`
 	Company      string        `json:"company"`
+	ContactEmail *string       `json:"contact_email,omitempty"`
+	ContactName  *string       `json:"contact_name,omitempty"`
 	Country      *string       `json:"country,omitempty"`
+	InterviewAt  *string       `json:"interview_at,omitempty"`
 	Location     string        `json:"location"`
 	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
@@ -384,7 +397,7 @@ type UpdateapplicationsOp struct {
 	// Ids IDs are the applications by id.
 	Ids *[]string `json:"ids,omitempty"`
 
-	// Q Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
+	// Q Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive.
 	Q      *string       `json:"q,omitempty"`
 	Set    DomainChanges `json:"set"`
 	Source *string       `json:"source,omitempty"`
@@ -407,7 +420,7 @@ type GetApiApplicationsParams struct {
 	// Source Source: spontaneous, job_post, recruiter or a name given by the user
 	Source *string `form:"source,omitempty" json:"source,omitempty"`
 
-	// Q Text in company, address, website, source or comment
+	// Q Text in company, address, website, source, contact or comment
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
 	// AppliedBefore applied_at < this day (2026-01-31)

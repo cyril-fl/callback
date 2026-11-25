@@ -22,7 +22,7 @@ type Filter struct {
 	// Status is any of these statuses.
 	Status []Status `json:"status,omitempty" binding:"optional"`
 	Source Source   `json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
-	// Q is text found in the company, the address, website, source_detail or comment, case-insensitive.
+	// Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive.
 	Q string `json:"q,omitempty" binding:"optional"`
 	// AppliedBefore and AppliedAfter are strict: applied_at < before, applied_at > after.
 	AppliedBefore string `json:"applied_before,omitempty" binding:"optional" example:"2026-01-31"`

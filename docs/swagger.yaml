@@ -70,8 +70,8 @@ components:
           type: array
           uniqueItems: false
         q:
-          description: Q is text found in the company, the address, website, source_detail
-            or comment, case-insensitive.
+          description: Q is text found in the company, the address, website, source_detail,
+            contact or comment, case-insensitive.
           type: string
         source:
           example: job_post
@@ -100,11 +100,19 @@ components:
           type: string
         company:
           type: string
+        contact_email:
+          type: string
+        contact_name:
+          type: string
         country:
           type: string
         created_at:
           type: string
         id:
+          type: string
+        interview_at:
+          description: InterviewAt is the next interview's local date and time.
+          example: 2026-01-31T14:30
           type: string
         location:
           description: Location is the city; Street, PostalCode and Country complete
@@ -176,7 +184,15 @@ components:
           type: string
         company:
           type: string
+        contact_email:
+          type: string
+        contact_name:
+          type: string
         country:
+          type: string
+        interview_at:
+          description: InterviewAt, ContactName and ContactEmail are cleared by "".
+          example: 2026-01-31T14:30
           type: string
         location:
           type: string
@@ -205,7 +221,14 @@ components:
           type: string
         company:
           type: string
+        contact_email:
+          type: string
+        contact_name:
+          type: string
         country:
+          type: string
+        interview_at:
+          example: 2026-01-31T14:30
           type: string
         location:
           type: string
@@ -398,8 +421,8 @@ components:
           type: array
           uniqueItems: false
         q:
-          description: Q is text found in the company, the address, website, source_detail
-            or comment, case-insensitive.
+          description: Q is text found in the company, the address, website, source_detail,
+            contact or comment, case-insensitive.
           type: string
         set:
           $ref: '#/components/schemas/domain.Changes'
@@ -496,7 +519,7 @@ paths:
         name: source
         schema:
           type: string
-      - description: Text in company, address, website, source or comment
+      - description: Text in company, address, website, source, contact or comment
         in: query
         name: q
         schema:

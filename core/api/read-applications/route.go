@@ -20,7 +20,7 @@ import (
 // @Param    ids             query []string false "Applications by id, comma separated or repeated" collectionFormat(csv)
 // @Param    status          query []string false "Any of these statuses" collectionFormat(csv) Enums(applied,responded,interview,offer,rejected)
 // @Param    source          query string   false "Source: spontaneous, job_post, recruiter or a name given by the user"
-// @Param    q               query string   false "Text in company, address, website, source or comment"
+// @Param    q               query string   false "Text in company, address, website, source, contact or comment"
 // @Param    applied_before  query string   false "applied_at < this day (2026-01-31)"
 // @Param    applied_after   query string   false "applied_at > this day (2026-01-31)"
 // @Param    untouched_since query string   false "Not updated since this day (2026-01-31)"

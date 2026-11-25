@@ -44,6 +44,9 @@ var Statuses = []Status{StatusApplied, StatusResponded, StatusInterview, StatusO
 // DateLayout is the layout of applied_at and of the date filters.
 const DateLayout = time.DateOnly
 
+// DateTimeLayout is the layout of interview_at: a local date and time, no zone.
+const DateTimeLayout = "2006-01-02T15:04"
+
 // Limits of the free text, in runes.
 const (
 	MaxShort   = 200
@@ -51,15 +54,17 @@ const (
 )
 
 var (
-	ErrNoCompany      = Invalid("company is required")
-	ErrNoLocation     = Invalid("location (the city) is required")
-	ErrLong           = Invalid("company, location, street, postal_code, country, website and source_detail have at most 200 characters, comment 10000")
-	ErrInvalidWebsite = Invalid("website must be an http(s) URL or an e-mail")
-	ErrInvalidSource  = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
-	ErrInvalidDetail  = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
-	ErrInvalidStatus  = Invalid("status must be one of applied, responded, interview, offer, rejected")
-	ErrInvalidRating  = Invalid("rating must be between 0 and 5")
-	ErrInvalidDate    = Invalid("dates must look like 2026-01-31")
+	ErrNoCompany        = Invalid("company is required")
+	ErrNoLocation       = Invalid("location (the city) is required")
+	ErrLong             = Invalid("company, location, street, postal_code, country, website, source_detail, contact_name and contact_email have at most 200 characters, comment 10000")
+	ErrInvalidWebsite   = Invalid("website must be an http(s) URL or an e-mail")
+	ErrInvalidSource    = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
+	ErrInvalidDetail    = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
+	ErrInvalidStatus    = Invalid("status must be one of applied, responded, interview, offer, rejected")
+	ErrInvalidRating    = Invalid("rating must be between 0 and 5")
+	ErrInvalidDate      = Invalid("dates must look like 2026-01-31")
+	ErrInvalidInterview = Invalid("interview_at must look like 2026-01-31T14:30")
+	ErrInvalidContact   = Invalid("contact_email must be an e-mail")
 )
 
 // Application is a job application. Text is stored raw: the web app escapes it when it shows it.
@@ -76,13 +81,17 @@ type Application struct {
 	PostalCode string `bun:",nullzero" json:"postal_code,omitempty" binding:"optional"`
 	Country    string `bun:",nullzero" json:"country,omitempty" binding:"optional"`
 	// Website is the company's site, or an e-mail to write to when it has none.
-	Website      string    `bun:",notnull" json:"website,omitempty" binding:"optional"`
-	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
-	SourceDetail string    `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
-	Status       Status    `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
-	Rating       int       `bun:",notnull" json:"rating,omitempty" binding:"optional"`
-	Comment      string    `bun:",notnull" json:"comment,omitempty" binding:"optional"`
-	AppliedAt    string    `bun:",notnull" json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+	Website      string `bun:",notnull" json:"website,omitempty" binding:"optional"`
+	Source       Source `bun:",notnull" json:"source,omitempty" binding:"optional" example:"job_post" swaggertype:"string"`
+	SourceDetail string `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
+	Status       Status `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Rating       int    `bun:",notnull" json:"rating,omitempty" binding:"optional"`
+	Comment      string `bun:",notnull" json:"comment,omitempty" binding:"optional"`
+	AppliedAt    string `bun:",notnull" json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+	// InterviewAt is the next interview's local date and time.
+	InterviewAt  string    `bun:",nullzero" json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
+	ContactName  string    `bun:",nullzero" json:"contact_name,omitempty" binding:"optional"`
+	ContactEmail string    `bun:",nullzero" json:"contact_email,omitempty" binding:"optional"`
 	CreatedAt    time.Time `bun:",notnull" json:"created_at,omitzero" binding:"optional"`
 	UpdatedAt    time.Time `bun:",notnull" json:"updated_at,omitzero" binding:"optional"`
 	// Truncated tells that comment was cut at max_chars.
@@ -90,7 +99,7 @@ type Application struct {
 }
 
 // Columns are the columns ?fields= may ask for.
-var Columns = []string{"id", "company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "created_at", "updated_at"}
+var Columns = []string{"id", "company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at"}
 
 // Normalize trims the text and fills the defaults: status applied, applied today.
 func (a *Application) Normalize() {
@@ -102,6 +111,9 @@ func (a *Application) Normalize() {
 	a.Source = Source(strings.TrimSpace(string(a.Source)))
 	a.Website = strings.TrimSpace(a.Website)
 	a.SourceDetail = strings.TrimSpace(a.SourceDetail)
+	a.InterviewAt = strings.TrimSpace(a.InterviewAt)
+	a.ContactName = strings.TrimSpace(a.ContactName)
+	a.ContactEmail = strings.TrimSpace(a.ContactEmail)
 	if a.Source == "" {
 		a.Source = SourceSpontaneous
 	}
@@ -120,7 +132,7 @@ func (a *Application) Validate() error {
 		return ErrNoCompany
 	case a.Location == "":
 		return ErrNoLocation
-	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.Comment) > MaxComment:
+	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment:
 		return ErrLong
 	case a.Website != "" && !isURL(a.Website) && !isEmail(a.Website):
 		return ErrInvalidWebsite
@@ -134,6 +146,10 @@ func (a *Application) Validate() error {
 		return ErrInvalidRating
 	case !IsDate(a.AppliedAt):
 		return ErrInvalidDate
+	case a.InterviewAt != "" && !isDateTime(a.InterviewAt):
+		return ErrInvalidInterview
+	case a.ContactEmail != "" && !isEmail(a.ContactEmail):
+		return ErrInvalidContact
 	}
 	return nil
 }
@@ -141,6 +157,11 @@ func (a *Application) Validate() error {
 // IsDate tells a date of DateLayout.
 func IsDate(value string) bool {
 	_, err := time.Parse(DateLayout, value)
+	return err == nil
+}
+
+func isDateTime(value string) bool {
+	_, err := time.Parse(DateTimeLayout, value)
 	return err == nil
 }
 
@@ -186,11 +207,14 @@ type NewApplication struct {
 	Rating       int    `json:"rating,omitempty" binding:"optional"`
 	Comment      string `json:"comment,omitempty" binding:"optional"`
 	AppliedAt    string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+	InterviewAt  string `json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
+	ContactName  string `json:"contact_name,omitempty" binding:"optional"`
+	ContactEmail string `json:"contact_email,omitempty" binding:"optional"`
 }
 
 // Application is the new application, not yet stored: no id nor timestamps.
 func (n NewApplication) Application() Application {
-	return Application{Company: n.Company, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt}
+	return Application{Company: n.Company, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt, InterviewAt: n.InterviewAt, ContactName: n.ContactName, ContactEmail: n.ContactEmail}
 }
 
 // Changes are the fields an update sets; a field left out keeps its value.
@@ -207,6 +231,10 @@ type Changes struct {
 	Rating       *int    `json:"rating,omitempty" binding:"optional"`
 	Comment      *string `json:"comment,omitempty" binding:"optional"`
 	AppliedAt    *string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+	// InterviewAt, ContactName and ContactEmail are cleared by "".
+	InterviewAt  *string `json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
+	ContactName  *string `json:"contact_name,omitempty" binding:"optional"`
+	ContactEmail *string `json:"contact_email,omitempty" binding:"optional"`
 }
 
 var ErrNoChanges = Invalid("set changes nothing: give at least one field")
@@ -230,6 +258,9 @@ func (c Changes) Apply(a *Application) {
 	set(&a.Rating, c.Rating)
 	set(&a.Comment, c.Comment)
 	set(&a.AppliedAt, c.AppliedAt)
+	set(&a.InterviewAt, c.InterviewAt)
+	set(&a.ContactName, c.ContactName)
+	set(&a.ContactEmail, c.ContactEmail)
 }
 
 func set[T any](field *T, value *T) {

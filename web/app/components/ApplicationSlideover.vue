@@ -56,6 +56,9 @@ const blank = (): State => ({
   rating: 0,
   comment: '',
   applied_at: today(),
+  interview_at: '',
+  contact_name: '',
+  contact_email: '',
 });
 const state = reactive(blank());
 // The street and postal code stay folded until asked for, or filled.

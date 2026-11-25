@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/cyril-fl/callback/cli/services/apiclient"
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -25,7 +26,28 @@ func addTool[In, Out any](server *mcp.Server, readOnly bool, tool *mcp.Tool, han
 	if readOnly && !tool.Annotations.ReadOnlyHint {
 		return
 	}
+	schema, err := jsonschema.For[In](nil)
+	if err != nil {
+		panic(err) // a type the SDK cannot infer: a bug of this package, caught by its tests
+	}
+	dropNull(schema)
+	tool.InputSchema = schema
 	mcp.AddTool(server, tool, handler)
+}
+
+// dropNull makes an optional field (a pointer, a slice) a plain type: an agent leaves it out rather than sending
+// null, and the "null" of each one cost the model bytes at every request.
+func dropNull(schema *jsonschema.Schema) {
+	if schema == nil {
+		return
+	}
+	if len(schema.Types) == 2 && schema.Types[0] == "null" {
+		schema.Type, schema.Types = schema.Types[1], nil
+	}
+	for _, property := range schema.Properties {
+		dropNull(property)
+	}
+	dropNull(schema.Items)
 }
 
 // reads marks a tool that changes nothing, so a client runs it without asking.
@@ -42,11 +64,11 @@ func writes(destructive, idempotent bool) *mcp.ToolAnnotations {
 type listArgs struct {
 	Status         []apiclient.GetApiApplicationsParamsStatus `json:"status,omitempty" jsonschema:"any of these"`
 	Source         *string                                    `json:"source,omitempty" jsonschema:"spontaneous, job_post, recruiter or any name"`
-	Q              *string                                    `json:"q,omitempty" jsonschema:"text in company, address, website, source_detail or comment"`
+	Q              *string                                    `json:"q,omitempty" jsonschema:"text in company, address, website, source_detail, contact or comment"`
 	AppliedBefore  *string                                    `json:"applied_before,omitempty"`
 	AppliedAfter   *string                                    `json:"applied_after,omitempty"`
 	UntouchedSince *string                                    `json:"untouched_since,omitempty" jsonschema:"not updated since this day"`
-	Fields         []string                                   `json:"fields,omitempty" jsonschema:"columns added: location, street, postal_code, country, website, source, source_detail, rating, comment, created_at, updated_at"`
+	Fields         []string                                   `json:"fields,omitempty" jsonschema:"columns added: location, street, postal_code, country, website, source, source_detail, rating, comment, interview_at, contact_name, contact_email, created_at, updated_at"`
 	CountOnly      bool                                       `json:"count_only,omitempty" jsonschema:"the total only"`
 	Sort           *string                                    `json:"sort,omitempty" jsonschema:"applied_at, company, source, status, rating, created_at or updated_at; - first to reverse"`
 	Limit          *int                                       `json:"limit,omitempty" jsonschema:"50 by default, 0 for all"`

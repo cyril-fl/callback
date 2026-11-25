@@ -5,7 +5,7 @@ package cmdmcp
 // readOnly, whose tools cannot write.
 func Instructions(readOnly bool) string {
 	text := "The user's job applications. status: applied, responded, interview, offer, rejected; source: spontaneous (default), job_post with source_detail its URL, recruiter with source_detail their e-mail, or any name the user gives (60 characters at most) with a free source_detail; " +
-		"rating 0 to 5; days look like 2026-01-31, applied_before and applied_after are strict.\n" +
+		"rating 0 to 5; days look like 2026-01-31, applied_before and applied_after are strict; interview_at is a local 2026-01-31T14:30.\n" +
 		"Read as little as possible:\n" +
 		"- Count before reading: application_stats, or list_applications with count_only.\n" +
 		"- Filter on the server (status, source, q, applied_before, applied_after, untouched_since) rather than reading everything.\n" +

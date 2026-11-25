@@ -21,7 +21,7 @@ export interface paths {
                     status?: ("applied" | "responded" | "interview" | "offer" | "rejected")[];
                     /** @description Source: spontaneous, job_post, recruiter or a name given by the user */
                     source?: string;
-                    /** @description Text in company, address, website, source or comment */
+                    /** @description Text in company, address, website, source, contact or comment */
                     q?: string;
                     /** @description applied_at < this day (2026-01-31) */
                     applied_before?: string;
@@ -795,7 +795,7 @@ export interface components {
             dry_run?: boolean;
             /** @description IDs are the applications by id. */
             ids?: string[];
-            /** @description Q is text found in the company, the address, website, source_detail or comment, case-insensitive. */
+            /** @description Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive. */
             q?: string;
             /** @example job_post */
             source?: string;
@@ -814,9 +814,16 @@ export interface components {
             applied_at?: string;
             comment?: string;
             company?: string;
+            contact_email?: string;
+            contact_name?: string;
             country?: string;
             created_at?: string;
             id: string;
+            /**
+             * @description InterviewAt is the next interview's local date and time.
+             * @example 2026-01-31T14:30
+             */
+            interview_at?: string;
             /** @description Location is the city; Street, PostalCode and Country complete the address when known. */
             location?: string;
             postal_code?: string;
@@ -849,7 +856,14 @@ export interface components {
             applied_at?: string;
             comment?: string;
             company?: string;
+            contact_email?: string;
+            contact_name?: string;
             country?: string;
+            /**
+             * @description InterviewAt, ContactName and ContactEmail are cleared by "".
+             * @example 2026-01-31T14:30
+             */
+            interview_at?: string;
             location?: string;
             postal_code?: string;
             rating?: number;
@@ -865,7 +879,11 @@ export interface components {
             applied_at?: string;
             comment?: string;
             company: string;
+            contact_email?: string;
+            contact_name?: string;
             country?: string;
+            /** @example 2026-01-31T14:30 */
+            interview_at?: string;
             location: string;
             postal_code?: string;
             rating?: number;
@@ -946,7 +964,7 @@ export interface components {
             applied_before?: string;
             /** @description IDs are the applications by id. */
             ids?: string[];
-            /** @description Q is text found in the company, the address, website, source_detail or comment, case-insensitive. */
+            /** @description Q is text found in the company, the address, website, source_detail, contact or comment, case-insensitive. */
             q?: string;
             set: components["schemas"]["domain.Changes"];
             /** @example job_post */

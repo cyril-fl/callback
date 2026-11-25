@@ -26,7 +26,7 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 		if text := strings.TrimSpace(filter.Q); text != "" {
 			like := "%" + likeEscaper.Replace(text) + "%"
 			q = q.WhereGroup(" AND ", func(q bun.QueryBuilder) bun.QueryBuilder {
-				for _, column := range []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "comment"} {
+				for _, column := range []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "contact_name", "contact_email", "comment"} {
 					q = q.WhereOr("a.? LIKE ? ESCAPE '\\'", bun.Ident(column), like)
 				}
 				return q
