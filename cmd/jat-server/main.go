@@ -4,11 +4,14 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/cyril-fl/jat/config"
 	cmdadmin "github.com/cyril-fl/jat/core/server/cmd-admin"
 	cmdserve "github.com/cyril-fl/jat/core/server/cmd-serve"
+	"github.com/cyril-fl/jat/core/server/mcphttp"
+	"github.com/cyril-fl/jat/core/server/oauth"
 	"github.com/cyril-fl/jat/core/services/process/createschema"
 	"github.com/cyril-fl/jat/core/services/sqlite"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
@@ -86,6 +89,12 @@ var cmdBackup = &cobra.Command{
 }
 
 func init() {
+	// The MCP over HTTP and its OAuth share the --mcp-addr listener; the tools call the API in process.
+	cmdserve.MCP = func(mux *http.ServeMux, db bun.IDB, api http.Handler, version string) {
+		mux.Handle("/mcp", mcphttp.Handler(api, version))
+		oauth.Routes(mux, db)
+	}
+
 	dbPath := os.Getenv(config.Env("DB"))
 	if dbPath == "" {
 		dbPath = "jat.db"
