@@ -330,6 +330,13 @@ type DomainPreferencesPlan string
 // DomainStatus defines model for domain.Status.
 type DomainStatus string
 
+// DomainStatusChange defines model for domain.StatusChange.
+type DomainStatusChange struct {
+	ApplicationId string       `json:"application_id"`
+	At            string       `json:"at"`
+	Status        DomainStatus `json:"status"`
+}
+
 // DomainToken defines model for domain.Token.
 type DomainToken struct {
 	CreatedAt string `json:"created_at"`
@@ -649,6 +656,11 @@ type ClientInterface interface {
 	// Corresponds with GET /api/stats (the `GetApiStats` operationId).
 	GetApiStats(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiStatusChanges List the status history
+	//
+	// Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
+	GetApiStatusChanges(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetApiTokens List the tokens
 	//
 	// Corresponds with GET /api/tokens (the `GetApiTokens` operationId).
@@ -924,6 +936,21 @@ func (c *Client) GetApiSources(ctx context.Context, reqEditors ...RequestEditorF
 // Corresponds with GET /api/stats (the `GetApiStats` operationId).
 func (c *Client) GetApiStats(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiStatsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetApiStatusChanges List the status history
+//
+// Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
+func (c *Client) GetApiStatusChanges(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiStatusChangesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -1531,6 +1558,33 @@ func NewGetApiStatsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetApiStatusChangesRequest constructs an http.Request for the GetApiStatusChanges method
+func NewGetApiStatusChangesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/status-changes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetApiTokensRequest constructs an http.Request for the GetApiTokens method
 func NewGetApiTokensRequest(server string) (*http.Request, error) {
 	var err error
@@ -1787,6 +1841,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/stats (the `GetApiStats` operationId).
 	GetApiStatsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStatsResponse, error)
+
+	// GetApiStatusChangesWithResponse List the status history
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
+	GetApiStatusChangesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStatusChangesResponse, error)
 
 	// GetApiTokensWithResponse List the tokens
 	//
@@ -2422,6 +2483,54 @@ func (r GetApiStatsResponse) ContentType() string {
 	return ""
 }
 
+type GetApiStatusChangesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]DomainStatusChange
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetApiStatusChangesResponse) GetJSON200() *[]DomainStatusChange {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetApiStatusChangesResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetApiStatusChangesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiStatusChangesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiStatusChangesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetApiStatusChangesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetApiTokensResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -2800,6 +2909,19 @@ func (c *ClientWithResponses) GetApiStatsWithResponse(ctx context.Context, reqEd
 		return nil, err
 	}
 	return ParseGetApiStatsResponse(rsp)
+}
+
+// GetApiStatusChangesWithResponse List the status history
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/status-changes (the `GetApiStatusChanges` operationId).
+func (c *ClientWithResponses) GetApiStatusChangesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStatusChangesResponse, error) {
+	rsp, err := c.GetApiStatusChanges(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiStatusChangesResponse(rsp)
 }
 
 // GetApiTokensWithResponse List the tokens
@@ -3286,6 +3408,39 @@ func ParseGetApiStatsResponse(rsp *http.Response) (*GetApiStatsResponse, error) 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest ReadstatsStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiStatusChangesResponse parses an HTTP response from a GetApiStatusChangesWithResponse call
+func ParseGetApiStatusChangesResponse(rsp *http.Response) (*GetApiStatusChangesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiStatusChangesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []DomainStatusChange
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

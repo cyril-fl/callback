@@ -121,6 +121,7 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 		fail(id, domain.NotFound("application not found"))
 	}
 	for _, application := range applications {
+		before := application.Status
 		op.Set.Apply(&application)
 		application.Normalize()
 		if err := application.Validate(); err != nil {
@@ -130,6 +131,12 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 		application.UpdatedAt = now
 		if _, err := tx.NewUpdate().Model(&application).WherePK().ExcludeColumn("id", "created_at").Exec(ctx); err != nil {
 			return err
+		}
+		if application.Status != before {
+			change := domain.StatusChange{ApplicationID: application.ID, Status: application.Status, At: now}
+			if _, err := tx.NewInsert().Model(&change).Exec(ctx); err != nil {
+				return err
+			}
 		}
 		p.cache.result.IDs = append(p.cache.result.IDs, application.ID)
 	}

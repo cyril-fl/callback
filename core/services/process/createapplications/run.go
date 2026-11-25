@@ -79,6 +79,15 @@ func (p *run) saveApplications() {
 	if p.HasErr() || len(p.cache.valid) == 0 {
 		return
 	}
-	_, err := p.db.NewInsert().Model(&p.cache.valid).Exec(p.ctx)
-	p.SetErr(err)
+	changes := make([]domain.StatusChange, 0, len(p.cache.valid))
+	for _, application := range p.cache.valid {
+		changes = append(changes, domain.StatusChange{ApplicationID: application.ID, Status: application.Status, At: application.CreatedAt})
+	}
+	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		if _, err := tx.NewInsert().Model(&p.cache.valid).Exec(ctx); err != nil {
+			return err
+		}
+		_, err := tx.NewInsert().Model(&changes).Exec(ctx)
+		return err
+	}))
 }

@@ -586,6 +586,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/status-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the status history */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["domain.StatusChange"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["respond.Failure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tokens": {
         parameters: {
             query?: never;
@@ -912,6 +957,11 @@ export interface components {
         };
         /** @enum {string} */
         "domain.Status": "applied" | "responded" | "interview" | "offer" | "rejected";
+        "domain.StatusChange": {
+            application_id: string;
+            at: string;
+            status: components["schemas"]["domain.Status"];
+        };
         "domain.Token": {
             created_at: string;
             /** @description no limit when absent */
