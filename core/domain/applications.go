@@ -1,0 +1,209 @@
+// Package domain holds the models: their bun tags are the schema, their json tags the API's JSON and the web app's types.
+package domain
+
+import (
+	"net/mail"
+	"net/url"
+	"slices"
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/uptrace/bun"
+)
+
+// Source is how the application started.
+type Source string
+
+const (
+	SourceSpontaneous Source = "spontaneous"
+	SourceJobPost     Source = "job_post"
+	SourceRecruiter   Source = "recruiter"
+)
+
+var Sources = []Source{SourceSpontaneous, SourceJobPost, SourceRecruiter}
+
+// Status is where the application stands in the pipeline.
+type Status string
+
+const (
+	StatusApplied   Status = "applied"
+	StatusResponded Status = "responded"
+	StatusInterview Status = "interview"
+	StatusOffer     Status = "offer"
+	StatusRejected  Status = "rejected"
+)
+
+var Statuses = []Status{StatusApplied, StatusResponded, StatusInterview, StatusOffer, StatusRejected}
+
+// DateLayout is the layout of applied_at and of the date filters.
+const DateLayout = time.DateOnly
+
+// Limits of the free text, in runes.
+const (
+	MaxShort   = 200
+	MaxComment = 10000
+)
+
+var (
+	ErrNoCompany      = Invalid("company is required")
+	ErrNoLocation     = Invalid("location is required")
+	ErrLong           = Invalid("company, location, website and source_detail have at most 200 characters, comment 10000")
+	ErrInvalidWebsite = Invalid("website must be an http(s) URL")
+	ErrInvalidSource  = Invalid("source must be one of spontaneous, job_post, recruiter")
+	ErrInvalidDetail  = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous")
+	ErrInvalidStatus  = Invalid("status must be one of applied, responded, interview, offer, rejected")
+	ErrInvalidRating  = Invalid("rating must be between 0 and 5")
+	ErrInvalidDate    = Invalid("dates must look like 2026-01-31")
+)
+
+// Application is a job application. Text is stored raw: the web app escapes it when it shows it.
+// Every field but id may be left out of a response that asks for some fields only (?fields=).
+// The columns have no SQL default: a batch insert leaves out a defaulted column when its first row has the zero value.
+type Application struct {
+	bun.BaseModel `bun:"table:applications,alias:a" json:"-"`
+
+	ID           string    `bun:",pk" json:"id"`
+	Company      string    `bun:",notnull" json:"company,omitempty" binding:"optional"`
+	Location     string    `bun:",notnull" json:"location,omitempty" binding:"optional"`
+	Website      string    `bun:",notnull" json:"website,omitempty" binding:"optional"`
+	Source       Source    `bun:",notnull" json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
+	SourceDetail string    `bun:",notnull" json:"source_detail,omitempty" binding:"optional"`
+	Status       Status    `bun:",notnull" json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Rating       int       `bun:",notnull" json:"rating,omitempty" binding:"optional"`
+	Comment      string    `bun:",notnull" json:"comment,omitempty" binding:"optional"`
+	AppliedAt    string    `bun:",notnull" json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+	CreatedAt    time.Time `bun:",notnull" json:"created_at,omitzero" binding:"optional"`
+	UpdatedAt    time.Time `bun:",notnull" json:"updated_at,omitzero" binding:"optional"`
+	// Truncated tells that comment was cut at max_chars.
+	Truncated bool `bun:"-" json:"truncated,omitempty" binding:"optional"`
+}
+
+// Columns are the columns ?fields= may ask for.
+var Columns = []string{"id", "company", "location", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "created_at", "updated_at"}
+
+// Normalize trims the text and fills the defaults: status applied, applied today.
+func (a *Application) Normalize() {
+	a.Company = strings.TrimSpace(a.Company)
+	a.Location = strings.TrimSpace(a.Location)
+	a.Website = strings.TrimSpace(a.Website)
+	a.SourceDetail = strings.TrimSpace(a.SourceDetail)
+	if a.Source == "" {
+		a.Source = SourceSpontaneous
+	}
+	if a.Status == "" {
+		a.Status = StatusApplied
+	}
+	if a.AppliedAt == "" {
+		a.AppliedAt = time.Now().UTC().Format(DateLayout)
+	}
+}
+
+// Validate checks an application as it will be stored.
+func (a *Application) Validate() error {
+	switch {
+	case a.Company == "":
+		return ErrNoCompany
+	case a.Location == "":
+		return ErrNoLocation
+	case runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.Comment) > MaxComment:
+		return ErrLong
+	case a.Website != "" && !isURL(a.Website):
+		return ErrInvalidWebsite
+	case !slices.Contains(Sources, a.Source):
+		return ErrInvalidSource
+	case !validDetail(a.Source, a.SourceDetail):
+		return ErrInvalidDetail
+	case !slices.Contains(Statuses, a.Status):
+		return ErrInvalidStatus
+	case a.Rating < 0 || a.Rating > 5:
+		return ErrInvalidRating
+	case !IsDate(a.AppliedAt):
+		return ErrInvalidDate
+	}
+	return nil
+}
+
+// IsDate tells a date of DateLayout.
+func IsDate(value string) bool {
+	_, err := time.Parse(DateLayout, value)
+	return err == nil
+}
+
+func validDetail(source Source, detail string) bool {
+	switch source {
+	case SourceJobPost:
+		return isURL(detail)
+	case SourceRecruiter:
+		address, err := mail.ParseAddress(detail)
+		return err == nil && address.Address == detail
+	default:
+		return detail == ""
+	}
+}
+
+func isURL(value string) bool {
+	parsed, err := url.Parse(value)
+	return err == nil && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
+}
+
+func runes(value string) int {
+	return utf8.RuneCountInString(value)
+}
+
+// NewApplication is an application to create: what is left out gets its default (Normalize).
+type NewApplication struct {
+	Company      string `json:"company"`
+	Location     string `json:"location"`
+	Website      string `json:"website,omitempty" binding:"optional"`
+	Source       Source `json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
+	SourceDetail string `json:"source_detail,omitempty" binding:"optional"`
+	Status       Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Rating       int    `json:"rating,omitempty" binding:"optional"`
+	Comment      string `json:"comment,omitempty" binding:"optional"`
+	AppliedAt    string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+}
+
+// Application is the new application, not yet stored: no id nor timestamps.
+func (n NewApplication) Application() Application {
+	return Application{Company: n.Company, Location: n.Location, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt}
+}
+
+// Changes are the fields an update sets; a field left out keeps its value.
+type Changes struct {
+	Company      *string `json:"company,omitempty" binding:"optional"`
+	Location     *string `json:"location,omitempty" binding:"optional"`
+	Website      *string `json:"website,omitempty" binding:"optional"`
+	Source       *Source `json:"source,omitempty" binding:"optional" enums:"spontaneous,job_post,recruiter"`
+	SourceDetail *string `json:"source_detail,omitempty" binding:"optional"`
+	Status       *Status `json:"status,omitempty" binding:"optional" enums:"applied,responded,interview,offer,rejected"`
+	Rating       *int    `json:"rating,omitempty" binding:"optional"`
+	Comment      *string `json:"comment,omitempty" binding:"optional"`
+	AppliedAt    *string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+}
+
+var ErrNoChanges = Invalid("set changes nothing: give at least one field")
+
+// Empty tells changes that set nothing.
+func (c Changes) Empty() bool {
+	return c == Changes{}
+}
+
+// Apply writes the changes into a.
+func (c Changes) Apply(a *Application) {
+	set(&a.Company, c.Company)
+	set(&a.Location, c.Location)
+	set(&a.Website, c.Website)
+	set(&a.Source, c.Source)
+	set(&a.SourceDetail, c.SourceDetail)
+	set(&a.Status, c.Status)
+	set(&a.Rating, c.Rating)
+	set(&a.Comment, c.Comment)
+	set(&a.AppliedAt, c.AppliedAt)
+}
+
+func set[T any](field *T, value *T) {
+	if value != nil {
+		*field = *value
+	}
+}
