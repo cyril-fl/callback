@@ -22,8 +22,8 @@ jobs:
           make openapi
           git diff --exit-code docs cli/services/apiclient
       # The CLI stays off the server: no database layer, no core.
-      - name: jat links no server code
-        run: "! go list -deps ./cmd/jat | grep -E 'github.com/uptrace/bun|github.com/cyril-fl/jat/core'"
+      - name: callback links no server code
+        run: "! go list -deps ./cmd/callback | grep -E 'github.com/uptrace/bun|github.com/cyril-fl/callback/core'"
 
   web:
     runs-on: ubuntu-latest
@@ -52,13 +52,13 @@ jobs:
         with:
           context: .
           load: true
-          tags: jat:ci
+          tags: callback:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
       # Not secrets: a throwaway base.
       - name: Start the image
         run: |
-          printf 'JAT_IMAGE=jat:ci\nJAT_PASSWORD=password-of-the-ci\nJAT_ORIGIN=http://localhost:8080\n' > .env
+          printf 'CALLBACK_IMAGE=callback:ci\nCALLBACK_PASSWORD=password-of-the-ci\nCALLBACK_ORIGIN=http://localhost:8080\n' > .env
           docker compose -f compose.prod.yaml up -d
       # 401 on /api/me: the API answers, not the web app's fallback page.
       - name: The web app and the API answer
@@ -66,4 +66,4 @@ jobs:
           curl -fs --retry 20 --retry-delay 1 --retry-all-errors -o /dev/null http://localhost:8080/
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/me)" = 401
       - if: failure()
-        run: docker compose -f compose.prod.yaml logs jat
+        run: docker compose -f compose.prod.yaml logs callback

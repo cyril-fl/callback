@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/cyril-fl/jat/cli/services/apiclient"
+	"github.com/cyril-fl/callback/cli/services/apiclient"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

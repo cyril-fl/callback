@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/api/services/auth"
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/testserver"
+	"github.com/cyril-fl/callback/core/api/services/auth"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/testserver"
 )
 
 // A client from its discovery to a refresh: metadata, registration, the consent page and the token endpoint, as
@@ -76,7 +76,7 @@ func TestFlow(t *testing.T) {
 		json.NewDecoder(response.Body).Decode(&registered)
 		return response.StatusCode, registered.ClientID
 	}
-	for _, uri := range []string{"http://evil.example/cb", "https://x.example/cb#frag", "javascript:alert(1)", "jat://cb", "https://user@x.example/cb"} {
+	for _, uri := range []string{"http://evil.example/cb", "https://x.example/cb#frag", "javascript:alert(1)", "callback://cb", "https://user@x.example/cb"} {
 		if status, _ := registerClient(`{"client_name":"x","redirect_uris":["` + uri + `"]}`); status != http.StatusBadRequest {
 			t.Errorf("register %s: %d, want 400", uri, status)
 		}

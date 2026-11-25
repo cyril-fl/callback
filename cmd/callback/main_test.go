@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cyril-fl/jat/cli/services/apiclient"
-	"github.com/cyril-fl/jat/cli/services/apiclient/apitest"
-	"github.com/cyril-fl/jat/config"
-	"github.com/cyril-fl/jat/core/services/testserver"
+	"github.com/cyril-fl/callback/cli/services/apiclient"
+	"github.com/cyril-fl/callback/cli/services/apiclient/apitest"
+	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/services/testserver"
 )
 
-// run runs jat with args and returns its stdout.
+// run runs callback with args and returns its stdout.
 func run(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	return apitest.Stdout(t, func() error {
@@ -27,7 +27,7 @@ func must(t *testing.T, args ...string) string {
 	t.Helper()
 	out, err := run(t, args...)
 	if err != nil {
-		t.Fatalf("jat %s: %v", strings.Join(args, " "), err)
+		t.Fatalf("callback %s: %v", strings.Join(args, " "), err)
 	}
 	return out
 }
@@ -90,7 +90,7 @@ func TestAccount(t *testing.T) {
 		t.Errorf("whoami = %q", out)
 	}
 	token := strings.TrimSpace(must(t, "token", "add", "reader", "--read-only"))
-	if !strings.HasPrefix(token, "jat_") {
+	if !strings.HasPrefix(token, "callback_") {
 		t.Errorf("token add = %q", token)
 	}
 	if out := must(t, "token", "ls"); !strings.Contains(out, "reader") {

@@ -4,8 +4,8 @@ package editapplications
 import (
 	"net/http"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
-	"github.com/cyril-fl/jat/core/services/process/updateapplications"
+	"github.com/cyril-fl/callback/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/services/process/updateapplications"
 	"github.com/uptrace/bun"
 )
 

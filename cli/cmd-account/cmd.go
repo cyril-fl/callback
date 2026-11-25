@@ -1,4 +1,4 @@
-// Package cmdaccount is the session and the tokens: jat login, logout, whoami and token.
+// Package cmdaccount is the session and the tokens: callback login, logout, whoami and token.
 package cmdaccount
 
 import (
@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cyril-fl/jat/cli/services/apiclient"
-	"github.com/cyril-fl/jat/cli/services/output"
-	"github.com/cyril-fl/jat/config"
+	"github.com/cyril-fl/callback/cli/services/apiclient"
+	"github.com/cyril-fl/callback/cli/services/output"
+	"github.com/cyril-fl/callback/config"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -41,7 +41,7 @@ func Login(cobra *cobra.Command, args []string) error {
 	return nil
 }
 
-// readPassword takes JAT_PASSWORD, else asks it on the terminal without echo.
+// readPassword takes CALLBACK_PASSWORD, else asks it on the terminal without echo.
 func readPassword() (string, error) {
 	if password := os.Getenv(config.Env("PASSWORD")); password != "" {
 		return password, nil
@@ -55,7 +55,7 @@ func readPassword() (string, error) {
 	return string(password), err
 }
 
-// Logout ends the session on the server and removes the session file; a JAT_SESSION token is left alone on disk, it
+// Logout ends the session on the server and removes the session file; a CALLBACK_SESSION token is left alone on disk, it
 // was never there.
 func Logout(cobra *cobra.Command, _ []string) error {
 	client, err := apiclient.Read().Client()
@@ -111,7 +111,7 @@ func Whoami(cobra *cobra.Command, _ []string) error {
 	return nil
 }
 
-// TokenAdd creates an API token and prints it, alone on stdout for TOKEN=$(jat token add name).
+// TokenAdd creates an API token and prints it, alone on stdout for TOKEN=$(callback token add name).
 func TokenAdd(cobra *cobra.Command, args []string) error {
 	client, err := apiclient.Read().Client()
 	if err != nil {

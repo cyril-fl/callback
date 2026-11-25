@@ -1,5 +1,5 @@
-// jat-server is the only binary on the base: the API, the web app, the MCP over HTTP, and the admin's commands.
-// The CLI, jat, is a client of its API.
+// callback-server is the only binary on the base: the API, the web app, the MCP over HTTP, and the admin's commands.
+// The CLI, callback, is a client of its API.
 package main
 
 import (
@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cyril-fl/jat/config"
-	cmdadmin "github.com/cyril-fl/jat/core/server/cmd-admin"
-	cmdserve "github.com/cyril-fl/jat/core/server/cmd-serve"
-	"github.com/cyril-fl/jat/core/server/mcphttp"
-	"github.com/cyril-fl/jat/core/server/oauth"
-	"github.com/cyril-fl/jat/core/services/process/createschema"
-	"github.com/cyril-fl/jat/core/services/sqlite"
+	"github.com/cyril-fl/callback/config"
+	cmdadmin "github.com/cyril-fl/callback/core/server/cmd-admin"
+	cmdserve "github.com/cyril-fl/callback/core/server/cmd-serve"
+	"github.com/cyril-fl/callback/core/server/mcphttp"
+	"github.com/cyril-fl/callback/core/server/oauth"
+	"github.com/cyril-fl/callback/core/services/process/createschema"
+	"github.com/cyril-fl/callback/core/services/sqlite"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun"
@@ -97,7 +97,7 @@ func init() {
 
 	dbPath := os.Getenv(config.Env("DB"))
 	if dbPath == "" {
-		dbPath = "jat.db"
+		dbPath = "callback.db"
 	}
 	cmdRoot.PersistentFlags().String("db", dbPath, "SQLite file of the base, created when missing ("+config.Env("DB")+")")
 	plumcliutilsargs.Makeflags(cmdServe, cmd.Serve.Flags)

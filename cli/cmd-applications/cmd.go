@@ -1,4 +1,4 @@
-// Package cmdapplications is the commands on the applications: jat add, ls, show, edit, rm and stats. Each one is a
+// Package cmdapplications is the commands on the applications: callback add, ls, show, edit, rm and stats. Each one is a
 // single request to the API, so a batch is one transaction.
 package cmdapplications
 
@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cyril-fl/jat/cli/services/apiclient"
-	"github.com/cyril-fl/jat/cli/services/output"
+	"github.com/cyril-fl/callback/cli/services/apiclient"
+	"github.com/cyril-fl/callback/cli/services/output"
 	"github.com/spf13/cobra"
 )
 

@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/api"
-	"github.com/cyril-fl/jat/core/services/process/createapitoken"
-	"github.com/cyril-fl/jat/core/services/process/createsession"
-	"github.com/cyril-fl/jat/core/services/process/setpassword"
-	"github.com/cyril-fl/jat/core/services/testdb"
+	"github.com/cyril-fl/callback/core/api"
+	"github.com/cyril-fl/callback/core/services/process/createapitoken"
+	"github.com/cyril-fl/callback/core/services/process/createsession"
+	"github.com/cyril-fl/callback/core/services/process/setpassword"
+	"github.com/cyril-fl/callback/core/services/testdb"
 	"github.com/uptrace/bun"
 )
 

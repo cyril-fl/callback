@@ -7,15 +7,15 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/password"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/password"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
 
 // Prefix starts every API token: a leaked one is recognizable.
-const Prefix = "jat_"
+const Prefix = "callback_"
 
 // Lifetimes are the durations a token can be given; 0 is no limit.
 var Lifetimes = map[string]time.Duration{

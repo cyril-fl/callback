@@ -1,4 +1,4 @@
-// Package cmdserve is jat-server serve: the API, the web app next to it, and the MCP over HTTP on its own address.
+// Package cmdserve is callback-server serve: the API, the web app next to it, and the MCP over HTTP on its own address.
 package cmdserve
 
 import (
@@ -14,9 +14,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cyril-fl/jat/core/api"
-	"github.com/cyril-fl/jat/core/api/services/guard"
-	"github.com/cyril-fl/jat/core/services/process/purgetokens"
+	"github.com/cyril-fl/callback/core/api"
+	"github.com/cyril-fl/callback/core/api/services/guard"
+	"github.com/cyril-fl/callback/core/services/process/purgetokens"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun"
 )

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cyril-fl/jat/config"
-	"github.com/cyril-fl/jat/core/api/services/respond"
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/process/readtoken"
+	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/readtoken"
 	"github.com/uptrace/bun"
 )
 
@@ -18,7 +18,7 @@ import (
 var Cookie = config.Current.Name + "_session"
 
 // ReadOnlyHeader is set to "true" on the answers to a read-only token: the MCP over HTTP leaves out its writing tools.
-const ReadOnlyHeader = "Jat-Read-Only"
+const ReadOnlyHeader = "Callback-Read-Only"
 
 // public routes answer without a token.
 var public = map[string]bool{"POST /api/login": true}

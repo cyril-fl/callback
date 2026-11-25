@@ -5,8 +5,8 @@ package cmdmcp
 import (
 	"context"
 
-	"github.com/cyril-fl/jat/cli/services/apiclient"
-	"github.com/cyril-fl/jat/config"
+	"github.com/cyril-fl/callback/cli/services/apiclient"
+	"github.com/cyril-fl/callback/config"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ func Serve(cobra *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	// A read-only token in JAT_SESSION gets the reading tools only, as over HTTP.
+	// A read-only token in CALLBACK_SESSION gets the reading tools only, as over HTTP.
 	me, err := apiclient.Decode[apiclient.LoginMeResult](client.GetApiMe(cobra.Context()))
 	if err != nil {
 		return err

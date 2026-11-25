@@ -5,8 +5,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/services/process/createschema"
-	"github.com/cyril-fl/jat/core/services/sqlite"
+	"github.com/cyril-fl/callback/core/services/process/createschema"
+	"github.com/cyril-fl/callback/core/services/sqlite"
 	"github.com/uptrace/bun"
 )
 

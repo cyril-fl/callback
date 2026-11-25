@@ -4,10 +4,10 @@ package tokens
 import (
 	"net/http"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
-	"github.com/cyril-fl/jat/core/services/process/createapitoken"
-	"github.com/cyril-fl/jat/core/services/process/deletetoken"
-	"github.com/cyril-fl/jat/core/services/process/listtokens"
+	"github.com/cyril-fl/callback/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/services/process/createapitoken"
+	"github.com/cyril-fl/callback/core/services/process/deletetoken"
+	"github.com/cyril-fl/callback/core/services/process/listtokens"
 	"github.com/uptrace/bun"
 )
 

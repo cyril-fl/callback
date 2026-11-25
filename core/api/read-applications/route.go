@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/process/listapplications"
+	"github.com/cyril-fl/callback/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/listapplications"
 	"github.com/uptrace/bun"
 )
 

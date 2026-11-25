@@ -6,8 +6,8 @@ import (
 	"context"
 	"unicode/utf8"
 
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/password"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/password"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )

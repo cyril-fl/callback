@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/api/services/respond"
 )
 
 const web = "http://localhost:3001"

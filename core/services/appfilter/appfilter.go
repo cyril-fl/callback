@@ -5,7 +5,7 @@ package appfilter
 import (
 	"strings"
 
-	"github.com/cyril-fl/jat/core/domain"
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/uptrace/bun"
 )
 

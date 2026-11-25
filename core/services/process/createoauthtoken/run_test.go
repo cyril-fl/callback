@@ -9,16 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/process/createoauthcode"
-	"github.com/cyril-fl/jat/core/services/process/createoauthtoken"
-	"github.com/cyril-fl/jat/core/services/process/createsession"
-	"github.com/cyril-fl/jat/core/services/process/deletetoken"
-	"github.com/cyril-fl/jat/core/services/process/listtokens"
-	"github.com/cyril-fl/jat/core/services/process/readtoken"
-	"github.com/cyril-fl/jat/core/services/process/refreshoauthtoken"
-	"github.com/cyril-fl/jat/core/services/process/setpassword"
-	"github.com/cyril-fl/jat/core/services/testdb"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/createoauthcode"
+	"github.com/cyril-fl/callback/core/services/process/createoauthtoken"
+	"github.com/cyril-fl/callback/core/services/process/createsession"
+	"github.com/cyril-fl/callback/core/services/process/deletetoken"
+	"github.com/cyril-fl/callback/core/services/process/listtokens"
+	"github.com/cyril-fl/callback/core/services/process/readtoken"
+	"github.com/cyril-fl/callback/core/services/process/refreshoauthtoken"
+	"github.com/cyril-fl/callback/core/services/process/setpassword"
+	"github.com/cyril-fl/callback/core/services/testdb"
 	"github.com/uptrace/bun"
 )
 
@@ -95,8 +95,8 @@ func TestOAuthConnection(t *testing.T) {
 		t.Fatalf("exchange: %v", process.GetErr())
 	}
 	tokens := process.GetResult()
-	if !strings.HasPrefix(tokens.AccessToken, "jat_") || tokens.RefreshToken == "" || tokens.ExpiresIn != 3600 || tokens.TokenType != "Bearer" {
-		t.Errorf("tokens = %+v, want a jat_ access token of an hour and a refresh token", tokens)
+	if !strings.HasPrefix(tokens.AccessToken, "callback_") || tokens.RefreshToken == "" || tokens.ExpiresIn != 3600 || tokens.TokenType != "Bearer" {
+		t.Errorf("tokens = %+v, want a callback_ access token of an hour and a refresh token", tokens)
 	}
 	again := createoauthtoken.Process(ctx, db, exchange)
 	again.Run()

@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cyril-fl/jat/config"
-	"github.com/cyril-fl/jat/core/services/testserver"
+	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/services/testserver"
 )
 
-// Serve starts the API on a base of its own and points JAT_URL and JAT_SESSION at it, logged in.
+// Serve starts the API on a base of its own and points CALLBACK_URL and CALLBACK_SESSION at it, logged in.
 func Serve(t *testing.T) *testserver.Server {
 	t.Helper()
 	server := testserver.Serve(t)

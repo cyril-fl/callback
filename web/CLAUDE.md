@@ -1,12 +1,12 @@
 # web
 
-Nuxt 4 (`ssr: false`), Nuxt UI 4 (Tailwind 4), `@nuxtjs/i18n` (fr only), VueUse, zod; the Go API on `runtimeConfig.public.apiBase` (`http://localhost:8080` in dev, same origin once generated and served by `jat-server serve --web`).
+Nuxt 4 (`ssr: false`), Nuxt UI 4 (Tailwind 4), `@nuxtjs/i18n` (fr only), VueUse, zod; the Go API on `runtimeConfig.public.apiBase` (`http://localhost:8080` in dev, same origin once generated and served by `callback-server serve --web`).
 
 ## Commands
 
 `bun run dev`, `bun run generate`, `bun run typecheck`, `bun run lint` (ESLint, `@nuxt/eslint`), `bun run format` (Prettier), `bun run types` (API types from `../docs/swagger.yaml` into `app/types/api.d.ts`, committed).
 
-Dev API: `JAT_PASSWORD=... go run ./cmd/jat-server serve --db <file> --origin http://localhost:3000`.
+Dev API: `CALLBACK_PASSWORD=... go run ./cmd/callback-server serve --db <file> --origin http://localhost:3000`.
 
 ## Rules
 

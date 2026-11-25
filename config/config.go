@@ -89,12 +89,12 @@ func load() (*config, error) {
 	return current, nil
 }
 
-// Env is the name of the app's environment variable key: JAT_<key>.
+// Env is the name of the app's environment variable key: CALLBACK_<key>.
 func Env(key string) string {
 	return strings.ToUpper(Current.Name) + "_" + key
 }
 
-// Dir is the user's folder of the app, ~/.config/jat: its session and its .env.
+// Dir is the user's folder of the app, ~/.config/callback: its session and its .env.
 func Dir() (string, error) {
 	home, err := os.UserHomeDir()
 	return filepath.Join(home, ".config", Current.Name), err

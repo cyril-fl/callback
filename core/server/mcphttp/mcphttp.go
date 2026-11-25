@@ -1,4 +1,4 @@
-// Package mcphttp serves the MCP tools of jat mcp over streamable HTTP, for an agent that cannot run jat where it
+// Package mcphttp serves the MCP tools of callback mcp over streamable HTTP, for an agent that cannot run callback where it
 // runs (the Claude app calls from Anthropic's cloud).
 package mcphttp
 
@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	cmdmcp "github.com/cyril-fl/jat/cli/cmd-mcp"
-	"github.com/cyril-fl/jat/cli/services/apiclient"
-	"github.com/cyril-fl/jat/core/api/services/auth"
-	"github.com/cyril-fl/jat/core/server/oauth"
+	cmdmcp "github.com/cyril-fl/callback/cli/cmd-mcp"
+	"github.com/cyril-fl/callback/cli/services/apiclient"
+	"github.com/cyril-fl/callback/core/api/services/auth"
+	"github.com/cyril-fl/callback/core/server/oauth"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -38,7 +38,7 @@ func Handler(api http.Handler, version string) http.Handler {
 		ok, readOnly := valid(r.Context(), client)
 		if token == "" || !ok {
 			w.Header().Set("WWW-Authenticate", oauth.Challenge(r))
-			http.Error(w, "an API token is required: Authorization: Bearer jat_…, or sign in with OAuth", http.StatusUnauthorized)
+			http.Error(w, "an API token is required: Authorization: Bearer callback_…, or sign in with OAuth", http.StatusUnauthorized)
 			return
 		}
 		server := cmdmcp.NewServer(client, readOnly, version)

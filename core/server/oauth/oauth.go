@@ -11,10 +11,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/cyril-fl/jat/config"
-	"github.com/cyril-fl/jat/core/services/process/createapitoken"
-	"github.com/cyril-fl/jat/core/services/process/createoauthtoken"
-	"github.com/cyril-fl/jat/core/services/process/refreshoauthtoken"
+	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/services/process/createapitoken"
+	"github.com/cyril-fl/callback/core/services/process/createoauthtoken"
+	"github.com/cyril-fl/callback/core/services/process/refreshoauthtoken"
 	"github.com/uptrace/bun"
 )
 

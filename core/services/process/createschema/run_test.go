@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/services/process/createschema"
-	"github.com/cyril-fl/jat/core/services/testdb"
+	"github.com/cyril-fl/callback/core/services/process/createschema"
+	"github.com/cyril-fl/callback/core/services/testdb"
 )
 
 // The schema runs at every start: a second run on a base that has it changes nothing and fails on nothing.

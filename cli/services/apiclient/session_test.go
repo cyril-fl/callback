@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cyril-fl/jat/config"
+	"github.com/cyril-fl/callback/config"
 )
 
-// TestSession keeps the file readable by the user only, and lets JAT_URL and JAT_SESSION override it one by one.
+// TestSession keeps the file readable by the user only, and lets CALLBACK_URL and CALLBACK_SESSION override it one by one.
 func TestSession(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv(config.Env("URL"), "")
@@ -24,7 +24,7 @@ func TestSession(t *testing.T) {
 	}
 	t.Setenv(config.Env("SESSION"), "env")
 	if got := Read(); got != (Session{URL: "http://saved", Token: "env"}) {
-		t.Errorf("Read with JAT_SESSION = %+v", got)
+		t.Errorf("Read with CALLBACK_SESSION = %+v", got)
 	}
 	if _, err := (Session{URL: "http://x"}).Client(); err != ErrNoSession {
 		t.Errorf("Client without token: %v, want ErrNoSession", err)

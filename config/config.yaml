@@ -1,4 +1,4 @@
-name: "jat"
+name: "callback"
 commands:
   server-root:
     use: "{name}-server"
@@ -57,7 +57,7 @@ commands:
     use: "login <url>"
     short: "Log in to a server"
     long: "Log in to the server at <url> with its password, read from {NAME}_PASSWORD or asked on the terminal. The session is kept in ~/.config/{name}/session.json."
-    example: "{name} login https://jat.example.com"
+    example: "{name} login https://callback.example.com"
   logout:
     use: "logout"
     short: "Log out of the server"
@@ -293,4 +293,4 @@ commands:
     use: "mcp"
     short: "Serve the applications to an agent over MCP, on stdin and stdout"
     long: "Serve the MCP tools on stdin and stdout, acting with the session of `{name} login` or {NAME}_URL and {NAME}_SESSION; a read-only token gets the reading tools only."
-    example: "claude mcp add jat -- {name} mcp"
+    example: "claude mcp add callback -- {name} mcp"

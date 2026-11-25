@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cyril-fl/jat/core/services/testdb"
+	"github.com/cyril-fl/callback/core/services/testdb"
 )
 
 // Four tries pass, the fifth waits 30 s; a forgiven try does not count; a reset or a day forgets them.

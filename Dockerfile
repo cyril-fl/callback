@@ -18,19 +18,19 @@ COPY . .
 # The context has no .git for go build to read the version from.
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
-    -ldflags "-s -w -X github.com/cyril-fl/jat/config.version=$VERSION" -o /jat-server ./cmd/jat-server
+    -ldflags "-s -w -X github.com/cyril-fl/callback/config.version=$VERSION" -o /callback-server ./cmd/callback-server
 # scratch has no mkdir: /data holds the base, /tmp is for SQLite temp files.
 RUN install -d -m 755 /image-data /image-tmp
 
 FROM scratch AS server
-COPY --from=api /jat-server /jat-server
+COPY --from=api /callback-server /callback-server
 COPY --from=api --chown=65534:65534 /image-data /data
 COPY --from=api --chown=65534:65534 /image-tmp /tmp
 USER 65534
 EXPOSE 8080
-ENTRYPOINT ["/jat-server"]
-CMD ["serve", "--db", "/data/jat.db", "--addr", ":8080"]
+ENTRYPOINT ["/callback-server"]
+CMD ["serve", "--db", "/data/callback.db", "--addr", ":8080"]
 
 FROM server
 COPY --from=web /src/.output/public /web
-CMD ["serve", "--db", "/data/jat.db", "--web", "/web", "--addr", ":8080"]
+CMD ["serve", "--db", "/data/callback.db", "--web", "/web", "--addr", ":8080"]

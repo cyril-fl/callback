@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/cyril-fl/jat/core/domain"
+	"github.com/cyril-fl/callback/core/domain"
 )
 
 // maxBody limits a request body: a batch of applications is far below it.

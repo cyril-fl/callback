@@ -1,6 +1,6 @@
 name: Image
 
-# A version tag publishes ghcr.io/cyril-fl/jat:<version> and :latest.
+# A version tag publishes ghcr.io/cyril-fl/callback:<version> and :latest.
 on:
   push:
     tags: ['v*']

@@ -4,7 +4,7 @@
 setup:
 	go tool lefthook install
 
-# The dev stack: the server image built locally, API and web on :8080, MCP on :8081. Needs JAT_PASSWORD in .env.
+# The dev stack: the server image built locally, API and web on :8080, MCP on :8081. Needs CALLBACK_PASSWORD in .env.
 up:
 	VERSION=$$(git describe --tags --always --dirty) docker compose up -d --build
 
@@ -17,7 +17,7 @@ web:
 
 # A consistent copy of the base (VACUUM INTO, safe while serving) in the volume.
 backup:
-	docker compose exec jat /jat-server --db /data/jat.db backup /data/backup-$$(date +%Y%m%d-%H%M%S).db
+	docker compose exec callback /callback-server --db /data/callback.db backup /data/backup-$$(date +%Y%m%d-%H%M%S).db
 
 # After an API change (swag comments): docs/swagger.yaml, then the CLI's client. `bun run types` in web/ next.
 openapi:

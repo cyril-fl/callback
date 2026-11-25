@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
-	"github.com/cyril-fl/jat/core/domain"
+	"github.com/cyril-fl/callback/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/uptrace/bun"
 )
 

@@ -1,14 +1,14 @@
-// jat is the CLI of the job application tracker, a client of the API of jat-server: it never opens the base.
+// callback is the CLI of the job application tracker, a client of the API of callback-server: it never opens the base.
 package main
 
 import (
 	"fmt"
 	"os"
 
-	cmdaccount "github.com/cyril-fl/jat/cli/cmd-account"
-	cmdapplications "github.com/cyril-fl/jat/cli/cmd-applications"
-	cmdmcp "github.com/cyril-fl/jat/cli/cmd-mcp"
-	"github.com/cyril-fl/jat/config"
+	cmdaccount "github.com/cyril-fl/callback/cli/cmd-account"
+	cmdapplications "github.com/cyril-fl/callback/cli/cmd-applications"
+	cmdmcp "github.com/cyril-fl/callback/cli/cmd-mcp"
+	"github.com/cyril-fl/callback/config"
 	plumcliconfig "github.com/cyril-fl/plum/cli/config"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"

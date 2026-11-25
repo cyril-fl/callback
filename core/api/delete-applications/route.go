@@ -4,8 +4,8 @@ package deleteapplications
 import (
 	"net/http"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
-	"github.com/cyril-fl/jat/core/services/process/deleteapplications"
+	"github.com/cyril-fl/callback/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/services/process/deleteapplications"
 	"github.com/uptrace/bun"
 )
 

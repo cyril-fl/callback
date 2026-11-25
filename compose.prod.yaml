@@ -5,25 +5,25 @@
 # (`tailscale serve` in front of 8080). Only /mcp (8081) is opened to the Internet: `tailscale funnel` on the MCP
 # port, or a Cloudflare tunnel to 127.0.0.1:8081.
 services:
-  jat:
-    # The name image.yml publishes, ghcr.io/<the GitHub repository>. JAT_IMAGE overrides it (the CI uses a local tag).
-    image: ${JAT_IMAGE:-ghcr.io/cyril-fl/jat:latest}
-    container_name: jat
+  callback:
+    # The name image.yml publishes, ghcr.io/<the GitHub repository>. CALLBACK_IMAGE overrides it (the CI uses a local tag).
+    image: ${CALLBACK_IMAGE:-ghcr.io/cyril-fl/callback:latest}
+    container_name: callback
     environment:
-      JAT_PASSWORD: ${JAT_PASSWORD:-}
+      CALLBACK_PASSWORD: ${CALLBACK_PASSWORD:-}
     # --origin: the address the browser types, requests from any other page are refused. --published: the address
     # published on the host, so the server knows it sits behind a proxy on loopback.
     command: >-
-      serve --db /data/jat.db --web /web --addr :8080
-      --origin ${JAT_ORIGIN:?set JAT_ORIGIN in .env}
-      --published ${JAT_LISTEN:-127.0.0.1:8080}
-      --mcp-addr :8081 --mcp-published ${JAT_MCP_LISTEN:-127.0.0.1:8081}
+      serve --db /data/callback.db --web /web --addr :8080
+      --origin ${CALLBACK_ORIGIN:?set CALLBACK_ORIGIN in .env}
+      --published ${CALLBACK_LISTEN:-127.0.0.1:8080}
+      --mcp-addr :8081 --mcp-published ${CALLBACK_MCP_LISTEN:-127.0.0.1:8081}
     ports:
-      - "${JAT_LISTEN:-127.0.0.1:8080}:8080"
-      - "${JAT_MCP_LISTEN:-127.0.0.1:8081}:8081"
+      - "${CALLBACK_LISTEN:-127.0.0.1:8080}:8080"
+      - "${CALLBACK_MCP_LISTEN:-127.0.0.1:8081}:8081"
     volumes:
-      - jat-data:/data
+      - callback-data:/data
     restart: unless-stopped
 
 volumes:
-  jat-data:
+  callback-data:

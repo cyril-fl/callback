@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/services/testserver"
+	"github.com/cyril-fl/callback/core/services/testserver"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -51,7 +51,7 @@ func connect(t *testing.T, endpoint, token string) *mcp.ClientSession {
 // TestHandler serves the tools over HTTP for an API token only, 401 with where to sign in otherwise.
 func TestHandler(t *testing.T) {
 	api, endpoint := serve(t)
-	for name, token := range map[string]string{"none": "", "session": api.Session, "unknown": "jat_nope"} {
+	for name, token := range map[string]string{"none": "", "session": api.Session, "unknown": "callback_nope"} {
 		request, _ := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/list"}`))
 		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Accept", "application/json, text/event-stream")

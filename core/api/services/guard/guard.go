@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/cyril-fl/jat/core/api/services/respond"
+	"github.com/cyril-fl/callback/core/api/services/respond"
 )
 
 var ErrInvalidOrigin = errors.New("origin must look like http://localhost:3000, with no path")

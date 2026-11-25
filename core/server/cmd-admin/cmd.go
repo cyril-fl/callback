@@ -1,4 +1,4 @@
-// Package cmdadmin is the admin's commands of jat-server: they run on the base, on the server's machine.
+// Package cmdadmin is the admin's commands of callback-server: they run on the base, on the server's machine.
 package cmdadmin
 
 import (
@@ -8,14 +8,14 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/cyril-fl/jat/config"
-	"github.com/cyril-fl/jat/core/services/process/setpassword"
+	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/services/process/setpassword"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun"
 	"golang.org/x/term"
 )
 
-// EnsurePassword sets the password from JAT_PASSWORD on a base that has none yet: a server put up from a compose
+// EnsurePassword sets the password from CALLBACK_PASSWORD on a base that has none yet: a server put up from a compose
 // file is usable at once. It does nothing once a password is set.
 func EnsurePassword(ctx context.Context, db bun.IDB) error {
 	has, err := setpassword.HasPassword(ctx, db)
@@ -31,7 +31,7 @@ func EnsurePassword(ctx context.Context, db bun.IDB) error {
 	return process.GetErr()
 }
 
-// ResetPassword changes the password: from JAT_PASSWORD, or asked on the terminal.
+// ResetPassword changes the password: from CALLBACK_PASSWORD, or asked on the terminal.
 func ResetPassword(cobra *cobra.Command, db bun.IDB) error {
 	pass := os.Getenv(config.Env("PASSWORD"))
 	if pass == "" {

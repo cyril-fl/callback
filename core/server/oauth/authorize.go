@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cyril-fl/jat/config"
-	"github.com/cyril-fl/jat/core/api/services/throttle"
-	"github.com/cyril-fl/jat/core/services/process/createoauthcode"
-	"github.com/cyril-fl/jat/core/services/process/createsession"
+	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/api/services/throttle"
+	"github.com/cyril-fl/callback/core/services/process/createoauthcode"
+	"github.com/cyril-fl/callback/core/services/process/createsession"
 	"github.com/uptrace/bun"
 )
 

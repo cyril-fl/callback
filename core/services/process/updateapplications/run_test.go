@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/process/updateapplications"
-	"github.com/cyril-fl/jat/core/services/seed"
-	"github.com/cyril-fl/jat/core/services/testdb"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/updateapplications"
+	"github.com/cyril-fl/callback/core/services/seed"
+	"github.com/cyril-fl/callback/core/services/testdb"
 )
 
 func ptr[T any](value T) *T { return &value }

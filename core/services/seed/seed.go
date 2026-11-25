@@ -5,8 +5,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/process/createapplications"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/createapplications"
 	"github.com/uptrace/bun"
 )
 

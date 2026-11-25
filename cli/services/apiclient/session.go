@@ -1,5 +1,5 @@
 // Package apiclient is the CLI's client of the API: client.gen.go is generated from docs/swagger.yaml by make openapi,
-// this file keeps the server and the session of jat login.
+// this file keeps the server and the session of callback login.
 package apiclient
 
 import (
@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cyril-fl/jat/config"
+	"github.com/cyril-fl/callback/config"
 )
 
 var (
@@ -45,7 +45,7 @@ func (doer) Do(req *http.Request) (*http.Response, error) {
 	return response, err
 }
 
-// Session is the server and the session token of jat login, or of JAT_URL and JAT_SESSION.
+// Session is the server and the session token of callback login, or of CALLBACK_URL and CALLBACK_SESSION.
 type Session struct {
 	URL   string `json:"url"`
 	Token string `json:"token"`
@@ -60,7 +60,7 @@ func SessionFile() (string, error) {
 	return filepath.Join(dir, "session.json"), nil
 }
 
-// Read takes JAT_URL and JAT_SESSION first, each on its own, for an agent that cannot run jat login where it runs,
+// Read takes CALLBACK_URL and CALLBACK_SESSION first, each on its own, for an agent that cannot run callback login where it runs,
 // then the file; what is missing stays empty.
 func Read() Session {
 	var session Session

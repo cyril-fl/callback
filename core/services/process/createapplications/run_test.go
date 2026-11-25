@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/process/createapplications"
-	"github.com/cyril-fl/jat/core/services/testdb"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/process/createapplications"
+	"github.com/cyril-fl/callback/core/services/testdb"
 )
 
 // The valid items of a batch are written, the invalid ones listed by index; the defaults fill what is left out.

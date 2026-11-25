@@ -12,7 +12,7 @@ const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
 const defaultSorting = [{ id: 'applied_at', desc: true }];
 const sorting = ref<{ id: string; desc: boolean }[]>([...defaultSorting]);
-const view = useLocalStorage<'table' | 'kanban'>('jat-view', 'table');
+const view = useLocalStorage<'table' | 'kanban'>('callback-view', 'table');
 
 const filtered = computed(
   () =>

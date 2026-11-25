@@ -1,62 +1,62 @@
 # MCP : donner les candidatures à un agent
 
-jat sert les candidatures à un agent (Claude Code, Claude Desktop, l'app Claude, tout client MCP) par six outils.
+callback sert les candidatures à un agent (Claude Code, Claude Desktop, l'app Claude, tout client MCP) par six outils.
 Deux transports, les mêmes outils :
 
-- **stdio** : `jat mcp`, lancé par le client sur la machine. C'est un client de l'API comme le reste de la CLI :
+- **stdio** : `callback mcp`, lancé par le client sur la machine. C'est un client de l'API comme le reste de la CLI :
   chaque outil devient une requête au serveur, avec le jeton de la session.
-- **HTTP** : `jat-server serve --mcp-addr <adresse>` sert `/mcp` (« streamable HTTP ») et sa connexion OAuth, pour
+- **HTTP** : `callback-server serve --mcp-addr <adresse>` sert `/mcp` (« streamable HTTP ») et sa connexion OAuth, pour
   un agent qui ne peut pas lancer de commande (l'app Claude appelle depuis le cloud d'Anthropic). Les outils y
   appellent l'API dans le même processus, sans réseau.
 
-## 1. En stdio : `jat mcp`
+## 1. En stdio : `callback mcp`
 
-Le client démarre `jat mcp` comme sous-processus et échange du JSON-RPC sur son entrée et sa sortie standard :
+Le client démarre `callback mcp` comme sous-processus et échange du JSON-RPC sur son entrée et sa sortie standard :
 on ne le lance pas à la main. Il suffit d'une session, une fois, sous l'utilisateur Unix qui lancera l'agent :
 
 ```sh
-go install github.com/cyril-fl/jat/cmd/jat@latest
-jat login https://jat.example.com     # le mot de passe, demandé ou lu dans JAT_PASSWORD
-jat whoami                            # si ça répond, le MCP marchera
-claude mcp add jat -- "$(go env GOPATH)/bin/jat" mcp
+go install github.com/cyril-fl/callback/cmd/callback@latest
+callback login https://callback.example.com     # le mot de passe, demandé ou lu dans CALLBACK_PASSWORD
+callback whoami                            # si ça répond, le MCP marchera
+claude mcp add callback -- "$(go env GOPATH)/bin/callback" mcp
 ```
 
 `.mcp.json` ou Claude Desktop (le chemin en absolu : un client lancé depuis le Finder n'a pas le `PATH` du shell) :
 
 ```json
-{ "mcpServers": { "jat": { "command": "/Users/<moi>/go/bin/jat", "args": ["mcp"] } } }
+{ "mcpServers": { "callback": { "command": "/Users/<moi>/go/bin/callback", "args": ["mcp"] } } }
 ```
 
-La session est dans `~/.config/jat/session.json` (`0600`). **`JAT_URL` et `JAT_SESSION` passent avant le fichier**,
-chacune à part : un agent dans un conteneur, sans shell pour `jat login`, prend le serveur et un jeton par son
+La session est dans `~/.config/callback/session.json` (`0600`). **`CALLBACK_URL` et `CALLBACK_SESSION` passent avant le fichier**,
+chacune à part : un agent dans un conteneur, sans shell pour `callback login`, prend le serveur et un jeton par son
 environnement. Le piège inverse : un bloc `env` recopié chez le client envoie le MCP vers un autre serveur.
 
 Le mieux pour un agent est un **jeton d'API** plutôt que la session : il se révoque seul, et peut être en lecture
 seule.
 
 ```sh
-JAT_SESSION=$(jat token add claude --read-only --expires 30d)
+CALLBACK_SESSION=$(callback token add claude --read-only --expires 30d)
 ```
 
 Ce jeton se traite comme un mot de passe : jamais dans un fichier versionné. Avec un jeton en lecture seule,
-`jat mcp` n'annonce que les outils de lecture.
+`callback mcp` n'annonce que les outils de lecture.
 
 ## 2. En HTTP : `/mcp`
 
-`jat-server serve --mcp-addr :8081` sert, sur une adresse à part, `/mcp` et les routes OAuth (`/.well-known/…`,
+`callback-server serve --mcp-addr :8081` sert, sur une adresse à part, `/mcp` et les routes OAuth (`/.well-known/…`,
 `/register`, `/authorize`, `/token`). C'est cette adresse seule qu'on ouvre à Internet (Tailscale Funnel, Cloudflare
 Tunnel, un proxy HTTPS qui garde le `Host`) ; l'API et l'app restent derrière.
 
 Chaque requête porte `Authorization: Bearer <jeton>`, de l'une de deux sources :
 
-- **Un jeton d'API** (`jat token add "Claude téléphone" --expires 30d`, montré une fois), pour un client qui
+- **Un jeton d'API** (`callback token add "Claude téléphone" --expires 30d`, montré une fois), pour un client qui
   accepte un en-tête fixe :
 
   ```sh
-  claude mcp add --transport http jat https://jat.example.com/mcp --header "Authorization: Bearer jat_…"
+  claude mcp add --transport http callback https://callback.example.com/mcp --header "Authorization: Bearer callback_…"
   ```
 
-- **OAuth** : le client ne reçoit que l'URL `https://jat.example.com/mcp`, ouvre la page de connexion de jat, et
+- **OAuth** : le client ne reçoit que l'URL `https://callback.example.com/mcp`, ouvre la page de connexion de callback, et
   reçoit ses jetons seul. Pour l'app Claude (Réglages > Connecteurs > « Add custom connector ») et ChatGPT.
 
 Sans jeton, avec un jeton inconnu, expiré, révoqué, ou un jeton de **session**, la réponse est `401` avant tout
@@ -67,7 +67,7 @@ lecture, et l'API lui refuse toute écriture (403). Aucune session MCP n'est gar
 Pour vérifier sans client :
 
 ```sh
-curl -s https://jat.example.com/mcp -H 'Authorization: Bearer jat_…' \
+curl -s https://callback.example.com/mcp -H 'Authorization: Bearer callback_…' \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
@@ -116,12 +116,12 @@ Avec un jeton en lecture seule, les consignes d'écriture sont retirées.
 
 ## 5. La CLI, pour un agent qui a un shell
 
-Un agent avec un shell peut aussi scripter `jat` : chaque commande prend `--json`, et `ls`, `edit`, `rm` prennent
+Un agent avec un shell peut aussi scripter `callback` : chaque commande prend `--json`, et `ls`, `edit`, `rm` prennent
 les mêmes filtres que les outils (`edit` les nomme `--where-status` et `--where-source`, `--status` et `--source` y
 étant les champs à changer).
 
 ```sh
-jat ls --status applied --untouched-since 2026-01-01 --count
-jat edit --where-status applied --untouched-since 2026-01-01 --status rejected --dry-run
-jat add --file apps.json        # un tableau JSON, un seul appel
+callback ls --status applied --untouched-since 2026-01-01 --count
+callback edit --where-status applied --untouched-since 2026-01-01 --status rejected --dry-run
+callback add --file apps.json        # un tableau JSON, un seul appel
 ```

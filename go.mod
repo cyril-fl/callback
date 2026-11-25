@@ -1,4 +1,4 @@
-module github.com/cyril-fl/jat
+module github.com/cyril-fl/callback
 
 go 1.27.3
 

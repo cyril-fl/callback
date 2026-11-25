@@ -4,19 +4,19 @@ package api
 import (
 	"net/http"
 
-	apicreateapplications "github.com/cyril-fl/jat/core/api/create-applications"
-	apideleteapplications "github.com/cyril-fl/jat/core/api/delete-applications"
-	apieditapplications "github.com/cyril-fl/jat/core/api/edit-applications"
-	apilogin "github.com/cyril-fl/jat/core/api/login"
-	apireadapplications "github.com/cyril-fl/jat/core/api/read-applications"
-	apireadstats "github.com/cyril-fl/jat/core/api/read-stats"
-	"github.com/cyril-fl/jat/core/api/services/auth"
-	"github.com/cyril-fl/jat/core/api/services/guard"
-	apitokens "github.com/cyril-fl/jat/core/api/tokens"
+	apicreateapplications "github.com/cyril-fl/callback/core/api/create-applications"
+	apideleteapplications "github.com/cyril-fl/callback/core/api/delete-applications"
+	apieditapplications "github.com/cyril-fl/callback/core/api/edit-applications"
+	apilogin "github.com/cyril-fl/callback/core/api/login"
+	apireadapplications "github.com/cyril-fl/callback/core/api/read-applications"
+	apireadstats "github.com/cyril-fl/callback/core/api/read-stats"
+	"github.com/cyril-fl/callback/core/api/services/auth"
+	"github.com/cyril-fl/callback/core/api/services/guard"
+	apitokens "github.com/cyril-fl/callback/core/api/tokens"
 	"github.com/uptrace/bun"
 )
 
-// @title    jat API
+// @title    callback API
 // @version  1.0
 
 // New gives the API, reachable by web pages from origin only (none when empty), with a valid token only.

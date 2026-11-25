@@ -1,24 +1,24 @@
 # The dev stack: `make up`, the image built locally. API and web on 8080, MCP on 8081.
 # Never put a tunnel in front of it: without --published, every client behind a proxy shares one address for the
 # wrong-password delay, so one stranger could lock you out. compose.prod.yaml is the one to expose.
-name: jat
+name: callback
 
 services:
-  jat:
+  callback:
     build:
       context: .
       args:
         VERSION: ${VERSION:-dev}
-    container_name: jat
+    container_name: callback
     environment:
-      JAT_PASSWORD: ${JAT_PASSWORD:?set JAT_PASSWORD in .env}
+      CALLBACK_PASSWORD: ${CALLBACK_PASSWORD:?set CALLBACK_PASSWORD in .env}
     ports:
       - "127.0.0.1:8080:8080"
       - "127.0.0.1:8081:8081"
-    command: serve --db /data/jat.db --web /web --addr :8080 --mcp-addr :8081
+    command: serve --db /data/callback.db --web /web --addr :8080 --mcp-addr :8081
     volumes:
-      - jat-data:/data
+      - callback-data:/data
     restart: unless-stopped
 
 volumes:
-  jat-data:
+  callback-data:

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cyril-fl/jat/core/api/services/auth"
-	"github.com/cyril-fl/jat/core/domain"
-	"github.com/cyril-fl/jat/core/services/testserver"
+	"github.com/cyril-fl/callback/core/api/services/auth"
+	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/testserver"
 )
 
 // call sends body as JSON with token, and decodes the answer into out when given.
@@ -126,7 +126,7 @@ func TestAuth(t *testing.T) {
 		status                    int
 	}{
 		{"no token", "", "GET", "/api/applications", nil, http.StatusUnauthorized},
-		{"wrong token", "jat_nope", "GET", "/api/me", nil, http.StatusUnauthorized},
+		{"wrong token", "callback_nope", "GET", "/api/me", nil, http.StatusUnauthorized},
 		{"session, tokens", server.Session, "GET", "/api/tokens", nil, http.StatusOK},
 		{"api token, list", api, "GET", "/api/applications", nil, http.StatusOK},
 		{"api token, tokens", api, "GET", "/api/tokens", nil, http.StatusForbidden},
@@ -162,7 +162,7 @@ func TestAuth(t *testing.T) {
 		Token    string
 		APIToken domain.Token `json:"api_token"`
 	}
-	if response := call(t, server, server.Session, "POST", "/api/tokens", map[string]any{"name": "script", "expires_in": "7d"}, &made); response.StatusCode != http.StatusCreated || !strings.HasPrefix(made.Token, "jat_") {
+	if response := call(t, server, server.Session, "POST", "/api/tokens", map[string]any{"name": "script", "expires_in": "7d"}, &made); response.StatusCode != http.StatusCreated || !strings.HasPrefix(made.Token, "callback_") {
 		t.Fatalf("create token: %d %+v", response.StatusCode, made)
 	}
 	if response := call(t, server, server.Session, "DELETE", "/api/tokens/"+made.APIToken.ID, nil, nil); response.StatusCode != http.StatusNoContent {
