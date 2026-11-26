@@ -161,7 +161,7 @@ func TestCountryCodes(t *testing.T) {
 	ctx := context.Background()
 	at := "'2026-01-10 00:00:00+00:00'"
 	for _, query := range []string{
-		`INSERT INTO users (id, name, password_hash, admin, preferences, created_at) VALUES ('u', 'u', 'h', 1, '{"default_country":"Italy","plan":"pro"}', ` + at + `)`,
+		`INSERT INTO users (id, name, password_hash, admin, preferences, created_at) VALUES ('u', 'u', 'h', TRUE, '{"default_country":"Italy","plan":"pro"}', ` + at + `)`,
 		`INSERT INTO applications (id, user_id, company, location, country, website, source, source_detail, status, rating, comment, applied_at, created_at, updated_at) VALUES
 			('a', 'u', 'Acme', 'Paris', 'France', '', 'spontaneous', '', 'applied', 0, '', '2026-01-10', ` + at + `, ` + at + `),
 			('b', 'u', 'Acme', 'Roma', 'Italie', '', 'spontaneous', '', 'applied', 0, 'Hi', '2026-01-10', ` + at + `, ` + at + `)`,
