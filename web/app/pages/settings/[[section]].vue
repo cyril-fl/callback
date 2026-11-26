@@ -94,6 +94,17 @@ const values = computed(() =>
   groupValues(places.applications.value, valueKind.value).map(({ value, ids }) => ({ value, ids, count: ids.length })),
 );
 type ValueRow = (typeof values.value)[number];
+// A page at a time: a long search names hundreds of companies. The filter searches them all.
+const valuesPerPage = 20;
+const valuePage = ref(1);
+watch([valueKind, valueSearch], () => (valuePage.value = 1));
+const foundValues = computed(() => {
+  const q = valueSearch.value.trim().toLocaleLowerCase();
+  return q ? values.value.filter(({ value }) => value.toLocaleLowerCase().includes(q)) : values.value;
+});
+const pagedValues = computed(() =>
+  foundValues.value.slice((valuePage.value - 1) * valuesPerPage, valuePage.value * valuesPerPage),
+);
 const valueColumns = computed<TableColumn<ValueRow>[]>(() => [
   { accessorKey: 'value', header: t(`settings.valueKinds.${valueKind.value}`) },
   {
@@ -389,8 +400,7 @@ async function revoke() {
             />
           </div>
           <UTable
-            v-model:global-filter="valueSearch"
-            :data="values"
+            :data="pagedValues"
             :columns="valueColumns"
             :get-row-id="(row: ValueRow) => row.value"
             class="rounded-lg border border-default"
@@ -408,6 +418,14 @@ async function revoke() {
               />
             </template>
           </UTable>
+          <UPagination
+            v-if="foundValues.length > valuesPerPage"
+            v-model:page="valuePage"
+            :items-per-page="valuesPerPage"
+            :total="foundValues.length"
+            size="sm"
+            class="flex justify-center"
+          />
         </div>
       </section>
 
