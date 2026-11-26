@@ -148,7 +148,9 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 			fail(application.ID, err)
 			continue
 		}
-		application.UpdatedAt = now
+		if op.Set != (domain.Changes{Position: op.Set.Position}) {
+			application.UpdatedAt = now
+		}
 		if op.Set.FollowedUp {
 			application.FollowedUpAt = now
 			if _, err := tx.NewInsert().Model(&domain.FollowUp{ApplicationID: application.ID, At: now}).Exec(ctx); err != nil {

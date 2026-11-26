@@ -19,14 +19,14 @@ import (
 const DefaultSort = "-applied_at"
 
 // Sorts are the columns a list sorts on, - first for the descending order.
-var Sorts = []string{"applied_at", "company", "location", "source", "status", "rating", "followed_up_at", "created_at", "updated_at"}
+var Sorts = []string{"applied_at", "company", "location", "source", "status", "rating", "followed_up_at", "created_at", "updated_at", "position"}
 
 // Lists are the fields read from their own tables: asked by fields, or there when no fields are.
 var Lists = []string{"interviews", "contacts"}
 
 var (
-	ErrInvalidField  = domain.Invalid("fields are among id, company, title, location, website, source, source_detail, status, rating, comment, applied_at, interview_at, contact_name, contact_email, interviews, contacts, created_at, updated_at, followed_up_at")
-	ErrInvalidSort   = domain.Invalid("sort is one of applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at, - first to reverse it")
+	ErrInvalidField  = domain.Invalid("fields are among id, company, title, location, website, source, source_detail, status, rating, comment, applied_at, interview_at, contact_name, contact_email, interviews, contacts, created_at, updated_at, followed_up_at, position")
+	ErrInvalidSort   = domain.Invalid("sort is one of applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at, position, - first to reverse it")
 	ErrInvalidPaging = domain.Invalid("limit, offset and max_chars are 0 or more")
 )
 
@@ -131,6 +131,9 @@ func (p *run) loadApplications() {
 	if column == "status" {
 		// The pipeline's order, not the alphabet's.
 		query = query.OrderExpr("CASE a.status WHEN 'applied' THEN 0 WHEN 'responded' THEN 1 WHEN 'interview' THEN 2 WHEN 'offer' THEN 3 ELSE 4 END" + order)
+	} else if column == "position" {
+		// NULL stands for 0, and the two bases sort NULL apart.
+		query = query.OrderExpr("COALESCE(a.position, 0)" + order)
 	} else {
 		query = query.OrderExpr("a.?"+order, bun.Ident(column))
 	}

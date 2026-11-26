@@ -429,7 +429,10 @@ type DomainApplication struct {
 	Interviews *[]DomainInterview `json:"interviews,omitempty"`
 
 	// Location Location is the city; Street, PostalCode and Country complete the address when known.
-	Location     *string       `json:"location,omitempty"`
+	Location *string `json:"location,omitempty"`
+
+	// Position Position is the place on the kanban, in its column: lowest first, 0 (new) on top. NULL stands for 0, no default.
+	Position     *int          `json:"position,omitempty"`
 	PostalCode   *string       `json:"postal_code,omitempty"`
 	Rating       *int          `json:"rating,omitempty"`
 	Source       *string       `json:"source,omitempty"`
@@ -490,14 +493,17 @@ type DomainChanges struct {
 
 	// Interviews Interviews and Contacts replace the lists whole. Without them, interview_at sets the last interview's date
 	// ("" removes it), contact_name and contact_email the first contact's (both "" remove it).
-	Interviews   *[]DomainInterview `json:"interviews,omitempty"`
-	Location     *string            `json:"location,omitempty"`
-	PostalCode   *string            `json:"postal_code,omitempty"`
-	Rating       *int               `json:"rating,omitempty"`
-	Source       *string            `json:"source,omitempty"`
-	SourceDetail *string            `json:"source_detail,omitempty"`
-	Status       *DomainStatus      `json:"status,omitempty"`
-	Street       *string            `json:"street,omitempty"`
+	Interviews *[]DomainInterview `json:"interviews,omitempty"`
+	Location   *string            `json:"location,omitempty"`
+
+	// Position Position is the place on the kanban; a change of it alone leaves updated_at as it was.
+	Position     *int          `json:"position,omitempty"`
+	PostalCode   *string       `json:"postal_code,omitempty"`
+	Rating       *int          `json:"rating,omitempty"`
+	Source       *string       `json:"source,omitempty"`
+	SourceDetail *string       `json:"source_detail,omitempty"`
+	Status       *DomainStatus `json:"status,omitempty"`
+	Street       *string       `json:"street,omitempty"`
 
 	// Title Title is cleared by "".
 	Title *string `json:"title,omitempty"`
@@ -854,7 +860,7 @@ type GetApiApplicationsParams struct {
 	// MaxChars Cut each comment to this many characters (truncated: true)
 	MaxChars *int `form:"max_chars,omitempty" json:"max_chars,omitempty"`
 
-	// Sort applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at; - first to reverse; -applied_at by default
+	// Sort applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at, position; - first to reverse; -applied_at by default
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
 	// Limit Most applications returned, all when 0

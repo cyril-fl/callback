@@ -49,7 +49,7 @@ type listArgs struct {
 	UntouchedSince *string                                    `json:"untouched_since,omitempty" jsonschema:"no status change nor follow-up since this day"`
 	Fields         []string                                   `json:"fields,omitempty" jsonschema:"columns added: location, street, postal_code, country, website, source, source_detail, rating, comment, interview_at, contact_name, contact_email, interviews, contacts, created_at, updated_at, followed_up_at"`
 	CountOnly      bool                                       `json:"count_only,omitempty" jsonschema:"the total only"`
-	Sort           *string                                    `json:"sort,omitempty" jsonschema:"applied_at, company, location, source, status, rating, followed_up_at, created_at or updated_at; - first to reverse"`
+	Sort           *string                                    `json:"sort,omitempty" jsonschema:"applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at or position; - first to reverse"`
 	Limit          *int                                       `json:"limit,omitempty" jsonschema:"50 by default, 0 for all"`
 	Offset         int                                        `json:"offset,omitempty"`
 }

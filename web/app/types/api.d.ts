@@ -71,7 +71,7 @@ export interface paths {
                     fields?: string[];
                     /** @description Cut each comment to this many characters (truncated: true) */
                     max_chars?: number;
-                    /** @description applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at; - first to reverse; -applied_at by default */
+                    /** @description applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at, position; - first to reverse; -applied_at by default */
                     sort?: string;
                     /** @description Most applications returned, all when 0 */
                     limit?: number;
@@ -1934,6 +1934,8 @@ export interface components {
             interviews?: components["schemas"]["domain.Interview"][];
             /** @description Location is the city; Street, PostalCode and Country complete the address when known. */
             location?: string;
+            /** @description Position is the place on the kanban, in its column: lowest first, 0 (new) on top. NULL stands for 0, no default. */
+            position?: number;
             postal_code?: string;
             rating?: number;
             /** @example job_post */
@@ -1989,6 +1991,8 @@ export interface components {
              */
             interviews?: components["schemas"]["domain.Interview"][];
             location?: string;
+            /** @description Position is the place on the kanban; a change of it alone leaves updated_at as it was. */
+            position?: number;
             postal_code?: string;
             rating?: number;
             /** @example job_post */

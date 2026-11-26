@@ -112,3 +112,28 @@ func TestSortStatus(t *testing.T) {
 		t.Errorf("got %+v, %v; want responded first", got, process.GetErr())
 	}
 }
+
+// position sorts the kanban: a placed card by its place, a new one (no position) on top, newest first.
+func TestSortPosition(t *testing.T) {
+	db := testdb.New(t)
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
+		domain.NewApplication{Company: "A", Location: "Paris"},
+		domain.NewApplication{Company: "B", Location: "Paris"},
+		domain.NewApplication{Company: "C", Location: "Paris"},
+	)
+	for i, id := range []string{ids[2], ids[0]} {
+		if _, err := db.NewUpdate().Model((*domain.Application)(nil)).Set("position = ?", i+1).Where("id = ?", id).Exec(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	process := listapplications.Process(ctx, db, listapplications.Input{Sort: "position"})
+	process.Run()
+	var got []string
+	for _, application := range process.GetResult().Applications {
+		got = append(got, application.ID)
+	}
+	if want := []string{ids[1], ids[2], ids[0]}; process.HasErr() || !slices.Equal(got, want) {
+		t.Errorf("got %v, %v; want %v", got, process.GetErr(), want)
+	}
+}

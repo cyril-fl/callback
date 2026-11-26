@@ -215,3 +215,25 @@ func TestUndo(t *testing.T) {
 		t.Errorf("after the last follow-up undo: %v with %d follow-ups, want none", application.FollowedUpAt, followUps)
 	}
 }
+
+// A move on the kanban sets the position and leaves updated_at: a reorder is no news.
+func TestPosition(t *testing.T) {
+	db := testdb.New(t)
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	var before domain.Application
+	if err := db.NewSelect().Model(&before).Where("id = ?", ids[0]).Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	process := updateapplications.Process(ctx, db, updateapplications.Input{Ops: []updateapplications.Op{
+		{Filter: domain.Filter{IDs: ids}, Set: domain.Changes{Position: ptr(3)}},
+	}})
+	process.Run()
+	var after domain.Application
+	if err := db.NewSelect().Model(&after).Where("id = ?", ids[0]).Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if process.HasErr() || after.Position != 3 || !after.UpdatedAt.Equal(before.UpdatedAt) {
+		t.Errorf("got position %d, updated_at %v (was %v), %v", after.Position, after.UpdatedAt, before.UpdatedAt, process.GetErr())
+	}
+}

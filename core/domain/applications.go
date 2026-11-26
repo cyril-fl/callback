@@ -111,6 +111,8 @@ type Application struct {
 	UpdatedAt    time.Time `bun:",notnull" json:"updated_at,omitzero" binding:"optional"`
 	// FollowedUpAt is the last follow-up, set by an update with followed_up.
 	FollowedUpAt time.Time `bun:",nullzero" json:"followed_up_at,omitzero" binding:"optional"`
+	// Position is the place on the kanban, in its column: lowest first, 0 (new) on top. NULL stands for 0, no default.
+	Position int `bun:",nullzero" json:"position,omitempty" binding:"optional"`
 	// Interviews and Contacts are read with the application when no fields are asked, or when fields name them.
 	Interviews []Interview `bun:"rel:has-many,join:id=application_id" json:"interviews,omitempty" binding:"optional"`
 	Contacts   []Contact   `bun:"rel:has-many,join:id=application_id" json:"contacts,omitempty" binding:"optional"`
@@ -119,7 +121,7 @@ type Application struct {
 }
 
 // Columns are the columns ?fields= may ask for.
-var Columns = []string{"id", "company", "title", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at", "followed_up_at"}
+var Columns = []string{"id", "company", "title", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at", "followed_up_at", "position"}
 
 // Normalize trims the text and fills the defaults: status applied, applied today.
 func (a *Application) Normalize() {
@@ -285,6 +287,8 @@ type Changes struct {
 	Rating       *int    `json:"rating,omitempty" binding:"optional"`
 	Comment      *string `json:"comment,omitempty" binding:"optional"`
 	AppliedAt    *string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
+	// Position is the place on the kanban; a change of it alone leaves updated_at as it was.
+	Position *int `json:"position,omitempty" binding:"optional"`
 	// Interviews and Contacts replace the lists whole. Without them, interview_at sets the last interview's date
 	// ("" removes it), contact_name and contact_email the first contact's (both "" remove it).
 	Interviews   *[]Interview `json:"interviews,omitempty" binding:"optional"`
@@ -328,6 +332,7 @@ func (c Changes) Apply(a *Application) {
 	set(&a.Rating, c.Rating)
 	set(&a.Comment, c.Comment)
 	set(&a.AppliedAt, c.AppliedAt)
+	set(&a.Position, c.Position)
 	set(&a.InterviewAt, c.InterviewAt)
 	set(&a.ContactName, c.ContactName)
 	set(&a.ContactEmail, c.ContactEmail)

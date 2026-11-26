@@ -165,6 +165,10 @@ components:
           description: Location is the city; Street, PostalCode and Country complete
             the address when known.
           type: string
+        position:
+          description: 'Position is the place on the kanban, in its column: lowest
+            first, 0 (new) on top. NULL stands for 0, no default.'
+          type: integer
         postal_code:
           type: string
         rating:
@@ -297,6 +301,10 @@ components:
           uniqueItems: false
         location:
           type: string
+        position:
+          description: Position is the place on the kanban; a change of it alone leaves
+            updated_at as it was.
+          type: integer
         postal_code:
           type: string
         rating:
@@ -1003,7 +1011,7 @@ paths:
         schema:
           type: integer
       - description: applied_at, company, location, source, status, rating, followed_up_at,
-          created_at, updated_at; - first to reverse; -applied_at by default
+          created_at, updated_at, position; - first to reverse; -applied_at by default
         in: query
         name: sort
         schema:
