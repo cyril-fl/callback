@@ -165,6 +165,9 @@ async function submit() {
     loading.value = false;
   }
 }
+
+// On a phone the form is a sheet rising from the bottom.
+const phone = useMediaQuery('(max-width: 639px)');
 </script>
 
 <template>
@@ -172,7 +175,8 @@ async function submit() {
     v-model:open="open"
     :title="application ? t('form.edit') : t('form.add')"
     :description="application ? t('form.edit') : t('form.add')"
-    :ui="{ description: 'sr-only' }"
+    :side="phone ? 'bottom' : 'right'"
+    :ui="{ description: 'sr-only', content: phone ? 'max-h-[90dvh] rounded-t-2xl' : undefined }"
   >
     <template #body>
       <UForm id="application-form" :schema="schema" :state="state" class="space-y-4" @submit="submit">
