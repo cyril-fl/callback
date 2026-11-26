@@ -104,14 +104,13 @@ const day = (v?: string) =>
         >
           <div class="flex items-center gap-2">
             <p class="truncate text-sm font-medium">{{ app.company }}</p>
-            <UBadge
-              v-if="column.key === 'closed'"
-              :label="t(`status.${app.status}`)"
-              color="neutral"
-              variant="soft"
-              size="sm"
-              class="ml-auto shrink-0"
-            />
+            <UTooltip v-if="column.key === 'closed'" :text="t(`status.${app.status}`)">
+              <UIcon
+                :name="app.status === 'no_reply' ? 'i-lucide-hourglass' : 'i-lucide-circle-x'"
+                class="ml-auto size-3.5 shrink-0 text-muted"
+                :aria-label="t(`status.${app.status}`)"
+              />
+            </UTooltip>
           </div>
           <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
             <UIcon name="i-lucide-map-pin" class="size-3 shrink-0" />{{
