@@ -396,7 +396,7 @@ function exportCsv() {
 <template>
   <div
     class="flex flex-col gap-6"
-    :class="view === 'kanban' ? 'h-[calc(100dvh-var(--ui-header-height)-3rem)]' : selected.length ? 'pb-16' : ''"
+    :class="['h-[calc(100dvh-var(--ui-header-height)-3rem)]', { 'pb-16': view === 'table' && selected.length }]"
   >
     <StatsCards v-if="!pro" :stats="stats" />
 
@@ -444,6 +444,8 @@ function exportCsv() {
     />
     <UTable
       v-if="view === 'table'"
+      sticky
+      class="min-h-0 flex-1"
       v-model:sorting="sorting"
       v-model:row-selection="selection"
       :get-row-id="(row: Application) => row.id"
