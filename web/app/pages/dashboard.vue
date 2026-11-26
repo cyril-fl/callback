@@ -99,19 +99,30 @@ const cityInterviews = computed(() =>
 const contactNames = computed(() =>
   [...new Set(cityInterviews.value.flatMap((r) => r.contacts.map(contactName)))].filter(Boolean).sort(),
 );
+// The headers' filters but the day's: the calendar marks these days, the day filter then narrows the table.
+const matching = computed(() =>
+  cityInterviews.value.filter(
+    (r) =>
+      has(r.company, companyQuery.value) &&
+      has(r.address, addressQuery.value) &&
+      (!contactFilter.value || r.contacts.some((c) => contactName(c) === contactFilter.value)),
+  ),
+);
+const interviewDays = computed(() => new Set(matching.value.map((r) => r.at.slice(0, 10))));
 const interviews = computed(() => {
   const [from, to] = dayBounds(dayMode.value, interviewDay.value?.toString(), {
     start: interviewRange.value?.start?.toString(),
     end: interviewRange.value?.end?.toString(),
   });
-  return cityInterviews.value.filter(
-    (r) =>
-      (!from || r.at.slice(0, 10) >= from) &&
-      (!to || r.at.slice(0, 10) <= to) &&
-      has(r.company, companyQuery.value) &&
-      has(r.address, addressQuery.value) &&
-      (!contactFilter.value || r.contacts.some((c) => contactName(c) === contactFilter.value)),
-  );
+  return matching.value.filter((r) => (!from || r.at.slice(0, 10) >= from) && (!to || r.at.slice(0, 10) <= to));
+});
+// A day picked on the calendar is the day filter's « on »; picked again (the calendar unselects it), the default.
+const calendarDay = computed({
+  get: () => (dayMode.value === 'on' ? interviewDay.value : undefined),
+  set: (v) => {
+    dayMode.value = v ? 'on' : 'after';
+    interviewDay.value = v ?? today;
+  },
 });
 type InterviewRow = (typeof interviews.value)[number];
 const interviewSorting = ref([{ id: 'at', desc: false }]);
@@ -200,27 +211,34 @@ function openForm(app: Application) {
 
     <section>
       <h2 class="mb-3 text-sm font-semibold">{{ t('stats.interviews') }}</h2>
-      <UTable
-        v-model:sorting="interviewSorting"
-        :data="interviews"
-        :columns="interviewColumns"
-        class="rounded-lg border border-default"
-        :ui="{ tr: 'data-[selectable=true]:cursor-pointer' }"
-        @select="(_: Event, row: TableRow<InterviewRow>) => openForm(row.original.application)"
-      >
-        <template #empty><UEmpty :icon="icons.empty" :title="t('common.empty')" variant="naked" /></template>
-        <template #at-cell="{ row }">{{ stamp(row.original.at) }}</template>
-        <template #contacts-cell="{ row }">
-          <UAvatarGroup v-if="row.original.contacts.length" size="xs">
-            <UAvatar
-              v-for="(c, i) in row.original.contacts"
-              :key="i"
-              :alt="c.name || c.email"
-              :title="[c.name || c.email, c.role].filter(Boolean).join(' · ')"
-            />
-          </UAvatarGroup>
-        </template>
-      </UTable>
+      <div class="grid items-start gap-4 xl:grid-cols-[1fr_auto]">
+        <UCalendar v-model="calendarDay" class="justify-self-center rounded-lg border border-default p-2 xl:order-last">
+          <template #day="{ day: d }">
+            <UChip :show="interviewDays.has(d.toString())" size="2xs">{{ d.day }}</UChip>
+          </template>
+        </UCalendar>
+        <UTable
+          v-model:sorting="interviewSorting"
+          :data="interviews"
+          :columns="interviewColumns"
+          class="min-w-0 rounded-lg border border-default"
+          :ui="{ tr: 'data-[selectable=true]:cursor-pointer' }"
+          @select="(_: Event, row: TableRow<InterviewRow>) => openForm(row.original.application)"
+        >
+          <template #empty><UEmpty :icon="icons.empty" :title="t('common.empty')" variant="naked" /></template>
+          <template #at-cell="{ row }">{{ stamp(row.original.at) }}</template>
+          <template #contacts-cell="{ row }">
+            <UAvatarGroup v-if="row.original.contacts.length" size="xs">
+              <UAvatar
+                v-for="(c, i) in row.original.contacts"
+                :key="i"
+                :alt="c.name || c.email"
+                :title="[c.name || c.email, c.role].filter(Boolean).join(' · ')"
+              />
+            </UAvatarGroup>
+          </template>
+        </UTable>
+      </div>
     </section>
 
     <div class="grid gap-8 md:grid-cols-2">
