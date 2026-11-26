@@ -151,7 +151,7 @@
       "appearance": "Apparence",
       "appearanceDescription": "Les couleurs et le mode de l'interface.",
       "data": "Données",
-      "dataDescription": "La sauvegarde, la corbeille, et tout effacer.",
+      "dataDescription": "Les valeurs, la sauvegarde, la corbeille, et tout effacer.",
       "tokens": "Jetons d'accès",
       "tokensDescription": "Pour le CLI et le MCP."
     },
@@ -234,6 +234,17 @@
     "forget": "Supprimer définitivement",
     "forgetMessage": "{company} et son historique sont supprimés pour de bon.",
     "emptyTrash": "Vider la corbeille",
-    "emptyTrashMessage": "La candidature de la corbeille et son historique sont supprimés pour de bon. | Les {n} candidatures de la corbeille et leur historique sont supprimés pour de bon."
+    "emptyTrashMessage": "La candidature de la corbeille et son historique sont supprimés pour de bon. | Les {n} candidatures de la corbeille et leur historique sont supprimés pour de bon.",
+    "valueKinds": {
+      "company": "Entreprises",
+      "location": "Villes",
+      "country": "Pays"
+    },
+    "valueCount": "Candidatures",
+    "valueSearch": "Filtrer",
+    "valuesEmpty": "Aucune valeur",
+    "renamed": "« {from} » devient « {to} » dans {count} candidature | « {from} » devient « {to} » dans {count} candidatures",
+    "values": "Valeurs",
+    "valuesHelp": "Les entreprises, villes et pays que les candidatures nomment. Corriger une valeur la change dans toutes ses candidatures ; la renommer comme une autre les réunit."
   }
 }

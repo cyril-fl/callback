@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui';
 import type {
+  BatchResult,
   Backup,
   DeletedApplication,
   ImportResult,
@@ -78,6 +80,52 @@ async function restore(deleted: DeletedApplication) {
     // useApi already toasted.
   } finally {
     await refreshTrash();
+  }
+}
+
+// The values the applications name, a field at a time: one fixed here is renamed in each of its applications.
+const valueKind = ref<'company' | 'location' | 'country'>('company');
+const valueKindItems = (['company', 'location', 'country'] as const).map((value) => ({
+  value,
+  label: t(`settings.valueKinds.${value}`),
+}));
+const valueSearch = ref('');
+const values = computed(() =>
+  groupValues(places.applications.value, valueKind.value).map(({ value, ids }) => ({ value, ids, count: ids.length })),
+);
+type ValueRow = (typeof values.value)[number];
+const valueColumns = computed<TableColumn<ValueRow>[]>(() => [
+  { accessorKey: 'value', header: t(`settings.valueKinds.${valueKind.value}`) },
+  {
+    accessorKey: 'count',
+    header: t('settings.valueCount'),
+    meta: { class: { th: 'w-32 text-right', td: 'text-right' } },
+  },
+]);
+async function rename(row: ValueRow, event: Event) {
+  const input = event.target as HTMLInputElement;
+  const to = input.value.trim();
+  if (!to || to === row.value) {
+    input.value = row.value;
+    return;
+  }
+  try {
+    const result = await api<BatchResult>('/api/applications', {
+      method: 'PATCH',
+      body: { ops: [{ ids: row.ids, set: { [valueKind.value]: to } }] },
+    });
+    // A batch's failures come back in the answer: useApi only tells a refused request.
+    const failure = result.failed?.[0];
+    if (failure) toast.add({ title: failure.error, color: 'error' });
+    else
+      toast.add({
+        title: t('settings.renamed', { from: row.value, to, count: result.count }, result.count),
+        color: 'success',
+      });
+  } catch {
+    // useApi already toasted.
+  } finally {
+    await places.refresh();
   }
 }
 
@@ -325,6 +373,44 @@ async function revoke() {
       </section>
     </div>
     <div v-else-if="section === 'data'" class="space-y-10">
+      <section>
+        <h2 class="mb-1 text-sm font-semibold">{{ t('settings.values') }}</h2>
+        <p class="mb-3 text-xs text-muted">{{ t('settings.valuesHelp') }}</p>
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <UTabs v-model="valueKind" :items="valueKindItems" :content="false" size="sm" />
+            <UInput
+              v-model="valueSearch"
+              :icon="icons.search"
+              :placeholder="t('settings.valueSearch')"
+              :aria-label="t('settings.valueSearch')"
+              size="sm"
+              class="ms-auto w-48"
+            />
+          </div>
+          <UTable
+            v-model:global-filter="valueSearch"
+            :data="values"
+            :columns="valueColumns"
+            :get-row-id="(row: ValueRow) => row.value"
+            class="rounded-lg border border-default"
+          >
+            <template #empty>{{ t('settings.valuesEmpty') }}</template>
+            <template #value-cell="{ row }">
+              <UInput
+                :key="row.original.value"
+                :default-value="row.original.value"
+                :aria-label="t(`settings.valueKinds.${valueKind}`)"
+                variant="ghost"
+                class="w-full"
+                @change="rename(row.original, $event)"
+                @keydown.enter="($event.target as HTMLInputElement).blur()"
+              />
+            </template>
+          </UTable>
+        </div>
+      </section>
+
       <section>
         <h2 class="mb-3 text-sm font-semibold">{{ t('settings.backup') }}</h2>
         <div class="flex flex-wrap items-center gap-4 rounded-lg border border-default px-4 py-3">

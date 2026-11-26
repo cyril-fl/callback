@@ -25,5 +25,5 @@ export function usePlaces() {
   // The newest application to company, but the one excluded (the one being edited).
   const lastTo = (company: string, excluded?: string) =>
     data.value.find((a) => a.company === company && a.id !== excluded);
-  return { cities, countries, companies, countryOf, lastTo, refresh };
+  return { applications: data, cities, countries, companies, countryOf, lastTo, refresh };
 }
