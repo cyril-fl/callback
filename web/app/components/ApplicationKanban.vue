@@ -115,8 +115,8 @@ const day = (v?: string) =>
     <section
       v-for="column in columns"
       :key="column.key"
-      class="flex min-w-52 flex-1 shrink-0 flex-col rounded-xl bg-elevated/60 ring-1 transition-colors ring-inset"
-      :class="over === column.key ? 'bg-primary/3 ring-primary/30' : 'ring-default'"
+      class="flex min-w-52 flex-1 shrink-0 flex-col rounded-xl ring-1 ring-default transition-colors ring-inset"
+      :class="over === column.key ? 'bg-elevated' : 'bg-elevated/60'"
       :aria-label="label(column.key)"
       @dragover.prevent="over = column.key"
       @dragleave.self="over = undefined"
