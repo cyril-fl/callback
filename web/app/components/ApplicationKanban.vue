@@ -257,12 +257,14 @@ const day = (v?: string) =>
           v-if="dragged && over === column.key && target === column.items.length && column.items.length"
           class="-my-1.5 h-0.5 rounded-full bg-primary"
         />
-        <p
+        <UEmpty
           v-if="column.items.length === 0"
-          class="rounded-lg border border-dashed border-default p-4 text-center text-xs text-muted"
-        >
-          {{ t('kanban.dropHere') }}
-        </p>
+          :icon="icons.empty"
+          variant="naked"
+          size="sm"
+          :aria-label="t('kanban.dropHere')"
+          class="rounded-lg border border-dashed border-default"
+        />
       </div>
     </section>
   </div>
