@@ -8,23 +8,26 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 )
 
 // migrations are one-time queries for what createschema cannot do (a renamed or retyped column, data to rewrite),
 // run once per base. Append only, never edit nor reorder one that has shipped: its id is how a base knows it ran.
+// Those marked sqliteOnly rewrite data of the SQLite era: a Postgres base is always newer, it claims them without
+// running them (their SQL is SQLite's: text times, sqlite_master).
 var migrations = []migration{
 	// The status history started after the applications: each one applied on its day, then at its current status
 	// when it moved on, at its last update. Times are stored as bun writes them, in UTC.
-	{id: "status-changes-backfill", query: `INSERT INTO status_changes (application_id, status, at)
+	{id: "status-changes-backfill", sqliteOnly: true, query: `INSERT INTO status_changes (application_id, status, at)
 		SELECT id, 'applied', applied_at || ' 00:00:00+00:00' FROM applications
 		UNION ALL
 		SELECT id, status, updated_at FROM applications WHERE status <> 'applied'`},
 	// The first change of an application was dated when it was entered: it moves back to the day it applied.
-	{id: "status-changes-applied-at", query: `UPDATE status_changes SET at = (SELECT applied_at || ' 00:00:00+00:00' FROM applications a WHERE a.id = status_changes.application_id)
+	{id: "status-changes-applied-at", sqliteOnly: true, query: `UPDATE status_changes SET at = (SELECT applied_at || ' 00:00:00+00:00' FROM applications a WHERE a.id = status_changes.application_id)
 		WHERE id = (SELECT MIN(id) FROM status_changes s WHERE s.application_id = status_changes.application_id)
 		AND at > (SELECT applied_at || ' 00:00:00+00:00' FROM applications a WHERE a.id = status_changes.application_id)`},
 	// The one account of the settings becomes a user, admin, who owns every row.
-	{id: "users-from-settings", run: usersFromSettings},
+	{id: "users-from-settings", sqliteOnly: true, run: usersFromSettings},
 }
 
 // migration is a query, or run when SQL alone cannot do it.
@@ -32,6 +35,8 @@ type migration struct {
 	id    string
 	query string
 	run   func(ctx context.Context, tx bun.Tx) error
+	// sqliteOnly is claimed but not run on Postgres.
+	sqliteOnly bool
 }
 
 // runMigrations runs, in the schema's transaction, the migrations this base has not run yet.
@@ -50,7 +55,7 @@ func (p *run) runMigrations(tx bun.Tx) {
 			p.SetErr(err)
 			return
 		}
-		if claimed, _ := result.RowsAffected(); claimed == 1 {
+		if claimed, _ := result.RowsAffected(); claimed == 1 && !(m.sqliteOnly && tx.Dialect().Name() != dialect.SQLite) {
 			if m.run != nil {
 				p.SetErr(m.run(p.ctx, tx))
 				continue

@@ -23,16 +23,17 @@ func Where(ctx context.Context, filter domain.Filter) func(bun.QueryBuilder) bun
 			q = q.Where("a.status IN (?)", bun.List(filter.Status))
 		}
 		if filter.Source != "" {
-			q = q.Where("a.source = ? COLLATE NOCASE", filter.Source)
+			q = q.Where("lower(a.source) = lower(?)", filter.Source)
 		}
 		if location := strings.TrimSpace(filter.Location); location != "" {
-			q = q.Where("a.location = ? COLLATE NOCASE", location)
+			q = q.Where("lower(a.location) = lower(?)", location)
 		}
 		if text := strings.TrimSpace(filter.Q); text != "" {
+			// lower() on both sides: LIKE is case-sensitive on Postgres, ASCII-insensitive on SQLite.
 			like := "%" + likeEscaper.Replace(text) + "%"
 			q = q.WhereGroup(" AND ", func(q bun.QueryBuilder) bun.QueryBuilder {
 				for _, column := range []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "contact_name", "contact_email", "comment"} {
-					q = q.WhereOr("a.? LIKE ? ESCAPE '\\'", bun.Ident(column), like)
+					q = q.WhereOr("lower(a.?) LIKE lower(?) ESCAPE '\\'", bun.Ident(column), like)
 				}
 				return q
 			})

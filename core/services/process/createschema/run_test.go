@@ -9,6 +9,8 @@ import (
 	"github.com/cyril-fl/callback/core/services/process/createschema"
 	"github.com/cyril-fl/callback/core/services/process/readpreferences"
 	"github.com/cyril-fl/callback/core/services/testdb"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 )
 
 // The schema runs at every start: a second run on a base that has it changes nothing and fails on nothing.
@@ -33,9 +35,8 @@ func TestAddColumn(t *testing.T) {
 	if again.HasErr() {
 		t.Fatalf("run: %v", again.GetErr())
 	}
-	var count int
-	if err := db.NewRaw(`SELECT count(*) FROM pragma_table_info('applications') WHERE name = 'comment'`).Scan(ctx, &count); err != nil || count != 1 {
-		t.Fatalf("comment column: %d, %v", count, err)
+	if _, err := db.ExecContext(ctx, `SELECT comment FROM applications`); err != nil {
+		t.Fatalf("comment column: %v", err)
 	}
 }
 
@@ -43,6 +44,7 @@ func TestAddColumn(t *testing.T) {
 // update when they moved on.
 func TestBackfillStatusChanges(t *testing.T) {
 	db := testdb.New(t)
+	sqliteOnly(t, db)
 	ctx := context.Background()
 	updated := time.Date(2026, 2, 3, 14, 30, 0, 0, time.UTC)
 	applications := []domain.Application{
@@ -81,6 +83,7 @@ func TestBackfillStatusChanges(t *testing.T) {
 
 func TestFirstChangeOnAppliedAt(t *testing.T) {
 	db := testdb.New(t)
+	sqliteOnly(t, db)
 	ctx := context.Background()
 	entered := time.Date(2026, 2, 3, 14, 30, 0, 0, time.UTC)
 	if _, err := db.NewInsert().Model(&domain.Application{ID: "a", Company: "Acme", Location: "Paris", Source: domain.SourceSpontaneous, Status: domain.StatusResponded, AppliedAt: "2026-01-05", CreatedAt: entered, UpdatedAt: entered}).Exec(ctx); err != nil {
@@ -112,6 +115,7 @@ func TestFirstChangeOnAppliedAt(t *testing.T) {
 // account that owns every row and keeps the preferences.
 func TestUsersFromSettings(t *testing.T) {
 	db := testdb.New(t)
+	sqliteOnly(t, db)
 	ctx := context.Background()
 	for _, query := range []string{
 		`DROP INDEX idx_applications_user`,
@@ -148,5 +152,12 @@ func TestUsersFromSettings(t *testing.T) {
 	preferences.Run()
 	if got := preferences.GetResult(); preferences.HasErr() || got.Plan != domain.PlanPro || got.TrashDays != 12 || got.FollowUpDays != domain.DefaultPreferences.FollowUpDays {
 		t.Errorf("preferences = %+v, %v", got, preferences.GetErr())
+	}
+}
+
+// sqliteOnly skips a test of a migration of the SQLite era: a Postgres base claims it without running it.
+func sqliteOnly(t *testing.T, db *bun.DB) {
+	if db.Dialect().Name() != dialect.SQLite {
+		t.Skip("a SQLite-era migration")
 	}
 }

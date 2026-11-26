@@ -8,6 +8,7 @@ import (
 	"github.com/cyril-fl/callback/core/domain"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 )
 
 type run struct {
@@ -46,7 +47,7 @@ func (p *run) createTables(tx bun.Tx) {
 }
 
 // addColumns gives an existing table the columns its model gained since: CREATE TABLE IF NOT EXISTS skips it whole.
-// A new NOT NULL column needs a default, SQLite refuses it otherwise.
+// A new NOT NULL column needs a default, SQLite refuses it otherwise (Postgres too, on a table with rows).
 func (p *run) addColumns(tx bun.Tx, model any) {
 	if p.HasErr() {
 		return
@@ -55,7 +56,11 @@ func (p *run) addColumns(tx bun.Tx, model any) {
 	var existing []struct {
 		Name string `bun:"name"`
 	}
-	if err := tx.NewRaw("SELECT name FROM pragma_table_info(?)", table.Name).Scan(p.ctx, &existing); err != nil {
+	columns := "SELECT name FROM pragma_table_info(?)"
+	if tx.Dialect().Name() == dialect.PG {
+		columns = "SELECT column_name AS name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ?"
+	}
+	if err := tx.NewRaw(columns, table.Name).Scan(p.ctx, &existing); err != nil {
 		p.SetErr(err)
 		return
 	}

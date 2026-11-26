@@ -1,7 +1,7 @@
 # callback — job application tracker
 
 Track job applications from a web app, a CLI and an MCP server for AI agents. One account or several (see
-[Modes](#modes)), one SQLite file.
+[Modes](#modes)), one SQLite file or a [Postgres](#postgres) base.
 
 - **`callback-server`**: the HTTP API (Go, SQLite), the web app it serves, and the MCP over HTTP with its OAuth sign-in.
 - **`callback`**: the CLI and the stdio MCP server, a client of the API only.
@@ -55,6 +55,19 @@ base lacks, so the same file can be imported twice.
 A new job search: Settings → Danger zone deletes every application and its history (type `supprimer` to confirm),
 after a backup. The password, the settings and the tokens stay. Only a logged-in session can, never an API token or
 an agent.
+
+## Postgres
+
+SQLite is the default. `--db` (or `CALLBACK_DB`) also takes a Postgres URL; the schema is made at start, as on SQLite:
+
+```sh
+callback-server serve --db 'postgres://callback:secret@db:5432/callback?sslmode=disable'
+```
+
+The dev stack has one, off by default: `docker compose --profile postgres up -d postgres`, then
+`--db 'postgres://callback:callback@localhost:5432/callback?sslmode=disable'` (from the `callback` container, the host
+is `postgres`). `callback-server backup` copies a SQLite base only: back up a Postgres base with `pg_dump`. Moving a
+SQLite base to Postgres: Settings → Backup on one, import on the other (the settings and tokens stay behind).
 
 ## Modes
 
@@ -113,6 +126,7 @@ make setup                                    # git hooks (gofmt, prettier, conv
 CALLBACK_PASSWORD=change-me go run ./cmd/callback-server serve --db ./data/callback.db --origin http://localhost:3000 --mcp-addr :8081
 make web                                      # Nuxt on http://localhost:3000
 make test                                     # go vet + go test, each test on an in-memory SQLite
+CALLBACK_TEST_PG='postgres://…' make test     # the same on Postgres, a schema of its own per test
 make openapi                                  # after an API change, then `bun run types` in web/
 make up / make down                           # the Docker stack, built locally
 ```

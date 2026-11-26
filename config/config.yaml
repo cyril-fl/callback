@@ -63,7 +63,7 @@ commands:
   backup:
     use: "backup <file>"
     short: "Copy the base to a file"
-    long: "Copy the base to a file with VACUUM INTO, while the server runs. The file must not exist."
+    long: "Copy a SQLite base to a file with VACUUM INTO, while the server runs. The file must not exist. A Postgres base is backed up with pg_dump."
     example: "{name}-server backup /data/backup-$(date +%F).db"
   root:
     use: "{name}"

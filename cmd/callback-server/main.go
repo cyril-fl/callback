@@ -13,8 +13,8 @@ import (
 	cmdserve "github.com/cyril-fl/callback/core/server/cmd-serve"
 	"github.com/cyril-fl/callback/core/server/mcphttp"
 	"github.com/cyril-fl/callback/core/server/oauth"
+	"github.com/cyril-fl/callback/core/services/database"
 	"github.com/cyril-fl/callback/core/services/process/createschema"
-	"github.com/cyril-fl/callback/core/services/sqlite"
 	plumcliutilsargs "github.com/cyril-fl/plum/cli/utils/args"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun"
@@ -38,7 +38,7 @@ var cmdRoot = &cobra.Command{
 		}
 		path, _ := cobra.Root().PersistentFlags().GetString("db")
 		var err error
-		if db, err = sqlite.Open(path); err != nil {
+		if db, err = database.Open(path); err != nil {
 			return err
 		}
 		schema := createschema.Process(cobra.Context(), db)
@@ -97,7 +97,7 @@ func init() {
 	if dbPath == "" {
 		dbPath = "callback.db"
 	}
-	cmdRoot.PersistentFlags().String("db", dbPath, "SQLite file of the base, created when missing ("+config.Env("DB")+")")
+	cmdRoot.PersistentFlags().String("db", dbPath, "SQLite file of the base, created when missing, or a Postgres URL: postgres://user:password@host:5432/callback?sslmode=disable ("+config.Env("DB")+")")
 	plumcliutilsargs.Makeflags(cmdServe, cmd.Serve.Flags)
 	plumcliutilsargs.Makeflags(cmdResetPassword, cmd.ResetPassword.Flags)
 	cmdRoot.AddCommand(cmdServe, cmdResetPassword, cmdBackup)

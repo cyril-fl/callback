@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 	"golang.org/x/term"
 )
 
@@ -99,8 +100,11 @@ func ResetPassword(cobra *cobra.Command, db bun.IDB) error {
 }
 
 // Backup copies the base to file while the server runs: VACUUM INTO writes a clean copy in one read transaction.
-// The image has no sqlite3 to do it.
+// The image has no sqlite3 to do it. A Postgres base has pg_dump.
 func Backup(cobra *cobra.Command, db bun.IDB, file string) error {
+	if db.Dialect().Name() != dialect.SQLite {
+		return errors.New("backup copies a SQLite base: back a Postgres base up with pg_dump")
+	}
 	if _, err := os.Stat(file); !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("%s already exists", file)
 	}

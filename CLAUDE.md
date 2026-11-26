@@ -1,6 +1,6 @@
 # callback
 
-A job application tracker: one Go module at the root (`github.com/cyril-fl/callback`: the API, the CLI and the MCP) and a Nuxt web app (`web/`), on SQLite. Two modes (`--mode single|multi`): one account logging in by password, or several with a name, sign-up by invitation or public, and admins; the schema is multi-user either way. The patterns come from tide (`~/Devloppement/go/notes/main`), without its Postgres and S3.
+A job application tracker: one Go module at the root (`github.com/cyril-fl/callback`: the API, the CLI and the MCP) and a Nuxt web app (`web/`), on SQLite or Postgres. Two modes (`--mode single|multi`): one account logging in by password, or several with a name, sign-up by invitation or public, and admins; the schema is multi-user either way. The patterns come from tide (`~/Devloppement/go/notes/main`), without its S3.
 
 - `cmd/`: the two binaries. `callback-server` (`cmd/callback-server/`, `core/server/`) is the only one on the base: `serve` (the API, the web app with `--web`, the MCP over HTTP and its OAuth with `--mcp-addr`), `reset-password`, `backup <file>`. `callback` (`cmd/callback/`, `cli/`) is the CLI and the stdio MCP (`callback mcp`), a client of the API only: `go list -deps ./cmd/callback` never shows bun nor `core/` (CI checks it).
 - `config/`: `config.yaml`, the commands, their help and flags, built in.
@@ -10,13 +10,13 @@ A job application tracker: one Go module at the root (`github.com/cyril-fl/callb
 ## Run
 
 - `CALLBACK_PASSWORD=change-me go run ./cmd/callback-server serve --db ./data/callback.db --origin http://localhost:3000 --mcp-addr :8081`, then `cd web && bun run dev`. `CALLBACK_PASSWORD` sets the password of an empty base only (account `CALLBACK_USER`, `admin` by default); `callback-server reset-password` changes it.
-- `make test`: `go vet` and `go test`, every test on an in-memory SQLite of its own (`core/services/testdb`, `core/services/testserver` for the API).
+- `make test`: `go vet` and `go test`, every test on an in-memory SQLite of its own (`core/services/testdb`, `core/services/testserver` for the API). `CALLBACK_TEST_PG=postgres://…` runs them on Postgres, a schema per test.
 - `callback-server backup <file>` before touching data or the schema.
 
 ## Go rules
 
 - Processes follow the `plum-process` skill: guarded steps, `HasErr()` then `GetErr()`, `bun.IDB` so tests pass a base or a transaction.
-- The base has one connection (`core/services/sqlite`): never query the `*bun.DB` while a transaction from it is open, use the `bun.Tx`. Times are stored in UTC (`time.Now().UTC()`): SQLite compares them as text.
+- The base is SQLite by default or Postgres (`core/services/database.Open`, by the `--db` DSN): raw SQL must run on both (`db.Dialect().Name()` when it cannot). SQLite has one connection: never query the `*bun.DB` while a transaction from it is open, use the `bun.Tx` (on Postgres too: the write would be outside the transaction). Times are stored in UTC (`time.Now().UTC()`): SQLite compares them as text.
 - **No migration tool.** `createschema` creates missing tables and indexes and the columns a model gained, at every start. A rename, a type change or data to rewrite goes into `core/services/process/createschema/migrations.go` (append only). A new NOT NULL column needs a default. The columns of `applications` have no SQL default: bun leaves a defaulted column out of a batch insert when the first row has its zero value.
 - Every application, deleted application, token and OAuth code has a `user_id`: a process reads and writes the account of `domain.UserID(ctx)` only (auth puts it in the request's ctx; tests use `testdb.Account`). The status history and the follow-ups go through their application (`appfilter.History`).
 - Errors: a process's sentinel errors are made with `domain.Invalid/Unauthorized/Forbidden/NotFound`, which `respond` maps to 400/401/403/404; anything else is a 500 logged without detail to the client.
