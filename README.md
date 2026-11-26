@@ -82,7 +82,7 @@ belongs to an account.
   `CALLBACK_ADD_USER_MODE`) says who may sign up:
   - **`invitation`** (default): whoever holds an invitation link, which an admin makes in the settings (it serves
     once, for 7 days);
-  - **`public`**: anyone who reaches the web app.
+  - **`public`**: anyone who reaches the web app. One address creates four accounts, then waits longer before each new one (30 seconds up to an hour, forgotten after a day without sign-up).
 
   The first account of a base is an admin: `CALLBACK_PASSWORD` creates it on the first start, or, without it, the
   first to sign up. Admins list the accounts, reset a password (a random one, shown once, which logs that account

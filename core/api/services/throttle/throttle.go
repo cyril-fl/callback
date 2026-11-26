@@ -1,5 +1,5 @@
-// Package throttle makes an address wait longer after each wrong password in a row, at the login and on the OAuth
-// consent page. The failures are kept in the base (login_failures): a restart forgets none, and /authorize faces
+// Package throttle makes an address wait longer after each try in a row: wrong passwords at the login and on the OAuth
+// consent page, accounts created from one address at the public sign-up. The failures are kept in the base (login_failures): a restart forgets none, and /authorize faces
 // the Internet.
 package throttle
 
@@ -25,8 +25,6 @@ var waits = []time.Duration{0, 0, 0, 30 * time.Second, time.Minute, 5 * time.Min
 // forget is how long a key keeps its failures after the last one: its next try starts over.
 const forget = 24 * time.Hour
 
-const message = "too many wrong passwords, try again later"
-
 // GlobalKey counts the wrong passwords of every address on the OAuth consent page, which faces the Internet: an
 // attacker rotating addresses still waits. The login stays on the tailnet and does not count it.
 const GlobalKey = "global consent"
@@ -44,15 +42,29 @@ func AddressKey(r *http.Request) string {
 	return "address " + host
 }
 
-// Throttle counts the tries in a row of each key.
+// Throttle counts the tries in a row of each key, under its name.
 type Throttle struct {
-	db  bun.IDB
-	now func() time.Time
+	db   bun.IDB
+	name string
+	now  func() time.Time
+	// message is the error of the 429.
+	message string
 }
 
-// Passwords counts the wrong passwords: the login and the OAuth consent page share the count of an address.
+// New gives a throttle whose keys are counted under name, and whose 429 says message.
+func New(db bun.IDB, name, message string) *Throttle {
+	return &Throttle{db: db, name: name, now: time.Now, message: message}
+}
+
+// Passwords counts the wrong passwords: the login and the OAuth consent page share the count of an address. No
+// name: its keys stay those the base already holds.
 func Passwords(db bun.IDB) *Throttle {
-	return &Throttle{db: db, now: time.Now}
+	return New(db, "", "too many wrong passwords, try again later")
+}
+
+// Signups counts the accounts an address creates in the public mode: one address cannot fill the server.
+func Signups(db bun.IDB) *Throttle {
+	return New(db, "signup ", "too many accounts created from this address, try again later")
 }
 
 // Try counts a try for key before it runs, and gives 0; or, while key waits, how long it has left, without
@@ -61,7 +73,7 @@ func Passwords(db bun.IDB) *Throttle {
 func (t *Throttle) Try(ctx context.Context, key string) (wait time.Duration, err error) {
 	now := t.now().UTC()
 	err = t.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		failure := domain.LoginFailure{Key: key}
+		failure := domain.LoginFailure{Key: t.name + key}
 		err := tx.NewSelect().Model(&failure).WherePK().Scan(ctx)
 		switch {
 		case errors.Is(err, sql.ErrNoRows) || err == nil && !failure.ExpiresAt.After(now):
@@ -86,10 +98,10 @@ func (t *Throttle) Try(ctx context.Context, key string) (wait time.Duration, err
 // Forgive takes back the try Try counted, when it did not count.
 func (t *Throttle) Forgive(ctx context.Context, key string) {
 	err := t.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if _, err := tx.NewDelete().Model((*domain.LoginFailure)(nil)).Where("key = ? AND count <= 1", key).Exec(ctx); err != nil {
+		if _, err := tx.NewDelete().Model((*domain.LoginFailure)(nil)).Where("key = ? AND count <= 1", t.name+key).Exec(ctx); err != nil {
 			return err
 		}
-		_, err := tx.NewUpdate().Model((*domain.LoginFailure)(nil)).Set("count = count - 1").Where("key = ? AND count > 1", key).Exec(ctx)
+		_, err := tx.NewUpdate().Model((*domain.LoginFailure)(nil)).Set("count = count - 1").Where("key = ? AND count > 1", t.name+key).Exec(ctx)
 		return err
 	})
 	if err != nil {
@@ -99,7 +111,7 @@ func (t *Throttle) Forgive(ctx context.Context, key string) {
 
 // Reset forgets the tries of key.
 func (t *Throttle) Reset(ctx context.Context, key string) {
-	if _, err := t.db.NewDelete().Model((*domain.LoginFailure)(nil)).Where("key = ?", key).Exec(ctx); err != nil {
+	if _, err := t.db.NewDelete().Model((*domain.LoginFailure)(nil)).Where("key = ?", t.name+key).Exec(ctx); err != nil {
 		log.Printf("throttle: reset: %v", err)
 	}
 }
@@ -115,6 +127,6 @@ func (t *Throttle) Blocked(w http.ResponseWriter, r *http.Request, key string) b
 		return false
 	}
 	w.Header().Set("Retry-After", strconv.Itoa(int(math.Ceil(wait.Seconds()))))
-	respond.Fail(w, http.StatusTooManyRequests, message)
+	respond.Fail(w, http.StatusTooManyRequests, t.message)
 	return true
 }

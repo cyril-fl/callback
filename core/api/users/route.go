@@ -37,7 +37,8 @@ func Modes(mode domain.ServerMode) http.HandlerFunc {
 
 // Signup creates an account and logs it in, without a session: POST /api/signup, in the multi mode only. It needs an
 // invitation in the invitation mode, but for the first account of a base, which becomes admin. Its tries count with
-// the wrong passwords of the address (throttle.Passwords): an invitation cannot be guessed either.
+// the wrong passwords of the address (throttle.Passwords): an invitation cannot be guessed either. In the public mode
+// the accounts of an address count too (throttle.Signups): a few, then it waits longer at each one.
 // @Summary  Create an account and log it in
 // @Tags     users
 // @Accept   json
@@ -56,14 +57,26 @@ func Signup(db bun.IDB, mode domain.ServerMode) http.HandlerFunc {
 			return
 		}
 		key := throttle.AddressKey(r)
+		// created counts the accounts of the address in the public mode, where no invitation holds the sign-up back.
+		created := throttle.Signups(db)
+		public := mode.Public()
+		if public && created.Blocked(w, r, key) {
+			return
+		}
 		failed := throttle.Passwords(db)
 		if failed.Blocked(w, r, key) {
+			if public {
+				created.Forgive(r.Context(), key)
+			}
 			return
 		}
 
-		process := createuser.Process(r.Context(), db, input, mode.Public())
+		process := createuser.Process(r.Context(), db, input, public)
 		process.Run()
 		if process.HasErr() {
+			if public {
+				created.Forgive(r.Context(), key)
+			}
 			if !errors.Is(process.GetErr(), createuser.ErrBadInvite) {
 				failed.Forgive(r.Context(), key)
 			}

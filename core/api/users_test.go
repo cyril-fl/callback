@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -159,6 +160,28 @@ func TestSignupPublic(t *testing.T) {
 	response := call(t, server, "", "POST", "/api/signup", map[string]any{"name": "bob", "password": "long enough"}, nil)
 	if response.StatusCode != http.StatusOK || session(response) == "" {
 		t.Errorf("public signup: %d", response.StatusCode)
+	}
+}
+
+// In the public mode an address creates a few accounts, then waits: a refused sign-up does not count.
+func TestSignupPublicThrottled(t *testing.T) {
+	server := testserver.ServeMode(t, multiPublic)
+	if response := call(t, server, "", "POST", "/api/signup", map[string]any{"name": "", "password": "long enough"}, nil); response.StatusCode != http.StatusBadRequest {
+		t.Fatalf("bad name: %d, want 400", response.StatusCode)
+	}
+	for i := range 4 {
+		name := "user" + strconv.Itoa(i)
+		if response := call(t, server, "", "POST", "/api/signup", map[string]any{"name": name, "password": "long enough"}, nil); response.StatusCode != http.StatusOK {
+			t.Fatalf("signup %s: %d, want 200", name, response.StatusCode)
+		}
+	}
+	response := call(t, server, "", "POST", "/api/signup", map[string]any{"name": "user4", "password": "long enough"}, nil)
+	if response.StatusCode != http.StatusTooManyRequests || response.Header.Get("Retry-After") == "" {
+		t.Errorf("fifth account: %d (Retry-After %q), want 429", response.StatusCode, response.Header.Get("Retry-After"))
+	}
+	// The login of the address is not held back by its sign-ups.
+	if response := call(t, server, "", "POST", "/api/login", map[string]any{"name": "user0", "password": "long enough"}, nil); response.StatusCode != http.StatusOK {
+		t.Errorf("login after sign-ups: %d, want 200", response.StatusCode)
 	}
 }
 
