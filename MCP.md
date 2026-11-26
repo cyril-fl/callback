@@ -100,6 +100,14 @@ e-mail) ou un nom libre
 0 à 5 ; les jours en `2026-01-31`, `applied_before` et `applied_after` stricts. `""` efface `interview_at` et le
 contact.
 
+Les entretiens et les contacts sont des listes : `interviews` (`at` en `2026-01-31T14:30` local, `kind` parmi `hr`,
+`manager`, `tech`, `other`, `note`) et `contacts` (`name` et/ou `email`, `role`), 50 au plus chacune. Envoyées dans
+`add_applications` ou le `set` d'`update_applications`, elles remplacent toute la liste : pour en ajouter un, relire
+la candidature et renvoyer la liste entière. `interview_at` (le dernier entretien) et `contact_name`/`contact_email`
+(le premier contact) en découlent ; envoyés seuls, ils modifient ce dernier entretien ou ce premier contact.
+`read_applications` et `list_applications` sans `fields` renvoient les listes, `fields` les demande par leur nom.
+`comment` reste la note globale de la candidature.
+
 Les réponses sont du JSON compact (sans indentation, champs vides omis). `readOnlyHint` sur les lectures : le client
 les lance sans demander ; `destructiveHint` sur `delete_applications` : le client demande avant.
 
