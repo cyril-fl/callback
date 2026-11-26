@@ -8,7 +8,8 @@ const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ save: [set: Partial<Application>] }>();
 const { t } = useI18n();
 const { pro } = usePreferences();
-const interviewColumns = useInterviewColumns();
+const { icons } = useIcons();
+const kinds = [...useInterviewColumns()[1].items];
 const blank = (): Interview => ({ at: '', kind: 'other', note: '' });
 
 const state = reactive({ interviews: [] as Interview[], interview_at: '' });
@@ -37,20 +38,42 @@ function submit() {
 <template>
   <UModal
     v-model:open="open"
-    :title="status ? t(`status.${status}`) : ''"
+    :title="application ? `${application.company} · ${t(`status.${status}`)}` : ''"
     :description="t('form.interviewsHint')"
-    :ui="{ content: pro ? 'sm:max-w-xl' : undefined }"
   >
     <template #body>
       <UForm id="interview-form" :schema="schema" :state="state" @submit="submit">
-        <ListTable
-          v-if="pro"
-          v-model="state.interviews"
-          name="interviews"
-          :title="`${application?.company ?? ''} · ${t('form.interviews')}`"
-          :columns="interviewColumns"
-          :blank="blank"
-        />
+        <div v-if="pro" class="space-y-3">
+          <div v-for="(interview, i) in state.interviews" :key="i" class="space-y-3 rounded-lg p-3 ring-1 ring-default">
+            <div class="flex items-end gap-2">
+              <UFormField :name="`interviews.${i}.at`" :label="t('form.at')" required class="flex-1">
+                <DateTimeInput v-model="interview.at" class="w-full" />
+              </UFormField>
+              <UFormField :name="`interviews.${i}.kind`" :label="t('form.kind')" class="w-36">
+                <USelect v-model="interview.kind" :items="kinds" class="w-full" />
+              </UFormField>
+              <UButton
+                v-if="state.interviews.length > 1"
+                :icon="icons.delete"
+                color="neutral"
+                variant="ghost"
+                :aria-label="t('common.delete')"
+                @click="state.interviews.splice(i, 1)"
+              />
+            </div>
+            <UFormField :name="`interviews.${i}.note`" :label="t('form.note')">
+              <UTextarea v-model="interview.note" :rows="2" autoresize class="w-full" />
+            </UFormField>
+          </div>
+          <UButton
+            :icon="icons.add"
+            variant="soft"
+            color="neutral"
+            block
+            :label="t('form.addInterview')"
+            @click="state.interviews.push(blank())"
+          />
+        </div>
         <UFormField v-else name="interview_at" :label="t('form.interviewAt')" required>
           <DateTimeInput v-model="state.interview_at" class="w-full" />
         </UFormField>

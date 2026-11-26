@@ -147,6 +147,7 @@
     "kinds": { "hr": "RH", "manager": "Manager", "tech": "Technique", "other": "Autre" },
     "noRow": "Aucun",
     "sections": { "company": "Entreprise", "application": "Candidature", "followUp": "Suivi", "notes": "Notes" },
+    "addInterview": "Ajouter un entretien",
     "interviewsHint": "Ajoutez chaque entretien : date, type et note.",
     "contactRequired": "Nom ou e-mail",
     "required": "Requis",
