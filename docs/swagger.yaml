@@ -754,6 +754,13 @@ components:
       - response_rate_by_source
       - total
       type: object
+    renameuser.Input:
+      properties:
+        name:
+          type: string
+      required:
+      - name
+      type: object
     respond.Failure:
       properties:
         error:
@@ -1454,6 +1461,47 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Unauthorized
       summary: Who is asking
+      tags:
+      - session
+  /api/me/name:
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/renameuser.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: Rename the account logged in
       tags:
       - session
   /api/me/password:

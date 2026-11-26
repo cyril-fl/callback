@@ -27,6 +27,7 @@
   "login": {
     "title": "Connexion",
     "password": "Mot de passe",
+    "renamed": "Nom changé : connectez-vous désormais avec celui-ci.",
     "submit": "Se connecter",
     "name": "Nom",
     "noAccount": "Pas encore de compte ?"

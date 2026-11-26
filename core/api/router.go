@@ -44,6 +44,7 @@ func New(db bun.IDB, origin string, mode domain.ServerMode) http.Handler {
 	mux.Handle("GET /api/add-user", apiusers.Modes(mode))
 	if mode.Multi() {
 		mux.Handle("POST /api/signup", apiusers.Signup(db, mode))
+		mux.Handle("PATCH /api/me/name", apilogin.Rename(db))
 		mux.Handle("GET /api/users", auth.Admin(db, apiusers.List(db)))
 		mux.Handle("DELETE /api/users/{id}", auth.Admin(db, apiusers.Delete(db)))
 		mux.Handle("POST /api/users/{id}/password", auth.Admin(db, apiusers.ResetPassword(db)))

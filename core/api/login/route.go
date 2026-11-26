@@ -14,6 +14,7 @@ import (
 	"github.com/cyril-fl/callback/core/services/process/createsession"
 	"github.com/cyril-fl/callback/core/services/process/deletesession"
 	"github.com/cyril-fl/callback/core/services/process/editpassword"
+	"github.com/cyril-fl/callback/core/services/process/renameuser"
 	"github.com/uptrace/bun"
 )
 
@@ -143,6 +144,33 @@ func EditPassword(db bun.IDB) http.HandlerFunc {
 			return
 		}
 		failed.Reset(r.Context(), key)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// Rename changes the name of the account logged in, in the multi mode: PATCH /api/me/name.
+// @Summary  Rename the account logged in
+// @Tags     session
+// @Accept   json
+// @Param    body body renameuser.Input true "body"
+// @Success  204
+// @Failure  400 {object} respond.Failure
+// @Failure  401 {object} respond.Failure
+// @Failure  403 {object} respond.Failure
+// @Failure  404 {object} respond.Failure
+// @Router   /api/me/name [patch]
+func Rename(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input renameuser.Input
+		if !respond.Decode(w, r, &input) {
+			return
+		}
+		process := renameuser.Process(r.Context(), db, input)
+		process.Run()
+		if process.HasErr() {
+			respond.Error(w, r, process.GetErr())
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

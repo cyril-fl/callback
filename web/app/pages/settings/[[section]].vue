@@ -248,6 +248,24 @@ async function confirmAccount() {
   }
 }
 
+// The account's own name, the one it logs in with: saved when the field is left.
+const nameDraft = ref(me.value?.user ?? '');
+watch(
+  () => me.value?.user,
+  (name) => (nameDraft.value = name ?? ''),
+);
+async function renameAccount() {
+  const name = nameDraft.value.trim();
+  if (!name || name === me.value?.user) return void (nameDraft.value = me.value?.user ?? '');
+  try {
+    await api('/api/me/name', { method: 'PATCH', body: { name } });
+    await refreshNuxtData('me');
+    toast.add({ title: t('settings.renamed'), color: 'success' });
+  } catch {
+    nameDraft.value = me.value?.user ?? ''; // useApi already toasted.
+  }
+}
+
 // The account's own password: the current one proves it is the owner, the other devices log out.
 const passwordOpen = ref(false);
 const passwordForm = reactive({ current: '', new: '' });
@@ -433,7 +451,14 @@ async function revoke() {
         <ul class="divide-y divide-default rounded-lg border border-default">
           <li v-if="me?.mode === 'multi'" class="flex flex-wrap items-center gap-4 px-4 py-3">
             <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.accountName') }}</p>
-            <span class="text-sm">{{ me.user }}</span>
+            <UInput
+              v-model="nameDraft"
+              size="sm"
+              maxlength="64"
+              autocomplete="username"
+              :aria-label="t('settings.accountName')"
+              @change="renameAccount"
+            />
           </li>
           <li v-if="me?.version" class="flex flex-wrap items-center gap-4 px-4 py-3">
             <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.version') }}</p>

@@ -334,3 +334,25 @@ func TestInviteTokenKept(t *testing.T) {
 		t.Errorf("with the secret: %+v, want %s first", pending, made.Token)
 	}
 }
+
+// An account renames itself in the multi mode, to a free name, and logs in with it; a token cannot, the single mode has no name.
+func TestRename(t *testing.T) {
+	server := testserver.ServeMode(t, multiInvitation)
+	bob := server.Account(t, "bob")
+	if response := call(t, server, bob, "PATCH", "/api/me/name", map[string]any{"name": "ADMIN"}, nil); response.StatusCode != http.StatusBadRequest {
+		t.Errorf("taken: %d, want 400", response.StatusCode)
+	}
+	if response := call(t, server, server.Token(t, false), "PATCH", "/api/me/name", map[string]any{"name": "root"}, nil); response.StatusCode != http.StatusForbidden {
+		t.Errorf("token: %d, want 403", response.StatusCode)
+	}
+	if response := call(t, server, server.Session, "PATCH", "/api/me/name", map[string]any{"name": " root "}, nil); response.StatusCode != http.StatusNoContent {
+		t.Fatalf("rename: %d", response.StatusCode)
+	}
+	if response := call(t, server, "", "POST", "/api/login", map[string]any{"name": "root", "password": testserver.Password}, nil); response.StatusCode != http.StatusOK {
+		t.Errorf("login as root: %d", response.StatusCode)
+	}
+	single := testserver.Serve(t)
+	if response := call(t, single, single.Session, "PATCH", "/api/me/name", map[string]any{"name": "x"}, nil); response.StatusCode != http.StatusNotFound {
+		t.Errorf("single: %d, want 404", response.StatusCode)
+	}
+}
