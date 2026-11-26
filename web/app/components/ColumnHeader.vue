@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { CommandPaletteItem, DropdownMenuItem } from '@nuxt/ui';
 
-// A column header: the label opens the column's filter (a menu, a list of values with a search, or a text search),
-// the arrow after it sorts asc then desc.
+// A column header: the label opens the column's filter (a menu, a list of values with a search, a text search, or
+// the default slot in a popover), the arrow after it sorts asc then desc.
 const props = defineProps<{
   label: string;
   sorted: false | 'asc' | 'desc';
@@ -74,6 +74,10 @@ const items = computed(() => [
           class="w-56 [&>input]:h-12"
         />
       </template>
+    </UPopover>
+    <UPopover v-else-if="$slots.default" :content="{ align: 'start' }">
+      <UButton v-bind="trigger" />
+      <template #content><slot /></template>
     </UPopover>
     <span v-else class="px-2.5 font-medium">{{ label }}</span>
     <UButton

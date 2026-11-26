@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { getLocalTimeZone, today as todayDate } from '@internationalized/date';
+import { getLocalTimeZone, today as todayDate, type DateValue } from '@internationalized/date';
 import type { TableColumn, TableRow } from '@nuxt/ui';
-import type { Application, StatusChange } from '~/types/items';
+import type { VNode } from 'vue';
+import type { Application, Contact, StatusChange } from '~/types/items';
 
 // The pro mode's page: in base the stats stay above the list.
 definePageMeta({ middleware: 'pro' });
@@ -12,6 +13,8 @@ const sources = useSources();
 const countries = useCountries();
 const { preferences } = usePreferences();
 const { icons } = useIcons();
+const ColumnHeader = resolveComponent('ColumnHeader');
+const DayFilter = resolveComponent('DayFilter');
 
 const { data: applications, refresh: refreshApplications } = await useAsyncData(
   'dashboard',
@@ -72,30 +75,95 @@ const followUps = computed(() =>
     today.subtract({ days: preferences.value?.follow_up_days ?? 7 }).toDate(getLocalTimeZone()),
   ),
 );
-// The interviews follow the city but not the period (it counts applications): their own day filter does, from today
-// on by default.
-const dayModes = ['after', 'before', 'on', 'between'] as const;
-const dayMode = ref<(typeof dayModes)[number]>('after');
-const dayModeItems = dayModes.map((value) => ({ value, label: t(`stats.interviews.${value}`) }));
+// The interviews follow the city but not the period (it counts applications); their headers filter them, the day
+// from today on by default.
+const dayMode = ref<DayMode>('after');
 const interviewDay = shallowRef(today);
-const interviewRange = shallowRef({ start: today, end: today.add({ weeks: 1 }) });
+const interviewRange = shallowRef<{ start: DateValue | undefined; end: DateValue | undefined }>({
+  start: today,
+  end: today.add({ weeks: 1 }),
+});
+const companyQuery = ref('');
+const addressQuery = ref('');
+const contactFilter = ref<string>();
+const contactName = (c: Contact) => c.name || c.email || '';
+const has = (v: string, q: string) => v.toLowerCase().includes(q.trim().toLowerCase());
+const cityInterviews = computed(() =>
+  interviewsOf(inPeriod(applications.value, '', city.value)).map((r) => ({
+    ...r,
+    company: r.application.company ?? '',
+    address: addressOf(r.application, countries.label(r.application.country)),
+    contacts: r.application.contacts ?? [],
+  })),
+);
+const contactNames = computed(() =>
+  [...new Set(cityInterviews.value.flatMap((r) => r.contacts.map(contactName)))].filter(Boolean).sort(),
+);
 const interviews = computed(() => {
-  const d = interviewDay.value?.toString();
-  const { start, end } = interviewRange.value ?? {};
-  const [from, to] = {
-    after: [d, undefined],
-    before: [undefined, d],
-    on: [d, d],
-    between: [start?.toString(), end?.toString()],
-  }[dayMode.value];
-  return interviewsOf(inPeriod(applications.value, '', city.value), from, to);
+  const [from, to] = dayBounds(dayMode.value, interviewDay.value?.toString(), {
+    start: interviewRange.value?.start?.toString(),
+    end: interviewRange.value?.end?.toString(),
+  });
+  return cityInterviews.value.filter(
+    (r) =>
+      (!from || r.at.slice(0, 10) >= from) &&
+      (!to || r.at.slice(0, 10) <= to) &&
+      has(r.company, companyQuery.value) &&
+      has(r.address, addressQuery.value) &&
+      (!contactFilter.value || r.contacts.some((c) => contactName(c) === contactFilter.value)),
+  );
 });
 type InterviewRow = (typeof interviews.value)[number];
+const interviewSorting = ref([{ id: 'at', desc: false }]);
+// Built once, as in the list: a new header function would close the open filter at every pick.
+const header =
+  (label: string, filter: () => Record<string, unknown>, slot?: () => VNode): TableColumn<InterviewRow>['header'] =>
+  ({ column }) =>
+    h(
+      ColumnHeader,
+      {
+        label: t(label),
+        sorted: column.getIsSorted(),
+        onSort: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+        ...filter(),
+      },
+      slot && { default: slot },
+    );
+const search = (query: Ref<string>) => () => ({
+  search: true,
+  modelValue: query.value,
+  'onUpdate:modelValue': (v?: string) => (query.value = v ?? ''),
+  active: query.value !== '',
+});
 const interviewColumns: TableColumn<InterviewRow>[] = [
-  { accessorKey: 'at', header: t('form.at') },
-  { id: 'company', header: t('form.company') },
-  { id: 'address', header: t('form.street') },
-  { id: 'contacts', header: t('form.contacts') },
+  {
+    accessorKey: 'at',
+    header: header(
+      'form.at',
+      () => ({ active: dayMode.value !== 'all' }),
+      () =>
+        h(DayFilter, {
+          mode: dayMode.value,
+          'onUpdate:mode': (v: DayMode) => (dayMode.value = v),
+          day: interviewDay.value,
+          'onUpdate:day': (v: typeof today) => (interviewDay.value = v),
+          range: interviewRange.value,
+          'onUpdate:range': (v: typeof interviewRange.value) => (interviewRange.value = v),
+        }),
+    ),
+  },
+  { accessorKey: 'company', header: header('form.company', search(companyQuery)) },
+  { accessorKey: 'address', header: header('form.street', search(addressQuery)) },
+  {
+    id: 'contacts',
+    accessorFn: (r) => r.contacts.map(contactName).join(', '),
+    header: header('form.contacts', () => ({
+      options: contactNames.value,
+      modelValue: contactFilter.value,
+      'onUpdate:modelValue': (v?: string) => (contactFilter.value = v),
+      active: !!contactFilter.value,
+    })),
+  },
 ];
 
 const day = (v?: string) => (v ? new Date(v.length === 10 ? `${v}T00:00:00` : v).toLocaleDateString('fr-FR') : '');
@@ -131,19 +199,9 @@ function openForm(app: Application) {
     </section>
 
     <section>
-      <div class="mb-3 flex flex-wrap items-center gap-2">
-        <h2 class="me-auto text-sm font-semibold">{{ t('stats.interviews.title') }}</h2>
-        <USelect
-          v-model="dayMode"
-          :items="dayModeItems"
-          size="sm"
-          class="w-28"
-          :aria-label="t('stats.interviews.filter')"
-        />
-        <UInputDate v-if="dayMode === 'between'" v-model="interviewRange" range size="sm" />
-        <UInputDate v-else v-model="interviewDay" size="sm" />
-      </div>
+      <h2 class="mb-3 text-sm font-semibold">{{ t('stats.interviews') }}</h2>
       <UTable
+        v-model:sorting="interviewSorting"
         :data="interviews"
         :columns="interviewColumns"
         class="rounded-lg border border-default"
@@ -152,14 +210,10 @@ function openForm(app: Application) {
       >
         <template #empty><UEmpty :icon="icons.empty" :title="t('common.empty')" variant="naked" /></template>
         <template #at-cell="{ row }">{{ stamp(row.original.at) }}</template>
-        <template #company-cell="{ row }">{{ row.original.application.company }}</template>
-        <template #address-cell="{ row }">
-          {{ addressOf(row.original.application, countries.label(row.original.application.country)) }}
-        </template>
         <template #contacts-cell="{ row }">
-          <UAvatarGroup v-if="row.original.application.contacts?.length" size="xs">
+          <UAvatarGroup v-if="row.original.contacts.length" size="xs">
             <UAvatar
-              v-for="(c, i) in row.original.application.contacts"
+              v-for="(c, i) in row.original.contacts"
               :key="i"
               :alt="c.name || c.email"
               :title="[c.name || c.email, c.role].filter(Boolean).join(' · ')"

@@ -44,6 +44,13 @@
     "job_post": "Offre d'emploi",
     "recruiter": "Recruteur"
   },
+  "dayFilter": {
+    "all": "Tous",
+    "after": "À partir du",
+    "before": "Jusqu'au",
+    "on": "Le",
+    "between": "Du … au"
+  },
   "stats": {
     "responseRate": "Taux de réponse",
     "total": "Total",
@@ -67,14 +74,7 @@
     "rateBySource": "Taux de réponse par source",
     "toFollowUp": "À relancer",
     "untouchedSince": "sans nouvelles depuis le {date}",
-    "interviews": {
-      "title": "Entretiens",
-      "filter": "Filtrer par jour",
-      "after": "À partir du",
-      "before": "Jusqu'au",
-      "on": "Le",
-      "between": "Du … au"
-    },
+    "interviews": "Entretiens",
     "funnel": "Étapes atteintes",
     "daysToResponse": "Première réponse en {days} jours en moyenne.",
     "noResponseYet": "Aucune réponse encore."

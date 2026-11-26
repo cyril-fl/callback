@@ -137,6 +137,21 @@ export function interviewsOf(applications: Application[], from?: string, to?: st
     .sort((a, b) => a.at.localeCompare(b.at));
 }
 
+/** The modes of a day filter: off, from a day, until a day, on a day, between two days. */
+export const DAY_MODES = ['all', 'after', 'before', 'on', 'between'] as const;
+export type DayMode = (typeof DAY_MODES)[number];
+
+/** The [from, to] days (YYYY-MM-DD, both included, undefined for open) a day filter keeps. */
+export function dayBounds(mode: DayMode, day?: string, range?: { start?: string; end?: string }) {
+  return {
+    all: [undefined, undefined],
+    after: [day, undefined],
+    before: [undefined, day],
+    on: [day, day],
+    between: [range?.start, range?.end],
+  }[mode];
+}
+
 /** The address on one line: street, postal code and city, country. */
 export const addressOf = (a: Application, country: string) =>
   [a.street, [a.postal_code, a.location].filter(Boolean).join(' '), country].filter(Boolean).join(', ');

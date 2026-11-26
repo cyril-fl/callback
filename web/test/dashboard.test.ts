@@ -7,6 +7,7 @@ import {
   averageDaysToResponse,
   canFollowUp,
   countBy,
+  dayBounds,
   funnelOf,
   historyOf,
   inPeriod,
@@ -175,6 +176,17 @@ test('interviewsOf lists every interview between two days, the earliest first', 
   assert.deepEqual(at('2026-01-20'), ['b 2026-01-20T10:00', 'a 2026-02-02T14:30']);
   assert.deepEqual(at(undefined, '2026-01-20'), ['a 2026-01-10T09:00', 'b 2026-01-20T10:00']);
   assert.deepEqual(at('2026-01-20', '2026-01-20'), ['b 2026-01-20T10:00']);
+});
+
+test('dayBounds turns a day filter into from and to', () => {
+  assert.deepEqual(dayBounds('all', '2026-01-20'), [undefined, undefined]);
+  assert.deepEqual(dayBounds('after', '2026-01-20'), ['2026-01-20', undefined]);
+  assert.deepEqual(dayBounds('before', '2026-01-20'), [undefined, '2026-01-20']);
+  assert.deepEqual(dayBounds('on', '2026-01-20'), ['2026-01-20', '2026-01-20']);
+  assert.deepEqual(dayBounds('between', '2026-01-20', { start: '2026-01-01', end: '2026-01-31' }), [
+    '2026-01-01',
+    '2026-01-31',
+  ]);
 });
 
 test('addressOf joins the parts it has', () => {
