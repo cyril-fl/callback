@@ -46,10 +46,7 @@ func Process(ctx context.Context, db bun.IDB, filter domain.Filter) *run {
 }
 
 func (p *run) Run() {
-	p.SetErr(p.filter.Validate())
-	if p.HasErr() {
-		return
-	}
+	p.checkFilter()
 	p.count()
 }
 
@@ -59,7 +56,15 @@ func (p *run) GetResult() Stats {
 }
 
 // Methods
+func (p *run) checkFilter() {
+	p.SetErr(p.filter.Validate())
+}
+
 func (p *run) count() {
+	if p.HasErr() {
+		return
+	}
+
 	var rows []struct {
 		Status domain.Status
 		Source domain.Source

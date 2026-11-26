@@ -38,9 +38,6 @@ func Process(ctx context.Context, db bun.IDB, days int, now time.Time) *run {
 }
 
 func (p *run) Run() {
-	if p.days <= 0 {
-		return
-	}
 	p.markApplications()
 }
 
@@ -54,7 +51,12 @@ func (p *run) GetResult() int {
 // Methods
 
 // markApplications writes the new status and its change, as an update would, so undo_status takes it back.
+// A preference of 0 days never moves anything.
 func (p *run) markApplications() {
+	if p.days <= 0 {
+		return
+	}
+
 	filter := domain.Filter{
 		Status:         domain.Waiting,
 		UntouchedSince: p.now.AddDate(0, 0, -p.days).Format(domain.DateLayout),
