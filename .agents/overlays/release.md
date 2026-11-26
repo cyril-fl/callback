@@ -6,3 +6,4 @@ callback.
 - Issues and their comments in French.
 - No handoff file.
 - The user runs `git push origin develop --follow-tags`.
+- Hotfix (the user says "hotfix"): no checks, no subagent, no issues. Commit, annotated tag, then push yourself: `git push origin develop --follow-tags`.
