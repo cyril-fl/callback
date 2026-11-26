@@ -7,8 +7,9 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-    <UCard v-for="s in STATUSES" :key="s">
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <!-- no_reply is only a step of the dashboard's funnel: a card of it would be gloomy. -->
+    <UCard v-for="s in STATUSES.filter((s) => s !== 'no_reply')" :key="s">
       <p class="text-sm text-muted">{{ t(`status.${s}`) }}</p>
       <p class="text-2xl font-semibold">{{ stats?.by_status[s] ?? 0 }}</p>
     </UCard>
