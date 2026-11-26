@@ -1,5 +1,7 @@
 <script setup lang="ts" generic="Row extends Record<string, unknown>">
+import type { Component } from 'vue';
 import type { TableColumn } from '@nuxt/ui';
+import { DateTimeInput, UInput } from '#components';
 import type { SortingState } from '@tanstack/vue-table';
 
 // An editable list of an application (interviews, contacts): each cell is an input, the headers sort, a row is added
@@ -20,6 +22,13 @@ const rows = defineModel<Row[]>({ required: true });
 const { t } = useI18n();
 const { icons } = useIcons();
 const ColumnHeader = resolveComponent('ColumnHeader');
+// The input of each column type: a datetime-local column gets the Nuxt UI date picker, not the browser's.
+type ColumnType = NonNullable<(typeof props.columns)[number]['type']>;
+const inputs: Record<ColumnType, { is: Component; type?: string }> = {
+  text: { is: UInput, type: 'text' },
+  email: { is: UInput, type: 'email' },
+  'datetime-local': { is: DateTimeInput },
+};
 const sorting = ref<SortingState>(props.sort ?? []);
 
 const tableColumns = computed<TableColumn<Row>[]>(() => [
@@ -57,10 +66,11 @@ const tableColumns = computed<TableColumn<Row>[]>(() => [
             size="sm"
             class="w-full"
           />
-          <UInput
+          <component
+            :is="inputs[c.type ?? 'text'].is"
             v-else
             v-model="(row.original as Record<string, unknown>)[c.key] as string"
-            :type="c.type ?? 'text'"
+            :type="inputs[c.type ?? 'text'].type"
             :aria-label="c.label"
             size="sm"
             :ui="{ base: 'min-w-0' }"

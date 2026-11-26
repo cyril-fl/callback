@@ -346,7 +346,7 @@ const phone = useMediaQuery('(max-width: 639px)');
         </div>
 
         <UFormField v-if="!pro && state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
-          <UInput v-model="state.interview_at" type="datetime-local" class="w-full" />
+          <DateTimeInput v-model="state.interview_at" class="w-full" />
         </UFormField>
 
         <template v-if="pro">
