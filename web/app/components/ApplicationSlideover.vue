@@ -3,6 +3,7 @@ import { parseDate, today as todayDate, getLocalTimeZone, type CalendarDate } fr
 import { z } from 'zod';
 import type { Application, BatchResult, Contact, Interview, NewApplication } from '~/types/items';
 import { STATUSES } from '~/types/items';
+import type { FormPart } from '~/utils/workflow';
 
 const props = defineProps<{ application?: Application }>();
 const open = defineModel<boolean>('open', { required: true });
@@ -194,7 +195,14 @@ const contactColumns = [
   { key: 'role', label: t('form.role') },
 ] as const;
 
-const statusItems = STATUSES.map((value) => ({ value, label: t(`status.${value}`) }));
+// A new application may start at any status; an edited one follows the workflow from its saved status.
+const statusItems = computed(() =>
+  (props.application?.status ? nextStatuses(props.application.status) : STATUSES).map((value) => ({
+    value,
+    label: t(`status.${value}`),
+  })),
+);
+const shows = (part: FormPart, filled = false) => showsPart(state.status, part, filled);
 
 async function submit() {
   loading.value = true;
@@ -356,20 +364,24 @@ const phone = useMediaQuery('(max-width: 639px)');
             />
           </UFormField>
         </fieldset>
-        <fieldset v-if="pro || state.status === 'interview'" class="space-y-4">
+        <fieldset v-if="pro || shows('interviews', !!state.interview_at)" class="space-y-4">
           <legend
             class="mb-3 w-full border-b border-default pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
           >
             {{ t('form.sections.followUp') }}
           </legend>
-          <UFormField v-if="!pro && state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
+          <UFormField
+            v-if="!pro && shows('interviews', !!state.interview_at)"
+            name="interview_at"
+            :label="t('form.interviewAt')"
+          >
             <DateTimeInput v-model="state.interview_at" class="w-full" />
           </UFormField>
 
           <template v-if="pro">
-            <!-- Like the base plan's field: from the interview status on, or once there is one. -->
+            <!-- The parts each status shows: app/utils/workflow.ts. -->
             <ListTable
-              v-if="state.status === 'interview' || state.interviews.length"
+              v-if="shows('interviews', state.interviews.length > 0)"
               v-model="state.interviews"
               name="interviews"
               :title="t('form.interviews')"
@@ -379,6 +391,7 @@ const phone = useMediaQuery('(max-width: 639px)');
               :sort="[{ id: 'at', desc: true }]"
             />
             <ListTable
+              v-if="shows('contacts')"
               v-model="state.contacts"
               name="contacts"
               :title="t('form.contacts')"
