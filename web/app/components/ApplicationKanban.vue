@@ -55,6 +55,17 @@ const dragged = ref<Application>();
 const over = ref<string>();
 // The place of the drop: the number of the column's cards above the pointer.
 const target = ref(0);
+// The dragged card's height, for the dashed slot shown where it would land; none where the drop moves nothing.
+const height = ref(0);
+const slot = (column: { key: string; items: Application[] }, index: number) =>
+  !!dragged.value &&
+  over.value === column.key &&
+  target.value === index &&
+  !!reorder(
+    column.items.map((a) => a.id),
+    dragged.value.id,
+    index,
+  );
 function hover(key: string, event: DragEvent) {
   over.value = key;
   const cards = (event.currentTarget as HTMLElement).querySelectorAll('[data-card]');
@@ -159,7 +170,11 @@ const day = (v?: string) =>
 
       <div class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 pb-2.5">
         <template v-for="(app, i) in column.items" :key="app.id">
-          <div v-if="dragged && over === column.key && target === i" class="-my-1.5 h-0.5 rounded-full bg-primary" />
+          <div
+            v-if="slot(column, i)"
+            :style="{ height: `${height}px` }"
+            class="shrink-0 rounded-lg border border-dashed border-default"
+          />
           <UContextMenu :items="menu(app)">
             <div
               data-card
@@ -171,7 +186,10 @@ const day = (v?: string) =>
               :aria-label="`${app.company}, ${app.location}`"
               @click="emit('edit', app)"
               @keydown.enter.prevent="emit('edit', app)"
-              @dragstart="dragged = app"
+              @dragstart="
+                dragged = app;
+                height = ($event.currentTarget as HTMLElement).offsetHeight;
+              "
               @dragend="
                 dragged = undefined;
                 over = undefined;
@@ -254,11 +272,12 @@ const day = (v?: string) =>
           </UContextMenu>
         </template>
         <div
-          v-if="dragged && over === column.key && target === column.items.length && column.items.length"
-          class="-my-1.5 h-0.5 rounded-full bg-primary"
+          v-if="slot(column, column.items.length)"
+          :style="{ height: `${height}px` }"
+          class="shrink-0 rounded-lg border border-dashed border-default"
         />
         <UEmpty
-          v-if="column.items.length === 0"
+          v-else-if="column.items.length === 0"
           :icon="icons.empty"
           variant="naked"
           size="sm"
