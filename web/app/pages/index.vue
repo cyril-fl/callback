@@ -395,7 +395,7 @@ function exportCsv() {
 <template>
   <div
     class="flex flex-col gap-6"
-    :class="view === 'kanban' ? 'h-[calc(100dvh-3.5rem-1px-3rem)]' : selected.length ? 'pb-16' : ''"
+    :class="view === 'kanban' ? 'h-[calc(100dvh-var(--ui-header-height)-3rem)]' : selected.length ? 'pb-16' : ''"
   >
     <StatsCards v-if="!pro" :stats="stats" />
 
