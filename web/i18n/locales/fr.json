@@ -67,7 +67,14 @@
     "rateBySource": "Taux de réponse par source",
     "toFollowUp": "À relancer",
     "untouchedSince": "sans nouvelles depuis le {date}",
-    "upcoming": "Prochains entretiens",
+    "interviews": {
+      "title": "Entretiens",
+      "filter": "Filtrer par jour",
+      "after": "À partir du",
+      "before": "Jusqu'au",
+      "on": "Le",
+      "between": "Du … au"
+    },
     "funnel": "Étapes atteintes",
     "daysToResponse": "Première réponse en {days} jours en moyenne.",
     "noResponseYet": "Aucune réponse encore."

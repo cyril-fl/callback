@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getLocalTimeZone, today as todayDate } from '@internationalized/date';
+import type { TableColumn, TableRow } from '@nuxt/ui';
 import type { Application, StatusChange } from '~/types/items';
 
 // The pro mode's page: in base the stats stay above the list.
@@ -10,6 +11,7 @@ const api = useApi();
 const sources = useSources();
 const countries = useCountries();
 const { preferences } = usePreferences();
+const { icons } = useIcons();
 
 const { data: applications, refresh: refreshApplications } = await useAsyncData(
   'dashboard',
@@ -70,7 +72,31 @@ const followUps = computed(() =>
     today.subtract({ days: preferences.value?.follow_up_days ?? 7 }).toDate(getLocalTimeZone()),
   ),
 );
-const upcoming = computed(() => upcomingInterviews(filtered.value, new Date()));
+// The interviews follow the city but not the period (it counts applications): their own day filter does, from today
+// on by default.
+const dayModes = ['after', 'before', 'on', 'between'] as const;
+const dayMode = ref<(typeof dayModes)[number]>('after');
+const dayModeItems = dayModes.map((value) => ({ value, label: t(`stats.interviews.${value}`) }));
+const interviewDay = shallowRef(today);
+const interviewRange = shallowRef({ start: today, end: today.add({ weeks: 1 }) });
+const interviews = computed(() => {
+  const d = interviewDay.value?.toString();
+  const { start, end } = interviewRange.value ?? {};
+  const [from, to] = {
+    after: [d, undefined],
+    before: [undefined, d],
+    on: [d, d],
+    between: [start?.toString(), end?.toString()],
+  }[dayMode.value];
+  return interviewsOf(inPeriod(applications.value, '', city.value), from, to);
+});
+type InterviewRow = (typeof interviews.value)[number];
+const interviewColumns: TableColumn<InterviewRow>[] = [
+  { accessorKey: 'at', header: t('form.at') },
+  { id: 'company', header: t('form.company') },
+  { id: 'address', header: t('form.street') },
+  { id: 'contacts', header: t('form.contacts') },
+];
 
 const day = (v?: string) => (v ? new Date(v.length === 10 ? `${v}T00:00:00` : v).toLocaleDateString('fr-FR') : '');
 const stamp = (v?: string) =>
@@ -104,6 +130,45 @@ function openForm(app: Application) {
       <p v-else class="text-xs text-muted">{{ t('common.empty') }}</p>
     </section>
 
+    <section>
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <h2 class="me-auto text-sm font-semibold">{{ t('stats.interviews.title') }}</h2>
+        <USelect
+          v-model="dayMode"
+          :items="dayModeItems"
+          size="sm"
+          class="w-28"
+          :aria-label="t('stats.interviews.filter')"
+        />
+        <UInputDate v-if="dayMode === 'between'" v-model="interviewRange" range size="sm" />
+        <UInputDate v-else v-model="interviewDay" size="sm" />
+      </div>
+      <UTable
+        :data="interviews"
+        :columns="interviewColumns"
+        class="rounded-lg border border-default"
+        :ui="{ tr: 'data-[selectable=true]:cursor-pointer' }"
+        @select="(_: Event, row: TableRow<InterviewRow>) => openForm(row.original.application)"
+      >
+        <template #empty><UEmpty :icon="icons.empty" :title="t('common.empty')" variant="naked" /></template>
+        <template #at-cell="{ row }">{{ stamp(row.original.at) }}</template>
+        <template #company-cell="{ row }">{{ row.original.application.company }}</template>
+        <template #address-cell="{ row }">
+          {{ addressOf(row.original.application, countries.label(row.original.application.country)) }}
+        </template>
+        <template #contacts-cell="{ row }">
+          <UAvatarGroup v-if="row.original.application.contacts?.length" size="xs">
+            <UAvatar
+              v-for="(c, i) in row.original.application.contacts"
+              :key="i"
+              :alt="c.name || c.email"
+              :title="[c.name || c.email, c.role].filter(Boolean).join(' · ')"
+            />
+          </UAvatarGroup>
+        </template>
+      </UTable>
+    </section>
+
     <div class="grid gap-8 md:grid-cols-2">
       <section>
         <h2 class="mb-3 text-sm font-semibold">{{ t('stats.toFollowUp') }}</h2>
@@ -116,22 +181,6 @@ function openForm(app: Application) {
             >
               <span class="flex-1 truncate text-sm">{{ a.company }}</span>
               <span class="text-xs text-muted">{{ t('stats.untouchedSince', { date: day(a.news) }) }}</span>
-            </button>
-          </li>
-        </ul>
-        <p v-else class="text-xs text-muted">{{ t('common.empty') }}</p>
-      </section>
-      <section>
-        <h2 class="mb-3 text-sm font-semibold">{{ t('stats.upcoming') }}</h2>
-        <ul v-if="upcoming.length" class="divide-y divide-default rounded-lg border border-default">
-          <li v-for="a in upcoming.slice(0, 8)" :key="a.id">
-            <button
-              type="button"
-              class="flex w-full items-center gap-4 px-4 py-2.5 text-left hover:bg-elevated"
-              @click="openForm(a)"
-            >
-              <span class="flex-1 truncate text-sm">{{ a.company }}</span>
-              <span class="text-xs text-muted">{{ stamp(a.interview_at) }}</span>
             </button>
           </li>
         </ul>
