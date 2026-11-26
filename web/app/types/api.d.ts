@@ -1969,6 +1969,11 @@ export interface components {
             created_by: string;
             expires_at: string;
             id: string;
+            /**
+             * @description Token is sealed by CALLBACK_SECRET in the base, in clear in the API, so the link shows again; "" without the
+             *     secret, or for the invitations made before it was kept: their link was shown once.
+             */
+            token: string;
         };
         "domain.NewApplication": {
             /** @example 2026-01-31 */

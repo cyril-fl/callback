@@ -187,15 +187,17 @@ const { data: users, refresh: refreshUsers } = await useAsyncData('users', () =>
 const { data: invites, refresh: refreshInvites } = await useAsyncData('invites', () =>
   admin.value ? api<Invite[]>('/api/invites') : Promise.resolve(null),
 );
-// A generated password or an invitation link, shown once.
+// A generated password, or an invitation link when the server keeps none (no CALLBACK_SECRET): shown once.
 const shown = ref<{ label: string; value: string }>();
+const inviteLink = (token: string) => `${location.origin}/signup?invite=${token}`;
 const inviting = ref(false);
 async function createInvite() {
   inviting.value = true;
   try {
     const { token } = await api<InviteResult>('/api/invites', { method: 'POST' });
-    shown.value = { label: t('settings.inviteLink'), value: `${location.origin}/signup?invite=${token}` };
     await refreshInvites();
+    if (invites.value?.some((invite) => invite.token)) await copyText(inviteLink(token));
+    else shown.value = { label: t('settings.inviteLink'), value: inviteLink(token) };
   } catch {
     // useApi already toasted.
   } finally {
@@ -819,6 +821,25 @@ async function revoke() {
               {{ t('settings.createdAt') }} {{ when(invite.created_at) }} · {{ t('settings.expiresAt') }}
               {{ when(invite.expires_at) }}
             </p>
+            <UInput
+              v-if="invite.token"
+              :model-value="inviteLink(invite.token)"
+              readonly
+              size="sm"
+              class="min-w-0 flex-1 basis-64 font-mono"
+              :aria-label="t('settings.inviteLink')"
+            >
+              <template #trailing>
+                <UButton
+                  :icon="icons.copy"
+                  :aria-label="t('settings.copy')"
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  @click="copyText(inviteLink(invite.token))"
+                />
+              </template>
+            </UInput>
             <UButton
               :icon="icons.delete"
               :label="t('settings.revoke')"

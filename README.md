@@ -27,6 +27,8 @@ volume. Pushing a `v*` tag builds and publishes it (`:<version>` and `:latest`, 
      empty; change it later with `docker compose -f compose.prod.yaml exec callback /callback-server --db /data/callback.db reset-password`.
    - `CALLBACK_USER` (optional, `admin` by default): the name of the account; set it later to rename the account.
    - `CALLBACK_MODE` and `CALLBACK_ADD_USER_MODE` (optional): see [Modes](#modes).
+   - `CALLBACK_SECRET` (optional, `openssl rand -base64 32`): seals the invitation links in the base, so the settings
+     show them until they are used; without it, a link is shown once.
    - `CALLBACK_ORIGIN`: the address you open in the browser, e.g. `https://callback.<tailnet>.ts.net`.
 2. If the GitHub package is private: `docker login ghcr.io` with a token that can read packages.
 3. `docker compose -f compose.prod.yaml up -d`. Update: `docker compose -f compose.prod.yaml pull && docker compose -f compose.prod.yaml up -d`.

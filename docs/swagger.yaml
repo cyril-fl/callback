@@ -410,11 +410,17 @@ components:
           type: string
         id:
           type: string
+        token:
+          description: |-
+            Token is sealed by CALLBACK_SECRET in the base, in clear in the API, so the link shows again; "" without the
+            secret, or for the invitations made before it was kept: their link was shown once.
+          type: string
       required:
       - created_at
       - created_by
       - expires_at
       - id
+      - token
       type: object
     domain.NewApplication:
       properties:

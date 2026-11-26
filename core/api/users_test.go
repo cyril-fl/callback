@@ -313,3 +313,24 @@ func TestResetPassword(t *testing.T) {
 		t.Errorf("reset unknown: %d, want 404", response.StatusCode)
 	}
 }
+
+// With CALLBACK_SECRET the list gives every pending invitation's token again, sealed in the base; without it, none.
+func TestInviteTokenKept(t *testing.T) {
+	server := testserver.ServeMode(t, multiInvitation)
+	var made struct{ Token string }
+	call(t, server, server.Session, "POST", "/api/invites", nil, &made)
+	var pending []domain.Invite
+	if call(t, server, server.Session, "GET", "/api/invites", nil, &pending); len(pending) != 1 || pending[0].Token != "" {
+		t.Fatalf("without the secret: %+v", pending)
+	}
+
+	t.Setenv("CALLBACK_SECRET", "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=")
+	call(t, server, server.Session, "POST", "/api/invites", nil, &made)
+	var stored string
+	if err := server.DB.NewSelect().Model((*domain.Invite)(nil)).Column("token").Where("token <> ''").Scan(server.Ctx, &stored); err != nil || stored == made.Token {
+		t.Fatalf("stored %q (%v), want sealed", stored, err)
+	}
+	if call(t, server, server.Session, "GET", "/api/invites", nil, &pending); len(pending) != 2 || pending[0].Token != made.Token {
+		t.Errorf("with the secret: %+v, want %s first", pending, made.Token)
+	}
+}

@@ -1,4 +1,5 @@
-// Package createinvite makes an invitation for the sign-up: its token is shown once, the base keeps its hash.
+// Package createinvite makes an invitation for the sign-up: the base keeps its hash, and its token sealed
+// when CALLBACK_SECRET is set.
 package createinvite
 
 import (
@@ -7,6 +8,7 @@ import (
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/password"
+	"github.com/cyril-fl/callback/core/services/secret"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -52,6 +54,9 @@ func (p *run) saveInvite() {
 	now := time.Now().UTC()
 	p.cache.result.Token = password.Token()
 	p.cache.result.Invite = domain.Invite{ID: uuid.NewString(), TokenHash: password.TokenHash(p.cache.result.Token), UserID: domain.UserID(p.ctx), CreatedAt: now, ExpiresAt: now.Add(domain.InviteLifetime)}
-	_, err := p.db.NewInsert().Model(&p.cache.result.Invite).Exec(p.ctx)
+	invite := p.cache.result.Invite
+	invite.Token, _ = secret.Seal(p.cache.result.Token) // without the secret, the link is shown once
+	_, err := p.db.NewInsert().Model(&invite).Exec(p.ctx)
+	p.cache.result.Invite.Token = p.cache.result.Token
 	p.SetErr(err)
 }

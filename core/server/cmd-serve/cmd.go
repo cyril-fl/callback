@@ -24,6 +24,7 @@ import (
 	"github.com/cyril-fl/callback/core/services/process/markunanswered"
 	"github.com/cyril-fl/callback/core/services/process/purgetokens"
 	"github.com/cyril-fl/callback/core/services/process/readpreferences"
+	"github.com/cyril-fl/callback/core/services/secret"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
@@ -48,6 +49,9 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 	flags := cobra.Flags()
 	mode, err := serverMode(flags)
 	if err != nil {
+		return err
+	}
+	if err := secret.Check(); err != nil && !errors.Is(err, secret.ErrNoKey) {
 		return err
 	}
 	if err := cmdadmin.EnsurePassword(cobra.Context(), db, mode.Multi()); err != nil {

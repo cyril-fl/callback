@@ -64,8 +64,11 @@ func (m ServerMode) Public() bool {
 type Invite struct {
 	bun.BaseModel `bun:"table:invites,alias:iv" json:"-"`
 
-	ID        string    `bun:",pk" json:"id"`
-	TokenHash string    `bun:",notnull,unique" json:"-"`
+	ID        string `bun:",pk" json:"id"`
+	TokenHash string `bun:",notnull,unique" json:"-"`
+	// Token is sealed by CALLBACK_SECRET in the base, in clear in the API, so the link shows again; "" without the
+	// secret, or for the invitations made before it was kept: their link was shown once.
+	Token     string    `bun:",notnull,default:''" json:"token"`
 	UserID    string    `bun:",notnull" json:"created_by"` // the admin who made it
 	CreatedAt time.Time `bun:",notnull" json:"created_at"`
 	ExpiresAt time.Time `bun:",notnull" json:"expires_at"`

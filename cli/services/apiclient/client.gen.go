@@ -467,6 +467,10 @@ type DomainInvite struct {
 	CreatedBy string `json:"created_by"`
 	ExpiresAt string `json:"expires_at"`
 	Id        string `json:"id"`
+
+	// Token Token is sealed by CALLBACK_SECRET in the base, in clear in the API, so the link shows again; "" without the
+	// secret, or for the invitations made before it was kept: their link was shown once.
+	Token string `json:"token"`
 }
 
 // DomainNewApplication defines model for domain.NewApplication.
