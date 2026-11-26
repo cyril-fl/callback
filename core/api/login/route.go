@@ -13,6 +13,7 @@ import (
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/process/createsession"
 	"github.com/cyril-fl/callback/core/services/process/deletesession"
+	"github.com/cyril-fl/callback/core/services/process/editpassword"
 	"github.com/uptrace/bun"
 )
 
@@ -105,5 +106,43 @@ func Me(db bun.IDB, mode domain.ServerMode) http.HandlerFunc {
 			return
 		}
 		respond.JSON(w, http.StatusOK, MeResult{Kind: token.Kind, Name: token.Name, User: user.Name, Admin: user.Admin, Mode: mode.Mode, ReadOnly: token.ReadOnly, Version: config.Version()})
+	}
+}
+
+// EditPassword changes the password of the account logged in and logs its other devices out: PATCH /api/me/password.
+// @Summary  Change the password of the account logged in
+// @Tags     session
+// @Accept   json
+// @Param    body body editpassword.Input true "body"
+// @Success  204
+// @Failure  400 {object} respond.Failure
+// @Failure  401 {object} respond.Failure
+// @Failure  403 {object} respond.Failure
+// @Failure  429 {object} respond.Failure
+// @Router   /api/me/password [patch]
+func EditPassword(db bun.IDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input editpassword.Input
+		if !respond.Decode(w, r, &input) {
+			return
+		}
+		// By account, not address: a stolen session must not guess the password at leisure.
+		key := "account " + domain.UserID(r.Context())
+		failed := throttle.Passwords(db)
+		if failed.Blocked(w, r, key) {
+			return
+		}
+
+		process := editpassword.Process(r.Context(), db, input, auth.Current(r.Context()).ID)
+		process.Run()
+		if process.HasErr() {
+			if !errors.Is(process.GetErr(), editpassword.ErrWrongPassword) {
+				failed.Forgive(r.Context(), key)
+			}
+			respond.Error(w, r, process.GetErr())
+			return
+		}
+		failed.Reset(r.Context(), key)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

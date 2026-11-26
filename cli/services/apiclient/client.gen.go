@@ -588,6 +588,12 @@ type DomainUser struct {
 	Preferences *DomainPreferences `json:"preferences,omitempty"`
 }
 
+// EditpasswordInput defines model for editpassword.Input.
+type EditpasswordInput struct {
+	Current string `json:"current"`
+	New     string `json:"new"`
+}
+
 // ForgetapplicationsInput defines model for forgetapplications.Input.
 type ForgetapplicationsInput struct {
 	// All All empties the trash; without it, ids are required.
@@ -791,6 +797,9 @@ type PostApiImportJSONRequestBody = DomainBackup
 
 // PostApiLoginJSONRequestBody defines body for PostApiLogin for application/json ContentType.
 type PostApiLoginJSONRequestBody = CreatesessionInput
+
+// PatchApiMePasswordJSONRequestBody defines body for PatchApiMePassword for application/json ContentType.
+type PatchApiMePasswordJSONRequestBody = EditpasswordInput
 
 // PatchApiPreferencesJSONRequestBody defines body for PatchApiPreferences for application/json ContentType.
 type PatchApiPreferencesJSONRequestBody = DomainPreferenceChanges
@@ -1027,6 +1036,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/me (the `GetApiMe` operationId).
 	GetApiMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiMePasswordWithBody Change the password of the account logged in
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+	PatchApiMePasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchApiMePassword Change the password of the account logged in
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+	PatchApiMePassword(ctx context.Context, body PatchApiMePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiPreferences Read the preferences
 	//
@@ -1509,6 +1532,40 @@ func (c *Client) PostApiLogout(ctx context.Context, reqEditors ...RequestEditorF
 // Corresponds with GET /api/me (the `GetApiMe` operationId).
 func (c *Client) GetApiMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiMeRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchApiMePasswordWithBody Change the password of the account logged in
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+func (c *Client) PatchApiMePasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiMePasswordRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PatchApiMePassword Change the password of the account logged in
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+func (c *Client) PatchApiMePassword(ctx context.Context, body PatchApiMePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchApiMePasswordRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2523,6 +2580,46 @@ func NewGetApiMeRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewPatchApiMePasswordRequest calls the generic PatchApiMePassword builder with application/json body
+func NewPatchApiMePasswordRequest(server string, body PatchApiMePasswordJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchApiMePasswordRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPatchApiMePasswordRequestWithBody constructs an http.Request for the PatchApiMePassword method, with any body, and a specified content type
+func NewPatchApiMePasswordRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/me/password")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetApiPreferencesRequest constructs an http.Request for the GetApiPreferences method
 func NewGetApiPreferencesRequest(server string) (*http.Request, error) {
 	var err error
@@ -3215,6 +3312,20 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/me (the `GetApiMe` operationId).
 	GetApiMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeResponse, error)
+
+	// PatchApiMePasswordWithBodyWithResponse Change the password of the account logged in
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+	PatchApiMePasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiMePasswordResponse, error)
+
+	// PatchApiMePasswordWithResponse Change the password of the account logged in
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+	PatchApiMePasswordWithResponse(ctx context.Context, body PatchApiMePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiMePasswordResponse, error)
 
 	// GetApiPreferencesWithResponse Read the preferences
 	//
@@ -4326,6 +4437,68 @@ func (r GetApiMeResponse) ContentType() string {
 	return ""
 }
 
+type PatchApiMePasswordResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *RespondFailure
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *RespondFailure
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *RespondFailure
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PatchApiMePasswordResponse) GetJSON400() *RespondFailure {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r PatchApiMePasswordResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PatchApiMePasswordResponse) GetJSON403() *RespondFailure {
+	return r.JSON403
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r PatchApiMePasswordResponse) GetJSON429() *RespondFailure {
+	return r.JSON429
+}
+
+// GetBody returns the raw response body bytes
+func (r PatchApiMePasswordResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchApiMePasswordResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchApiMePasswordResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PatchApiMePasswordResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetApiPreferencesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5339,6 +5512,32 @@ func (c *ClientWithResponses) GetApiMeWithResponse(ctx context.Context, reqEdito
 	return ParseGetApiMeResponse(rsp)
 }
 
+// PatchApiMePasswordWithBodyWithResponse Change the password of the account logged in
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+func (c *ClientWithResponses) PatchApiMePasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiMePasswordResponse, error) {
+	rsp, err := c.PatchApiMePasswordWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiMePasswordResponse(rsp)
+}
+
+// PatchApiMePasswordWithResponse Change the password of the account logged in
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /api/me/password (the `PatchApiMePassword` operationId).
+func (c *ClientWithResponses) PatchApiMePasswordWithResponse(ctx context.Context, body PatchApiMePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiMePasswordResponse, error) {
+	rsp, err := c.PatchApiMePassword(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchApiMePasswordResponse(rsp)
+}
+
 // GetApiPreferencesWithResponse Read the preferences
 //
 // Returns a wrapper object for the known response body format(s).
@@ -6274,6 +6473,56 @@ func ParseGetApiMeResponse(rsp *http.Response) (*GetApiMeResponse, error) {
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchApiMePasswordResponse parses an HTTP response from a PatchApiMePasswordWithResponse call
+func ParsePatchApiMePasswordResponse(rsp *http.Response) (*PatchApiMePasswordResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchApiMePasswordResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
 
 	}
 

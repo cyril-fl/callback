@@ -246,6 +246,24 @@ async function confirmAccount() {
   }
 }
 
+// The account's own password: the current one proves it is the owner, the other devices log out.
+const passwordOpen = ref(false);
+const passwordForm = reactive({ current: '', new: '' });
+const changingPassword = ref(false);
+async function changePassword() {
+  changingPassword.value = true;
+  try {
+    await api('/api/me/password', { method: 'PATCH', body: passwordForm });
+    passwordOpen.value = false;
+    Object.assign(passwordForm, { current: '', new: '' });
+    toast.add({ title: t('settings.passwordChanged'), color: 'success' });
+  } catch {
+    // useApi already toasted.
+  } finally {
+    changingPassword.value = false;
+  }
+}
+
 const confirmOpen = ref(false);
 const revoking = ref<Token>();
 function askRevoke(token: Token) {
@@ -418,6 +436,49 @@ async function revoke() {
           <li v-if="me?.version" class="flex flex-wrap items-center gap-4 px-4 py-3">
             <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.version') }}</p>
             <span class="font-mono text-xs text-muted">{{ me.version }}</span>
+          </li>
+          <li class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <p class="min-w-0 flex-1 text-sm">{{ t('settings.password') }}</p>
+            <UModal v-model:open="passwordOpen" :title="t('settings.changePassword')">
+              <UButton
+                :icon="icons.resetPassword"
+                :label="t('settings.changePassword')"
+                :ui="{ label: 'max-sm:sr-only' }"
+                color="neutral"
+                variant="ghost"
+              />
+              <template #body>
+                <form id="password-form" class="space-y-4" @submit.prevent="changePassword">
+                  <UFormField :label="t('settings.currentPassword')">
+                    <UInput
+                      v-model="passwordForm.current"
+                      type="password"
+                      autocomplete="current-password"
+                      required
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UFormField :label="t('settings.newOwnPassword')" :hint="t('settings.passwordHint')">
+                    <UInput
+                      v-model="passwordForm.new"
+                      type="password"
+                      autocomplete="new-password"
+                      required
+                      minlength="8"
+                      class="w-full"
+                    />
+                  </UFormField>
+                </form>
+              </template>
+              <template #footer>
+                <UButton
+                  type="submit"
+                  form="password-form"
+                  :label="t('settings.changePassword')"
+                  :loading="changingPassword"
+                />
+              </template>
+            </UModal>
           </li>
           <li class="flex flex-wrap items-center gap-4 px-4 py-3">
             <p class="min-w-0 flex-1 text-sm">{{ t('nav.logout') }}</p>

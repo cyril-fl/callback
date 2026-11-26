@@ -75,3 +75,32 @@ func TestAccountsApart(t *testing.T) {
 		t.Errorf("A after B: list %+v, trash %+v, tokens %+v", list, trash, tokens)
 	}
 }
+
+// The account changes its own password given the current one: this session stays, the others log out, a token cannot.
+func TestEditPassword(t *testing.T) {
+	server := testserver.Serve(t)
+	var login struct{ Token string }
+	call(t, server, "", "POST", "/api/login", map[string]any{"password": testserver.Password, "token": true}, &login)
+
+	if response := call(t, server, server.Session, "PATCH", "/api/me/password", map[string]any{"current": "wrong one", "new": "battery staple"}, nil); response.StatusCode != http.StatusBadRequest {
+		t.Errorf("wrong current: %d, want 400", response.StatusCode)
+	}
+	if response := call(t, server, server.Token(t, false), "PATCH", "/api/me/password", map[string]any{"current": testserver.Password, "new": "battery staple"}, nil); response.StatusCode != http.StatusForbidden {
+		t.Errorf("API token: %d, want 403", response.StatusCode)
+	}
+	if response := call(t, server, server.Session, "PATCH", "/api/me/password", map[string]any{"current": testserver.Password, "new": "short"}, nil); response.StatusCode != http.StatusBadRequest {
+		t.Errorf("short: %d, want 400", response.StatusCode)
+	}
+	if response := call(t, server, server.Session, "PATCH", "/api/me/password", map[string]any{"current": testserver.Password, "new": "battery staple"}, nil); response.StatusCode != http.StatusNoContent {
+		t.Fatalf("change: %d, want 204", response.StatusCode)
+	}
+	if response := call(t, server, server.Session, "GET", "/api/me", nil, nil); response.StatusCode != http.StatusOK {
+		t.Errorf("own session: %d, want 200", response.StatusCode)
+	}
+	if response := call(t, server, login.Token, "GET", "/api/me", nil, nil); response.StatusCode != http.StatusUnauthorized {
+		t.Errorf("other session: %d, want 401", response.StatusCode)
+	}
+	if response := call(t, server, "", "POST", "/api/login", map[string]any{"password": "battery staple"}, nil); response.StatusCode != http.StatusOK {
+		t.Errorf("login with the new one: %d", response.StatusCode)
+	}
+}

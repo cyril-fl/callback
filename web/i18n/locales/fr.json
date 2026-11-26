@@ -262,6 +262,12 @@
     "invites": "Invitations",
     "createInvite": "Inviter",
     "inviteLink": "Lien d'invitation",
+    "password": "Mot de passe",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newOwnPassword": "Nouveau mot de passe",
+    "passwordHint": "8 caractères au moins",
+    "passwordChanged": "Mot de passe changé : vos autres appareils sont déconnectés.",
     "revokeInvite": "Révoquer l'invitation",
     "revokeInviteMessage": "Ce lien ne permettra plus de créer un compte.",
     "noInvites": "Aucune invitation en attente."

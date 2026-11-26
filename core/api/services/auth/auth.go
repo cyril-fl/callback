@@ -71,12 +71,12 @@ func New(db bun.IDB, next http.Handler) http.Handler {
 	})
 }
 
-// manages tells the routes refused to an API or OAuth token: the tokens, the accounts and invitations, the logout, the
+// manages tells the routes refused to an API or OAuth token: the tokens, the accounts and invitations, the password, the logout, the
 // purge of everything and the deletion for good from the trash. The mux has not matched the route yet, so this goes by
 // path; the mux redirects an unclean path (//, ..) instead of serving it.
 func manages(r *http.Request) bool {
 	path := r.URL.Path
-	return path == "/api/logout" || path == "/api/data" || r.Method == http.MethodDelete && path == "/api/applications/deleted" || path == "/api/tokens" || strings.HasPrefix(path, "/api/tokens/") ||
+	return path == "/api/logout" || path == "/api/me/password" || path == "/api/data" || r.Method == http.MethodDelete && path == "/api/applications/deleted" || path == "/api/tokens" || strings.HasPrefix(path, "/api/tokens/") ||
 		path == "/api/users" || strings.HasPrefix(path, "/api/users/") || path == "/api/invites" || strings.HasPrefix(path, "/api/invites/")
 }
 

@@ -27,6 +27,7 @@ type run struct {
 	db     bun.IDB
 	userID string
 	pass   string
+	keep   string
 }
 
 func Process(ctx context.Context, db bun.IDB, userID, pass string) *run {
@@ -36,6 +37,12 @@ func Process(ctx context.Context, db bun.IDB, userID, pass string) *run {
 		userID: userID,
 		pass:   pass,
 	}
+}
+
+// Keep spares the session of id from the log out: the device that changed its own password.
+func (p *run) Keep(id string) *run {
+	p.keep = id
+	return p
 }
 
 func (p *run) Run() {
@@ -63,7 +70,7 @@ func (p *run) savePassword() {
 		if rows, _ := result.RowsAffected(); rows == 0 {
 			return ErrNoUser
 		}
-		_, err = tx.NewDelete().Model((*domain.Token)(nil)).Where("kind = ? AND user_id = ?", domain.TokenSession, p.userID).Exec(ctx)
+		_, err = tx.NewDelete().Model((*domain.Token)(nil)).Where("kind = ? AND user_id = ? AND id <> ?", domain.TokenSession, p.userID, p.keep).Exec(ctx)
 		return err
 	}))
 }

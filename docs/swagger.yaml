@@ -632,6 +632,16 @@ components:
       - id
       - name
       type: object
+    editpassword.Input:
+      properties:
+        current:
+          type: string
+        new:
+          type: string
+      required:
+      - current
+      - new
+      type: object
     forgetapplications.Input:
       properties:
         all:
@@ -1438,6 +1448,47 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Unauthorized
       summary: Who is asking
+      tags:
+      - session
+  /api/me/password:
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/editpassword.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Too Many Requests
+      summary: Change the password of the account logged in
       tags:
       - session
   /api/preferences:
