@@ -203,10 +203,12 @@ const day = (v?: string) =>
                   <UIcon v-else :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
                 </UTooltip>
               </span>
-              <UTooltip v-if="interview(app)" :text="t('form.interviewAt')">
-                <span class="flex items-center gap-1 font-medium text-highlighted">
-                  <UIcon :name="icons.interview" class="size-3.5" />{{ interview(app) }}
-                </span>
+              <UTooltip v-if="interview(app)" :text="`${t('form.interviewAt')} : ${interview(app)}`">
+                <UIcon
+                  :name="icons.interview"
+                  class="size-3.5 text-highlighted"
+                  :aria-label="`${t('form.interviewAt')} : ${interview(app)}`"
+                />
               </UTooltip>
               <UTooltip v-if="canFollowUp(app, followUpSince)" :text="t('table.markFollowedUp')">
                 <UButton
