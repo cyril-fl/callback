@@ -3,16 +3,17 @@ import { test } from 'node:test';
 import { parseDate } from '@internationalized/date';
 import type { Application, StatusChange } from '../app/types/items.ts';
 import {
+  addressOf,
   averageDaysToResponse,
   canFollowUp,
   countBy,
   funnelOf,
   historyOf,
   inPeriod,
+  interviewsOf,
   responseRates,
   statsOf,
   toFollowUp,
-  upcomingInterviews,
   websiteHref,
   weeksOf,
 } from '../app/utils/dashboard.ts';
@@ -163,15 +164,25 @@ test('the follow-up button: waiting on the employer, and no follow-up nor interv
   assert.equal(canFollowUp({ ...app, status: 'no_reply' }, '2026-01-06'), false);
 });
 
-test('the upcoming interviews are the ones from now on, the nearest first', () => {
-  assert.deepEqual(
-    upcomingInterviews(apps, new Date('2026-01-15T00:00:00')).map((a) => a.id),
-    ['b'],
+test('interviewsOf lists every interview between two days, the earliest first', () => {
+  const list: Application[] = [
+    { id: 'a', interviews: [{ at: '2026-02-02T14:30' }, { at: '2026-01-10T09:00' }] },
+    { id: 'b', interviews: [{ at: '2026-01-20T10:00' }] },
+    { id: 'c' },
+  ];
+  const at = (from?: string, to?: string) => interviewsOf(list, from, to).map((r) => `${r.application.id} ${r.at}`);
+  assert.deepEqual(at(), ['a 2026-01-10T09:00', 'b 2026-01-20T10:00', 'a 2026-02-02T14:30']);
+  assert.deepEqual(at('2026-01-20'), ['b 2026-01-20T10:00', 'a 2026-02-02T14:30']);
+  assert.deepEqual(at(undefined, '2026-01-20'), ['a 2026-01-10T09:00', 'b 2026-01-20T10:00']);
+  assert.deepEqual(at('2026-01-20', '2026-01-20'), ['b 2026-01-20T10:00']);
+});
+
+test('addressOf joins the parts it has', () => {
+  assert.equal(
+    addressOf({ id: 'a', street: '1 rue X', postal_code: '75001', location: 'Paris' }, 'France'),
+    '1 rue X, 75001 Paris, France',
   );
-  assert.deepEqual(
-    upcomingInterviews(apps, new Date('2026-01-01T00:00:00')).map((a) => a.id),
-    ['c', 'b'],
-  );
+  assert.equal(addressOf({ id: 'a', location: 'Paris' }, ''), 'Paris');
 });
 
 test('websiteHref mails an address and links a site', () => {

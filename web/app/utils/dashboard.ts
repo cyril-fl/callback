@@ -128,12 +128,18 @@ export function toFollowUp(applications: Application[], history: Map<string, Sta
     .sort((a, b) => new Date(a.news).getTime() - new Date(b.news).getTime());
 }
 
-/** The interviews from now on, the nearest first; interview_at is a local "2026-01-31T14:30". */
-export function upcomingInterviews(applications: Application[], now: Date) {
+/** Every interview of the applications as a row with its application, the earliest first, its day (YYYY-MM-DD)
+ * between from and to when given, both included; at is a local "2026-01-31T14:30". */
+export function interviewsOf(applications: Application[], from?: string, to?: string) {
   return applications
-    .filter((a) => a.interview_at && new Date(a.interview_at) >= now)
-    .sort((a, b) => a.interview_at!.localeCompare(b.interview_at!));
+    .flatMap((a) => (a.interviews ?? []).map((i) => ({ ...i, application: a })))
+    .filter((r) => (!from || r.at.slice(0, 10) >= from) && (!to || r.at.slice(0, 10) <= to))
+    .sort((a, b) => a.at.localeCompare(b.at));
 }
+
+/** The address on one line: street, postal code and city, country. */
+export const addressOf = (a: Application, country: string) =>
+  [a.street, [a.postal_code, a.location].filter(Boolean).join(' '), country].filter(Boolean).join(', ');
 
 /** Waiting on the employer and neither followed up, applied nor interviewed since the follow-up delay started (a
  * YYYY-MM-DD day): the follow-up button shows. Never followed up, the delay runs from the day it applied. */
