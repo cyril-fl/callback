@@ -55,9 +55,20 @@ function drop(column: { status: Status; statuses: Status[] }) {
   over.value = undefined;
 }
 
-// A right click or the card's "…" button (keyboard, touch) deletes it: the table's same path. A click edits.
+// A right click or the card's "…" button (keyboard, touch): the status and delete, the table's same paths. A click edits.
 const menu = (app: Application) => [
-  { label: t('common.delete'), icon: icons.delete, color: 'error' as const, onSelect: () => emit('remove', app) },
+  [
+    {
+      label: t('table.changeStatus'),
+      children: STATUSES.map((s) => ({
+        label: t(`status.${s}`),
+        type: 'checkbox' as const,
+        checked: app.status === s,
+        onSelect: () => emit('move', app, s),
+      })),
+    },
+  ],
+  [{ label: t('common.delete'), icon: icons.delete, color: 'error' as const, onSelect: () => emit('remove', app) }],
 ];
 
 // The card's facts as icons, one group, the detail in a tooltip.
