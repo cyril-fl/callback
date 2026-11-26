@@ -20,6 +20,7 @@ const toast = useToast();
 const theme = useTheme();
 const { preferences, pro, save } = usePreferences();
 const places = usePlaces();
+const countries = useCountries();
 const me = useNuxtData<Me>('me').data;
 const planItems = (['base', 'pro'] as const).map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 // /settings opens the first section; an unknown one goes back to it.
@@ -84,8 +85,9 @@ async function restore(deleted: DeletedApplication) {
 }
 
 // The values the applications name, a field at a time: one fixed here is renamed in each of its applications.
-const valueKind = ref<'company' | 'location' | 'country'>('company');
-const valueKindItems = (['company', 'location', 'country'] as const).map((value) => ({
+// Countries are codes of a fixed list: no typo to fix.
+const valueKind = ref<'company' | 'location'>('company');
+const valueKindItems = (['company', 'location'] as const).map((value) => ({
   value,
   label: t(`settings.valueKinds.${value}`),
 }));
@@ -287,14 +289,15 @@ async function revoke() {
                 class="w-40"
                 @update:model-value="(v: string) => save({ default_location: v })"
               />
-              <SuggestInput
+              <USelectMenu
                 :model-value="preferences?.default_country ?? ''"
-                :suggestions="places.countries.value"
+                :items="countries.items.value"
+                value-key="value"
                 :placeholder="t('form.country')"
                 :aria-label="t('form.country')"
                 clear
                 class="w-40"
-                @update:model-value="(v: string) => save({ default_country: v })"
+                @update:model-value="(v?: string | null) => save({ default_country: v ?? '' })"
               />
             </div>
           </li>

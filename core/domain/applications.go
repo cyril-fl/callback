@@ -66,7 +66,7 @@ const (
 var (
 	ErrNoCompany        = Invalid("company is required")
 	ErrNoLocation       = Invalid("location (the city) is required")
-	ErrLong             = Invalid("company, location, street, postal_code, country, website, source_detail, contact_name and contact_email have at most 200 characters, comment 10000")
+	ErrLong             = Invalid("company, location, street, postal_code, website, source_detail, contact_name and contact_email have at most 200 characters, comment 10000")
 	ErrInvalidWebsite   = Invalid("website must be an http(s) URL or an e-mail")
 	ErrInvalidSource    = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
 	ErrInvalidDetail    = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
@@ -122,7 +122,7 @@ func (a *Application) Normalize() {
 	a.Location = strings.TrimSpace(a.Location)
 	a.Street = strings.TrimSpace(a.Street)
 	a.PostalCode = strings.TrimSpace(a.PostalCode)
-	a.Country = strings.TrimSpace(a.Country)
+	a.Country = CountryCode(a.Country)
 	a.Source = Source(strings.TrimSpace(string(a.Source)))
 	a.Website = strings.TrimSpace(a.Website)
 	a.SourceDetail = strings.TrimSpace(a.SourceDetail)
@@ -148,7 +148,8 @@ func (a *Application) Validate() error {
 	}{
 		{a.Company == "", ErrNoCompany},
 		{a.Location == "", ErrNoLocation},
-		{runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Country) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment, ErrLong},
+		{runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment, ErrLong},
+		{!IsCountry(a.Country), ErrInvalidCountry},
 		{a.Website != "" && !isURL(a.Website) && !isEmail(a.Website), ErrInvalidWebsite},
 		{runes(string(a.Source)) > MaxSource, ErrInvalidSource},
 		{!validDetail(a.Source, a.SourceDetail), ErrInvalidDetail},

@@ -17,6 +17,7 @@ export type PurgeResult = S['purgeapplications.Result'];
 export type TokenInput = S['createapitoken.Input'];
 export type Stats = S['readstats.Stats'];
 export type SourceCount = S['listsources.Source'];
+export type Country = S['domain.Country'];
 export type StatusChange = S['domain.StatusChange'];
 export type Me = S['login.MeResult'];
 

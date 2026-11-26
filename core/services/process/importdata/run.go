@@ -81,6 +81,7 @@ func (p *run) restore() {
 		check := func(application *domain.Application, failure domain.BatchFailure) bool {
 			id := application.ID
 			application.UserID = user
+			application.KeepCountry()
 			application.Normalize()
 			application.Source = known.Match(application.Source)
 			if application.CreatedAt.IsZero() {

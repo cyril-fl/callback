@@ -15,6 +15,7 @@ import (
 	apipreferences "github.com/cyril-fl/callback/core/api/preferences"
 	apipurgeapplications "github.com/cyril-fl/callback/core/api/purge-applications"
 	apireadapplications "github.com/cyril-fl/callback/core/api/read-applications"
+	apireadcountries "github.com/cyril-fl/callback/core/api/read-countries"
 	apireaddeletedapplications "github.com/cyril-fl/callback/core/api/read-deleted-applications"
 	apireadsources "github.com/cyril-fl/callback/core/api/read-sources"
 	apireadstats "github.com/cyril-fl/callback/core/api/read-stats"
@@ -60,6 +61,7 @@ func New(db bun.IDB, origin string, mode domain.ServerMode) http.Handler {
 	mux.Handle("DELETE /api/data", apipurgeapplications.Handler(db))
 	mux.Handle("GET /api/stats", apireadstats.Handler(db))
 	mux.Handle("GET /api/sources", apireadsources.Handler(db))
+	mux.Handle("GET /api/countries", apireadcountries.Handler())
 	mux.Handle("GET /api/status-changes", apireadstatuschanges.Handler(db))
 
 	mux.Handle("GET /api/export", apiexportdata.Handler(db))

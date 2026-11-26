@@ -295,6 +295,22 @@ components:
         website:
           type: string
       type: object
+    domain.Country:
+      properties:
+        code:
+          example: IT
+          type: string
+        key:
+          example: countries.IT
+          type: string
+        name:
+          example: Italy
+          type: string
+      required:
+      - code
+      - key
+      - name
+      type: object
     domain.DeletedApplication:
       properties:
         application:
@@ -399,8 +415,8 @@ components:
         default_country:
           type: string
         default_location:
-          description: DefaultLocation and DefaultCountry fill a new application of
-            the web app; both may be empty.
+          description: DefaultLocation and DefaultCountry (a code of Countries) fill
+            a new application of the web app; both may be empty.
           type: string
         follow_up_days:
           description: FollowUpDays is how long an application waits without news
@@ -1085,6 +1101,26 @@ paths:
                 $ref: '#/components/schemas/respond.Failure'
           description: Forbidden
       summary: Restore deleted applications
+      tags:
+      - applications
+  /api/countries:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Country'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+      summary: List the countries
       tags:
       - applications
   /api/data:

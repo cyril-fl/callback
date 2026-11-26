@@ -42,6 +42,7 @@ const sourceIcon = (source?: string) =>
   ({ spontaneous: icons.spontaneous, job_post: icons.jobPost, recruiter: icons.recruiter })[source ?? 'spontaneous'] ??
   icons.otherSource;
 const sources = useSources();
+const countries = useCountries();
 
 // A drag moves a card to another column; a click opens it. The form changes the status from the keyboard.
 const dragged = ref<Application>();
@@ -147,7 +148,7 @@ const day = (v?: string) =>
           </div>
           <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
             <UIcon :name="icons.location" class="size-3 shrink-0" />{{
-              [app.location, app.country].filter(Boolean).join(', ')
+              [app.location, countries.label(app.country)].filter(Boolean).join(', ')
             }}
           </p>
           <div class="mt-4 flex items-center gap-2 text-xs text-muted">

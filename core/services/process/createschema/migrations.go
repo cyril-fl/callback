@@ -3,9 +3,11 @@ package createschema
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"time"
 
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect"
@@ -28,6 +30,8 @@ var migrations = []migration{
 		AND at > (SELECT applied_at || ' 00:00:00+00:00' FROM applications a WHERE a.id = status_changes.application_id)`},
 	// The one account of the settings becomes a user, admin, who owns every row.
 	{id: "users-from-settings", sqliteOnly: true, run: usersFromSettings},
+	// Countries were free text: they become codes of domain.Countries, an unknown one goes to the comment.
+	{id: "country-codes", run: countryCodes},
 }
 
 // migration is a query, or run when SQL alone cannot do it.
@@ -88,6 +92,63 @@ func usersFromSettings(ctx context.Context, tx bun.Tx) error {
 	}
 	for _, table := range []string{"applications", "deleted_applications", "tokens", "oauth_codes"} {
 		if _, err := tx.ExecContext(ctx, `UPDATE ? SET user_id = ? WHERE user_id = ''`, bun.Ident(table), id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// countryCodes stores each country as its code, in the applications, the trash and the default of the preferences.
+func countryCodes(ctx context.Context, tx bun.Tx) error {
+	var applications []domain.Application
+	if err := tx.NewSelect().Model(&applications).Column("id", "country", "comment").Where("country IS NOT NULL").Scan(ctx); err != nil {
+		return err
+	}
+	for _, a := range applications {
+		if a.KeepCountry() {
+			if _, err := tx.NewUpdate().Model(&a).Column("country", "comment").WherePK().Exec(ctx); err != nil {
+				return err
+			}
+		}
+	}
+	var deleted []domain.DeletedApplication
+	if err := tx.NewSelect().Model(&deleted).Scan(ctx); err != nil {
+		return err
+	}
+	for _, d := range deleted {
+		if d.Application.KeepCountry() {
+			if _, err := tx.NewUpdate().Model(&d).Column("application").WherePK().Exec(ctx); err != nil {
+				return err
+			}
+		}
+	}
+	// The stored JSON, not the struct: it holds only what was saved, read over the defaults.
+	var users []struct {
+		ID          string
+		Preferences string
+	}
+	if err := tx.NewRaw(`SELECT id, preferences FROM users`).Scan(ctx, &users); err != nil {
+		return err
+	}
+	for _, u := range users {
+		var preferences map[string]any
+		if err := json.Unmarshal([]byte(u.Preferences), &preferences); err != nil {
+			return err
+		}
+		country, _ := preferences["default_country"].(string)
+		code := domain.CountryCode(country)
+		if !domain.IsCountry(code) {
+			code = "" // an unknown default is only a preference: it is cleared
+		}
+		if code == country {
+			continue
+		}
+		preferences["default_country"] = code
+		stored, err := json.Marshal(preferences)
+		if err != nil {
+			return err
+		}
+		if _, err := tx.NewUpdate().Table("users").Set("preferences = ?", string(stored)).Where("id = ?", u.ID).Exec(ctx); err != nil {
 			return err
 		}
 	}

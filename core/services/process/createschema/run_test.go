@@ -155,6 +155,46 @@ func TestUsersFromSettings(t *testing.T) {
 	}
 }
 
+// Free text countries become codes, an unknown one goes to the comment, in the applications, the trash and the default.
+func TestCountryCodes(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	at := "'2026-01-10 00:00:00+00:00'"
+	for _, query := range []string{
+		`INSERT INTO users (id, name, password_hash, admin, preferences, created_at) VALUES ('u', 'u', 'h', 1, '{"default_country":"Italy","plan":"pro"}', ` + at + `)`,
+		`INSERT INTO applications (id, user_id, company, location, country, website, source, source_detail, status, rating, comment, applied_at, created_at, updated_at) VALUES
+			('a', 'u', 'Acme', 'Paris', 'France', '', 'spontaneous', '', 'applied', 0, '', '2026-01-10', ` + at + `, ` + at + `),
+			('b', 'u', 'Acme', 'Roma', 'Italie', '', 'spontaneous', '', 'applied', 0, 'Hi', '2026-01-10', ` + at + `, ` + at + `)`,
+		`INSERT INTO deleted_applications (id, user_id, application, deleted_at) VALUES ('d', 'u', '{"id":"d","company":"Acme","country":"germany"}', ` + at + `)`,
+		`DELETE FROM migrations WHERE id = 'country-codes'`,
+	} {
+		if _, err := db.ExecContext(ctx, query); err != nil {
+			t.Fatalf("%s: %v", query, err)
+		}
+	}
+	again := createschema.Process(ctx, db)
+	again.Run()
+	if again.HasErr() {
+		t.Fatal(again.GetErr())
+	}
+	var applications []domain.Application
+	if err := db.NewSelect().Model(&applications).Order("id").Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if applications[0].Country != "FR" || applications[1].Country != "" || applications[1].Comment != "Country: Italie\nHi" {
+		t.Errorf("applications = %+v", applications)
+	}
+	var deleted domain.DeletedApplication
+	if err := db.NewSelect().Model(&deleted).Scan(ctx); err != nil || deleted.Application.Country != "DE" {
+		t.Errorf("trash = %+v, %v", deleted, err)
+	}
+	preferences := readpreferences.Process(domain.WithUser(ctx, "u"), db)
+	preferences.Run()
+	if got := preferences.GetResult(); got.DefaultCountry != "IT" || got.Plan != domain.PlanPro || got.TrashDays != domain.DefaultPreferences.TrashDays {
+		t.Errorf("preferences = %+v, %v", got, preferences.GetErr())
+	}
+}
+
 // sqliteOnly skips a test of a migration of the SQLite era: a Postgres base claims it without running it.
 func sqliteOnly(t *testing.T, db *bun.DB) {
 	if db.Dialect().Name() != dialect.SQLite {

@@ -8,7 +8,8 @@ Track job applications from a web app, a CLI and an MCP server for AI agents. On
 - **`web/`**: Nuxt 4 + Nuxt UI: a dashboard with a sortable, filterable table or a kanban by status, the add/edit
   form, API tokens, four themes and dark mode.
 
-Each application has a company, an address (location is the city, plus an optional street, postal code and country),
+Each application has a company, an address (location is the city, plus an optional street, postal code and country:
+an ISO code from the list built into the server, `core/domain/countries.yaml`, shown translated in the web app),
 a website, a source (spontaneous, job post with its URL, recruiter with their e-mail, or any name you give), a status
 (applied → responded → interview → offer / rejected, or no_reply: the server moves there an application still waiting
 without news, since its last follow-up or else since it was sent, for the days the settings give, 10 by default), a rating out of 5, a comment, the day it was sent, and optionally

@@ -85,7 +85,7 @@ func TestCustomSourceAndAddress(t *testing.T) {
 	if err := json.Unmarshal([]byte(must(t, "ls", "--fields", "source,country", "--json", "--source", "Agence intérim Adecco")), &rows); err != nil {
 		t.Fatal(err)
 	}
-	if len(rows) != 1 || rows[0]["source"] != "Agence intérim Adecco" || rows[0]["country"] != "France" {
+	if len(rows) != 1 || rows[0]["source"] != "Agence intérim Adecco" || rows[0]["country"] != "FR" {
 		t.Errorf("ls --fields source,country = %v", rows)
 	}
 }

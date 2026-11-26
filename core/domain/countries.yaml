@@ -1,0 +1,251 @@
+# The countries an application can name (ISO 3166-1 alpha-2): code is stored, name is the English name the API
+# also takes, key is the web app's i18n key of the translated name.
+- { code: AD, name: "Andorra", key: countries.AD }
+- { code: AE, name: "United Arab Emirates", key: countries.AE }
+- { code: AF, name: "Afghanistan", key: countries.AF }
+- { code: AG, name: "Antigua & Barbuda", key: countries.AG }
+- { code: AI, name: "Anguilla", key: countries.AI }
+- { code: AL, name: "Albania", key: countries.AL }
+- { code: AM, name: "Armenia", key: countries.AM }
+- { code: AO, name: "Angola", key: countries.AO }
+- { code: AQ, name: "Antarctica", key: countries.AQ }
+- { code: AR, name: "Argentina", key: countries.AR }
+- { code: AS, name: "American Samoa", key: countries.AS }
+- { code: AT, name: "Austria", key: countries.AT }
+- { code: AU, name: "Australia", key: countries.AU }
+- { code: AW, name: "Aruba", key: countries.AW }
+- { code: AX, name: "Åland Islands", key: countries.AX }
+- { code: AZ, name: "Azerbaijan", key: countries.AZ }
+- { code: BA, name: "Bosnia & Herzegovina", key: countries.BA }
+- { code: BB, name: "Barbados", key: countries.BB }
+- { code: BD, name: "Bangladesh", key: countries.BD }
+- { code: BE, name: "Belgium", key: countries.BE }
+- { code: BF, name: "Burkina Faso", key: countries.BF }
+- { code: BG, name: "Bulgaria", key: countries.BG }
+- { code: BH, name: "Bahrain", key: countries.BH }
+- { code: BI, name: "Burundi", key: countries.BI }
+- { code: BJ, name: "Benin", key: countries.BJ }
+- { code: BL, name: "St. Barthélemy", key: countries.BL }
+- { code: BM, name: "Bermuda", key: countries.BM }
+- { code: BN, name: "Brunei", key: countries.BN }
+- { code: BO, name: "Bolivia", key: countries.BO }
+- { code: BQ, name: "Caribbean Netherlands", key: countries.BQ }
+- { code: BR, name: "Brazil", key: countries.BR }
+- { code: BS, name: "Bahamas", key: countries.BS }
+- { code: BT, name: "Bhutan", key: countries.BT }
+- { code: BV, name: "Bouvet Island", key: countries.BV }
+- { code: BW, name: "Botswana", key: countries.BW }
+- { code: BY, name: "Belarus", key: countries.BY }
+- { code: BZ, name: "Belize", key: countries.BZ }
+- { code: CA, name: "Canada", key: countries.CA }
+- { code: CC, name: "Cocos (Keeling) Islands", key: countries.CC }
+- { code: CD, name: "Congo - Kinshasa", key: countries.CD }
+- { code: CF, name: "Central African Republic", key: countries.CF }
+- { code: CG, name: "Congo - Brazzaville", key: countries.CG }
+- { code: CH, name: "Switzerland", key: countries.CH }
+- { code: CI, name: "Côte d’Ivoire", key: countries.CI }
+- { code: CK, name: "Cook Islands", key: countries.CK }
+- { code: CL, name: "Chile", key: countries.CL }
+- { code: CM, name: "Cameroon", key: countries.CM }
+- { code: CN, name: "China mainland", key: countries.CN }
+- { code: CO, name: "Colombia", key: countries.CO }
+- { code: CR, name: "Costa Rica", key: countries.CR }
+- { code: CU, name: "Cuba", key: countries.CU }
+- { code: CV, name: "Cape Verde", key: countries.CV }
+- { code: CW, name: "Curaçao", key: countries.CW }
+- { code: CX, name: "Christmas Island", key: countries.CX }
+- { code: CY, name: "Cyprus", key: countries.CY }
+- { code: CZ, name: "Czechia", key: countries.CZ }
+- { code: DE, name: "Germany", key: countries.DE }
+- { code: DJ, name: "Djibouti", key: countries.DJ }
+- { code: DK, name: "Denmark", key: countries.DK }
+- { code: DM, name: "Dominica", key: countries.DM }
+- { code: DO, name: "Dominican Republic", key: countries.DO }
+- { code: DZ, name: "Algeria", key: countries.DZ }
+- { code: EC, name: "Ecuador", key: countries.EC }
+- { code: EE, name: "Estonia", key: countries.EE }
+- { code: EG, name: "Egypt", key: countries.EG }
+- { code: EH, name: "Western Sahara", key: countries.EH }
+- { code: ER, name: "Eritrea", key: countries.ER }
+- { code: ES, name: "Spain", key: countries.ES }
+- { code: ET, name: "Ethiopia", key: countries.ET }
+- { code: FI, name: "Finland", key: countries.FI }
+- { code: FJ, name: "Fiji", key: countries.FJ }
+- { code: FK, name: "Falkland Islands", key: countries.FK }
+- { code: FM, name: "Micronesia", key: countries.FM }
+- { code: FO, name: "Faroe Islands", key: countries.FO }
+- { code: FR, name: "France", key: countries.FR }
+- { code: GA, name: "Gabon", key: countries.GA }
+- { code: GB, name: "United Kingdom", key: countries.GB }
+- { code: GD, name: "Grenada", key: countries.GD }
+- { code: GE, name: "Georgia", key: countries.GE }
+- { code: GF, name: "French Guiana", key: countries.GF }
+- { code: GG, name: "Guernsey", key: countries.GG }
+- { code: GH, name: "Ghana", key: countries.GH }
+- { code: GI, name: "Gibraltar", key: countries.GI }
+- { code: GL, name: "Greenland", key: countries.GL }
+- { code: GM, name: "Gambia", key: countries.GM }
+- { code: GN, name: "Guinea", key: countries.GN }
+- { code: GP, name: "Guadeloupe", key: countries.GP }
+- { code: GQ, name: "Equatorial Guinea", key: countries.GQ }
+- { code: GR, name: "Greece", key: countries.GR }
+- { code: GS, name: "So. Georgia & So. Sandwich Isl.", key: countries.GS }
+- { code: GT, name: "Guatemala", key: countries.GT }
+- { code: GU, name: "Guam", key: countries.GU }
+- { code: GW, name: "Guinea-Bissau", key: countries.GW }
+- { code: GY, name: "Guyana", key: countries.GY }
+- { code: HK, name: "Hong Kong", key: countries.HK }
+- { code: HM, name: "Heard & McDonald Islands", key: countries.HM }
+- { code: HN, name: "Honduras", key: countries.HN }
+- { code: HR, name: "Croatia", key: countries.HR }
+- { code: HT, name: "Haiti", key: countries.HT }
+- { code: HU, name: "Hungary", key: countries.HU }
+- { code: ID, name: "Indonesia", key: countries.ID }
+- { code: IE, name: "Ireland", key: countries.IE }
+- { code: IL, name: "Israel", key: countries.IL }
+- { code: IM, name: "Isle of Man", key: countries.IM }
+- { code: IN, name: "India", key: countries.IN }
+- { code: IO, name: "Chagos Archipelago", key: countries.IO }
+- { code: IQ, name: "Iraq", key: countries.IQ }
+- { code: IR, name: "Iran", key: countries.IR }
+- { code: IS, name: "Iceland", key: countries.IS }
+- { code: IT, name: "Italy", key: countries.IT }
+- { code: JE, name: "Jersey", key: countries.JE }
+- { code: JM, name: "Jamaica", key: countries.JM }
+- { code: JO, name: "Jordan", key: countries.JO }
+- { code: JP, name: "Japan", key: countries.JP }
+- { code: KE, name: "Kenya", key: countries.KE }
+- { code: KG, name: "Kyrgyzstan", key: countries.KG }
+- { code: KH, name: "Cambodia", key: countries.KH }
+- { code: KI, name: "Kiribati", key: countries.KI }
+- { code: KM, name: "Comoros", key: countries.KM }
+- { code: KN, name: "St. Kitts & Nevis", key: countries.KN }
+- { code: KP, name: "North Korea", key: countries.KP }
+- { code: KR, name: "South Korea", key: countries.KR }
+- { code: KW, name: "Kuwait", key: countries.KW }
+- { code: KY, name: "Cayman Islands", key: countries.KY }
+- { code: KZ, name: "Kazakhstan", key: countries.KZ }
+- { code: LA, name: "Laos", key: countries.LA }
+- { code: LB, name: "Lebanon", key: countries.LB }
+- { code: LC, name: "St. Lucia", key: countries.LC }
+- { code: LI, name: "Liechtenstein", key: countries.LI }
+- { code: LK, name: "Sri Lanka", key: countries.LK }
+- { code: LR, name: "Liberia", key: countries.LR }
+- { code: LS, name: "Lesotho", key: countries.LS }
+- { code: LT, name: "Lithuania", key: countries.LT }
+- { code: LU, name: "Luxembourg", key: countries.LU }
+- { code: LV, name: "Latvia", key: countries.LV }
+- { code: LY, name: "Libya", key: countries.LY }
+- { code: MA, name: "Morocco", key: countries.MA }
+- { code: MC, name: "Monaco", key: countries.MC }
+- { code: MD, name: "Moldova", key: countries.MD }
+- { code: ME, name: "Montenegro", key: countries.ME }
+- { code: MF, name: "St. Martin", key: countries.MF }
+- { code: MG, name: "Madagascar", key: countries.MG }
+- { code: MH, name: "Marshall Islands", key: countries.MH }
+- { code: MK, name: "North Macedonia", key: countries.MK }
+- { code: ML, name: "Mali", key: countries.ML }
+- { code: MM, name: "Myanmar (Burma)", key: countries.MM }
+- { code: MN, name: "Mongolia", key: countries.MN }
+- { code: MO, name: "Macao", key: countries.MO }
+- { code: MP, name: "Northern Mariana Islands", key: countries.MP }
+- { code: MQ, name: "Martinique", key: countries.MQ }
+- { code: MR, name: "Mauritania", key: countries.MR }
+- { code: MS, name: "Montserrat", key: countries.MS }
+- { code: MT, name: "Malta", key: countries.MT }
+- { code: MU, name: "Mauritius", key: countries.MU }
+- { code: MV, name: "Maldives", key: countries.MV }
+- { code: MW, name: "Malawi", key: countries.MW }
+- { code: MX, name: "Mexico", key: countries.MX }
+- { code: MY, name: "Malaysia", key: countries.MY }
+- { code: MZ, name: "Mozambique", key: countries.MZ }
+- { code: NA, name: "Namibia", key: countries.NA }
+- { code: NC, name: "New Caledonia", key: countries.NC }
+- { code: NE, name: "Niger", key: countries.NE }
+- { code: NF, name: "Norfolk Island", key: countries.NF }
+- { code: NG, name: "Nigeria", key: countries.NG }
+- { code: NI, name: "Nicaragua", key: countries.NI }
+- { code: NL, name: "Netherlands", key: countries.NL }
+- { code: NO, name: "Norway", key: countries.NO }
+- { code: NP, name: "Nepal", key: countries.NP }
+- { code: NR, name: "Nauru", key: countries.NR }
+- { code: NU, name: "Niue", key: countries.NU }
+- { code: NZ, name: "New Zealand", key: countries.NZ }
+- { code: OM, name: "Oman", key: countries.OM }
+- { code: PA, name: "Panama", key: countries.PA }
+- { code: PE, name: "Peru", key: countries.PE }
+- { code: PF, name: "French Polynesia", key: countries.PF }
+- { code: PG, name: "Papua New Guinea", key: countries.PG }
+- { code: PH, name: "Philippines", key: countries.PH }
+- { code: PK, name: "Pakistan", key: countries.PK }
+- { code: PL, name: "Poland", key: countries.PL }
+- { code: PM, name: "St. Pierre & Miquelon", key: countries.PM }
+- { code: PN, name: "Pitcairn Islands", key: countries.PN }
+- { code: PR, name: "Puerto Rico", key: countries.PR }
+- { code: PS, name: "Palestinian Territories", key: countries.PS }
+- { code: PT, name: "Portugal", key: countries.PT }
+- { code: PW, name: "Palau", key: countries.PW }
+- { code: PY, name: "Paraguay", key: countries.PY }
+- { code: QA, name: "Qatar", key: countries.QA }
+- { code: RE, name: "Réunion", key: countries.RE }
+- { code: RO, name: "Romania", key: countries.RO }
+- { code: RS, name: "Serbia", key: countries.RS }
+- { code: RU, name: "Russia", key: countries.RU }
+- { code: RW, name: "Rwanda", key: countries.RW }
+- { code: SA, name: "Saudi Arabia", key: countries.SA }
+- { code: SB, name: "Solomon Islands", key: countries.SB }
+- { code: SC, name: "Seychelles", key: countries.SC }
+- { code: SD, name: "Sudan", key: countries.SD }
+- { code: SE, name: "Sweden", key: countries.SE }
+- { code: SG, name: "Singapore", key: countries.SG }
+- { code: SH, name: "St. Helena", key: countries.SH }
+- { code: SI, name: "Slovenia", key: countries.SI }
+- { code: SJ, name: "Svalbard & Jan Mayen", key: countries.SJ }
+- { code: SK, name: "Slovakia", key: countries.SK }
+- { code: SL, name: "Sierra Leone", key: countries.SL }
+- { code: SM, name: "San Marino", key: countries.SM }
+- { code: SN, name: "Senegal", key: countries.SN }
+- { code: SO, name: "Somalia", key: countries.SO }
+- { code: SR, name: "Suriname", key: countries.SR }
+- { code: SS, name: "South Sudan", key: countries.SS }
+- { code: ST, name: "São Tomé & Príncipe", key: countries.ST }
+- { code: SV, name: "El Salvador", key: countries.SV }
+- { code: SX, name: "Sint Maarten", key: countries.SX }
+- { code: SY, name: "Syria", key: countries.SY }
+- { code: SZ, name: "Eswatini", key: countries.SZ }
+- { code: TC, name: "Turks & Caicos Islands", key: countries.TC }
+- { code: TD, name: "Chad", key: countries.TD }
+- { code: TF, name: "French Southern Territories", key: countries.TF }
+- { code: TG, name: "Togo", key: countries.TG }
+- { code: TH, name: "Thailand", key: countries.TH }
+- { code: TJ, name: "Tajikistan", key: countries.TJ }
+- { code: TK, name: "Tokelau", key: countries.TK }
+- { code: TL, name: "Timor-Leste", key: countries.TL }
+- { code: TM, name: "Turkmenistan", key: countries.TM }
+- { code: TN, name: "Tunisia", key: countries.TN }
+- { code: TO, name: "Tonga", key: countries.TO }
+- { code: TR, name: "Türkiye", key: countries.TR }
+- { code: TT, name: "Trinidad & Tobago", key: countries.TT }
+- { code: TV, name: "Tuvalu", key: countries.TV }
+- { code: TW, name: "Taiwan", key: countries.TW }
+- { code: TZ, name: "Tanzania", key: countries.TZ }
+- { code: UA, name: "Ukraine", key: countries.UA }
+- { code: UG, name: "Uganda", key: countries.UG }
+- { code: UM, name: "U.S. Outlying Islands", key: countries.UM }
+- { code: US, name: "United States", key: countries.US }
+- { code: UY, name: "Uruguay", key: countries.UY }
+- { code: UZ, name: "Uzbekistan", key: countries.UZ }
+- { code: VA, name: "Vatican City", key: countries.VA }
+- { code: VC, name: "St. Vincent & Grenadines", key: countries.VC }
+- { code: VE, name: "Venezuela", key: countries.VE }
+- { code: VG, name: "British Virgin Islands", key: countries.VG }
+- { code: VI, name: "U.S. Virgin Islands", key: countries.VI }
+- { code: VN, name: "Vietnam", key: countries.VN }
+- { code: VU, name: "Vanuatu", key: countries.VU }
+- { code: WF, name: "Wallis & Futuna", key: countries.WF }
+- { code: WS, name: "Samoa", key: countries.WS }
+- { code: YE, name: "Yemen", key: countries.YE }
+- { code: YT, name: "Mayotte", key: countries.YT }
+- { code: ZA, name: "South Africa", key: countries.ZA }
+- { code: ZM, name: "Zambia", key: countries.ZM }
+- { code: ZW, name: "Zimbabwe", key: countries.ZW }

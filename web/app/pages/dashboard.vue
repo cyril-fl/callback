@@ -8,6 +8,7 @@ definePageMeta({ middleware: 'pro' });
 const { t } = useI18n();
 const api = useApi();
 const sources = useSources();
+const countries = useCountries();
 const { preferences } = usePreferences();
 
 const { data: applications, refresh: refreshApplications } = await useAsyncData(
@@ -45,7 +46,11 @@ const filtered = computed(() => inPeriod(applications.value, since.value, city.v
 const stats = computed(() => statsOf(filtered.value));
 const days = computed(() => filtered.value.flatMap((a) => (a.applied_at ? [a.applied_at] : [])));
 const cities = computed(() =>
-  countBy(filtered.value.flatMap((a) => (a.location ? [[a.location, a.country].filter(Boolean).join(', ')] : []))),
+  countBy(
+    filtered.value.flatMap((a) =>
+      a.location ? [[a.location, countries.label(a.country)].filter(Boolean).join(', ')] : [],
+    ),
+  ),
 );
 const bySource = computed(() => countBy(filtered.value.map((a) => sources.label(a.source))));
 const weeks = computed(() =>

@@ -7,6 +7,7 @@ import { today as todayDate, getLocalTimeZone } from '@internationalized/date';
 const { t } = useI18n();
 const { icons } = useIcons();
 const api = useApi();
+const countries = useCountries();
 const sources = useSources();
 const places = usePlaces();
 const { pro, preferences } = usePreferences();
@@ -510,7 +511,7 @@ function exportCsv() {
         />
       </template>
       <template #location-cell="{ row }">
-        {{ [row.original.location, row.original.country].filter(Boolean).join(', ') }}
+        {{ [row.original.location, countries.label(row.original.country)].filter(Boolean).join(', ') }}
       </template>
       <template #applied_at-cell="{ row }">
         <UTooltip

@@ -94,7 +94,8 @@ dernière relance, ou à défaut depuis son envoi, le délai `no_reply_days` des
 `source` : `spontaneous` (par défaut), `job_post` (avec l'URL de l'annonce en `source_detail`), `recruiter` (avec son
 e-mail) ou un nom libre
 (60 caractères au plus, `source_detail` libre) ; l'adresse : `location` est la ville, `street`, `postal_code` et
-`country` la complètent (aussi dans `fields` et `q`) ; `interview_at`, la date et l'heure locales de l'entretien
+`country` la complètent (aussi dans `fields` et `q`, qui cherche le code) ; `country` est un code ISO 3166-1 alpha-2
+(`IT`), le nom anglais (`Italy`) est accepté et converti, la liste est sur `GET /api/countries` ; `interview_at`, la date et l'heure locales de l'entretien
 (`2026-01-31T14:30`) ; `contact_name` et `contact_email` (une adresse valide), cherchés aussi par `q` ; `rating` de
 0 à 5 ; les jours en `2026-01-31`, `applied_before` et `applied_after` stricts. `""` efface `interview_at` et le
 contact.

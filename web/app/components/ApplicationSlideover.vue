@@ -14,6 +14,7 @@ const api = useApi();
 const toast = useToast();
 const sources = useSources();
 const places = usePlaces();
+const countries = useCountries();
 const { preferences, pro } = usePreferences();
 const loading = ref(false);
 
@@ -202,7 +203,14 @@ async function submit() {
             />
           </UFormField>
           <UFormField name="country" :label="t('form.country')">
-            <SuggestInput v-model="state.country" :suggestions="places.countries.value" class="w-full" />
+            <USelectMenu
+              v-model="state.country"
+              :items="countries.items.value"
+              value-key="value"
+              :placeholder="t('form.country')"
+              clear
+              class="w-full"
+            />
           </UFormField>
         </div>
         <div v-if="fullAddress" class="grid grid-cols-3 gap-3">

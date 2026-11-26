@@ -384,6 +384,13 @@ type DomainChanges struct {
 	Website    *string `json:"website,omitempty"`
 }
 
+// DomainCountry defines model for domain.Country.
+type DomainCountry struct {
+	Code string `json:"code"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
 // DomainDeletedApplication defines model for domain.DeletedApplication.
 type DomainDeletedApplication struct {
 	// Application Application is the row as it was, in JSON: a column the applications gain needs nothing here.
@@ -444,7 +451,7 @@ type DomainPreferenceChangesPlan string
 type DomainPreferences struct {
 	DefaultCountry string `json:"default_country"`
 
-	// DefaultLocation DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty.
+	// DefaultLocation DefaultLocation and DefaultCountry (a code of Countries) fill a new application of the web app; both may be empty.
 	DefaultLocation string `json:"default_location"`
 
 	// FollowUpDays FollowUpDays is how long an application waits without news before it is to follow up.
@@ -894,6 +901,11 @@ type ClientInterface interface {
 	// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
 	PostApiApplicationsRestore(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiCountries List the countries
+	//
+	// Corresponds with GET /api/countries (the `GetApiCountries` operationId).
+	GetApiCountries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteApiData Delete every application
 	//
 	// Corresponds with DELETE /api/data (the `DeleteApiData` operationId).
@@ -1250,6 +1262,21 @@ func (c *Client) PostApiApplicationsRestoreWithBody(ctx context.Context, content
 // Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
 func (c *Client) PostApiApplicationsRestore(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiApplicationsRestoreRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetApiCountries List the countries
+//
+// Corresponds with GET /api/countries (the `GetApiCountries` operationId).
+func (c *Client) GetApiCountries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiCountriesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2130,6 +2157,33 @@ func NewPostApiApplicationsRestoreRequestWithBody(server string, contentType str
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetApiCountriesRequest constructs an http.Request for the GetApiCountries method
+func NewGetApiCountriesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/countries")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -3019,6 +3073,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/applications/restore (the `PostApiApplicationsRestore` operationId).
 	PostApiApplicationsRestoreWithResponse(ctx context.Context, body PostApiApplicationsRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiApplicationsRestoreResponse, error)
 
+	// GetApiCountriesWithResponse List the countries
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/countries (the `GetApiCountries` operationId).
+	GetApiCountriesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiCountriesResponse, error)
+
 	// DeleteApiDataWithResponse Delete every application
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -3664,6 +3725,54 @@ func (r PostApiApplicationsRestoreResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostApiApplicationsRestoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetApiCountriesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]DomainCountry
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *RespondFailure
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetApiCountriesResponse) GetJSON200() *[]DomainCountry {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetApiCountriesResponse) GetJSON401() *RespondFailure {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetApiCountriesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiCountriesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiCountriesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetApiCountriesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -5015,6 +5124,19 @@ func (c *ClientWithResponses) PostApiApplicationsRestoreWithResponse(ctx context
 	return ParsePostApiApplicationsRestoreResponse(rsp)
 }
 
+// GetApiCountriesWithResponse List the countries
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/countries (the `GetApiCountries` operationId).
+func (c *ClientWithResponses) GetApiCountriesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiCountriesResponse, error) {
+	rsp, err := c.GetApiCountries(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiCountriesResponse(rsp)
+}
+
 // DeleteApiDataWithResponse Delete every application
 //
 // Returns a wrapper object for the known response body format(s).
@@ -5701,6 +5823,39 @@ func ParsePostApiApplicationsRestoreResponse(rsp *http.Response) (*PostApiApplic
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiCountriesResponse parses an HTTP response from a GetApiCountriesWithResponse call
+func ParseGetApiCountriesResponse(rsp *http.Response) (*GetApiCountriesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiCountriesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []DomainCountry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest RespondFailure
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 

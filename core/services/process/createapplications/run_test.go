@@ -58,7 +58,7 @@ func TestRun(t *testing.T) {
 	}
 	// A source the user names is kept as given, trimmed, its detail free; the address is trimmed too.
 	var vandelay domain.Application
-	if err := db.NewSelect().Model(&vandelay).Where("id = ?", result.IDs[3]).Scan(ctx); err != nil || vandelay.Source != "Agence intérim Adecco" || vandelay.Street != "1 rue de la Paix" || vandelay.Country != "France" || vandelay.InterviewAt != "2026-02-03T14:30" || vandelay.ContactName != "Marie" {
+	if err := db.NewSelect().Model(&vandelay).Where("id = ?", result.IDs[3]).Scan(ctx); err != nil || vandelay.Source != "Agence intérim Adecco" || vandelay.Street != "1 rue de la Paix" || vandelay.Country != "FR" || vandelay.InterviewAt != "2026-02-03T14:30" || vandelay.ContactName != "Marie" {
 		t.Errorf("vandelay = %+v, %v", vandelay, err)
 	}
 	var hooli domain.Application

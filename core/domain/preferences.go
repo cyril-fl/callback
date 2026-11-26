@@ -20,13 +20,13 @@ var (
 	ErrInvalidFollowUp = Invalid("follow_up_days is between 1 and 90")
 	ErrInvalidNoReply  = Invalid("no_reply_days is between 0 and 365")
 	ErrInvalidTrash    = Invalid("trash_days is between 1 and 365")
-	ErrLongDefault     = Invalid("default_location and default_country have at most 200 characters")
+	ErrLongDefault     = Invalid("default_location has at most 200 characters")
 )
 
 // Preferences are the settings of an account that follow it on every device; the theme stays on each device.
 type Preferences struct {
 	Plan string `json:"plan" enums:"base,pro"`
-	// DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty.
+	// DefaultLocation and DefaultCountry (a code of Countries) fill a new application of the web app; both may be empty.
 	DefaultLocation string `json:"default_location"`
 	DefaultCountry  string `json:"default_country"`
 	// FollowUpDays is how long an application waits without news before it is to follow up.
@@ -52,8 +52,10 @@ func (p Preferences) Validate() error {
 		return ErrInvalidNoReply
 	case p.TrashDays < MinTrashDays || p.TrashDays > MaxTrashDays:
 		return ErrInvalidTrash
-	case runes(p.DefaultLocation) > MaxShort || runes(p.DefaultCountry) > MaxShort:
+	case runes(p.DefaultLocation) > MaxShort:
 		return ErrLongDefault
+	case !IsCountry(p.DefaultCountry):
+		return ErrInvalidCountry
 	}
 	return nil
 }
@@ -73,6 +75,7 @@ func (c PreferenceChanges) Apply(p *Preferences) {
 	set(&p.Plan, c.Plan)
 	set(&p.DefaultLocation, c.DefaultLocation)
 	set(&p.DefaultCountry, c.DefaultCountry)
+	p.DefaultCountry = CountryCode(p.DefaultCountry)
 	set(&p.FollowUpDays, c.FollowUpDays)
 	set(&p.NoReplyDays, c.NoReplyDays)
 	set(&p.TrashDays, c.TrashDays)
