@@ -206,7 +206,7 @@ const day = (v?: string) =>
               <UTooltip v-if="interview(app)" :text="`${t('form.interviewAt')} : ${interview(app)}`">
                 <UIcon
                   :name="icons.interview"
-                  class="size-3.5 text-highlighted"
+                  class="size-3.5 text-primary"
                   :aria-label="`${t('form.interviewAt')} : ${interview(app)}`"
                 />
               </UTooltip>
