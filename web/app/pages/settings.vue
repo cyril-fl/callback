@@ -401,14 +401,8 @@ async function revoke() {
           <div class="min-w-0 flex-1 basis-48">
             <p class="flex min-w-0 items-center gap-2 text-sm">
               <span class="truncate">{{ token.name }}</span>
-              <UBadge :label="t(`settings.kinds.${token.kind}`)" size="sm" color="neutral" variant="subtle" />
-              <UBadge
-                v-if="token.read_only"
-                :label="t('settings.readOnly')"
-                size="sm"
-                color="neutral"
-                variant="subtle"
-              />
+              <UBadge :label="t(`settings.kinds.${token.kind}`)" size="sm" color="neutral" variant="soft" />
+              <UBadge v-if="token.read_only" :label="t('settings.readOnly')" size="sm" color="neutral" variant="soft" />
             </p>
             <p class="text-xs text-muted">
               {{ t('settings.createdAt') }} {{ when(token.created_at) }} · {{ t('settings.lastUsedAt') }}

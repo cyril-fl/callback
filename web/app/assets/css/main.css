@@ -6,6 +6,11 @@
   --font-sans: 'Merriweather Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* A rounder look than Nuxt UI's 0.25rem: every rounded-* scales from it. */
+:root {
+  --ui-radius: 0.5rem;
+}
+
 /* The themes of app/utils/themes.ts: four accents, lilac the default (on Lilac Vodka, #bfc2f3, its 300; its greys
    a dark lilac) and the others after those of the previous app, each with greys tinted by its hue, and its status
    colors (info, success, warning, error) picked from the same family, as in tide: pink with periwinkle, mint, peach and

@@ -123,7 +123,7 @@ const day = (v?: string) =>
           role="button"
           tabindex="0"
           draggable="true"
-          class="group cursor-pointer rounded-xl bg-default p-4 shadow-xs ring-1 ring-default/50 transition hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
+          class="group cursor-pointer rounded-lg bg-default p-4 shadow-xs ring-1 ring-default/50 transition hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
           :class="dragged?.id === app.id ? 'opacity-40' : ''"
           :aria-label="`${app.company}, ${app.location}`"
           @click="emit('edit', app)"
@@ -195,7 +195,7 @@ const day = (v?: string) =>
         </div>
         <p
           v-if="column.items.length === 0"
-          class="rounded-xl border border-dashed border-default p-4 text-center text-xs text-muted"
+          class="rounded-lg border border-dashed border-default p-4 text-center text-xs text-muted"
         >
           {{ t('kanban.dropHere') }}
         </p>

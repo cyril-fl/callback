@@ -473,7 +473,7 @@ function exportCsv() {
           rel="noopener noreferrer"
           :label="t('source.job_post')"
           :trailing-icon="icons.website"
-          variant="subtle"
+          variant="soft"
           class="hover:underline"
         />
         <UBadge
@@ -482,17 +482,17 @@ function exportCsv() {
           :href="`mailto:${row.original.source_detail}`"
           :label="t('source.recruiter')"
           :trailing-icon="icons.mail"
-          variant="subtle"
+          variant="soft"
           class="hover:underline"
         />
-        <UBadge v-else :label="sources.label(row.original.source)" color="neutral" variant="subtle" />
+        <UBadge v-else :label="sources.label(row.original.source)" color="neutral" variant="soft" />
       </template>
       <template #status-cell="{ row }">
         <UDropdownMenu :items="statusMenu(row.original)">
           <UBadge
             as="button"
             :color="statusColor[row.original.status ?? 'applied']"
-            variant="subtle"
+            variant="soft"
             class="cursor-pointer"
             :aria-label="`${t('table.changeStatus')} : ${t(`status.${row.original.status ?? 'applied'}`)}`"
             :label="t(`status.${row.original.status ?? 'applied'}`)"
