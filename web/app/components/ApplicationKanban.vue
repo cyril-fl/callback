@@ -15,8 +15,18 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+// The ends nobody works on share one column, "closed": a drop there is a rejection, no_reply is set by the server.
+const CLOSED: Status[] = ['rejected', 'no_reply'];
 const columns = computed(() =>
-  STATUSES.map((status) => ({ status, items: props.applications.filter((a) => a.status === status) })),
+  [...STATUSES.filter((s) => !CLOSED.includes(s)), 'closed' as const].map((key) => {
+    const statuses = key === 'closed' ? CLOSED : [key];
+    return {
+      key,
+      status: statuses[0]!,
+      statuses,
+      items: props.applications.filter((a) => statuses.includes(a.status ?? 'applied')),
+    };
+  }),
 );
 
 const dot: Record<string, string> = {
@@ -35,12 +45,15 @@ const sources = useSources();
 
 // A drag moves a card to another column; a click opens it. The form changes the status from the keyboard.
 const dragged = ref<Application>();
-const over = ref<Status>();
-function drop(status: Status) {
-  if (dragged.value && dragged.value.status !== status) emit('move', dragged.value, status);
+const over = ref<string>();
+function drop(column: { status: Status; statuses: Status[] }) {
+  if (dragged.value && !column.statuses.includes(dragged.value.status ?? 'applied'))
+    emit('move', dragged.value, column.status);
   dragged.value = undefined;
   over.value = undefined;
 }
+
+const label = (key: string) => (key === 'closed' ? t('kanban.closed') : t(`status.${key}`));
 
 // "2026-01-31" is a day, not an instant: no timezone shift.
 const day = (v?: string) =>
@@ -51,17 +64,17 @@ const day = (v?: string) =>
   <div class="flex min-h-80 flex-1 gap-3 overflow-x-auto pb-1">
     <section
       v-for="column in columns"
-      :key="column.status"
+      :key="column.key"
       class="flex min-w-52 flex-1 shrink-0 flex-col rounded-xl bg-elevated/60 ring-1 transition-colors ring-inset"
-      :class="over === column.status ? 'bg-primary/5 ring-primary' : 'ring-default'"
-      :aria-label="t(`status.${column.status}`)"
-      @dragover.prevent="over = column.status"
+      :class="over === column.key ? 'bg-primary/5 ring-primary' : 'ring-default'"
+      :aria-label="label(column.key)"
+      @dragover.prevent="over = column.key"
       @dragleave.self="over = undefined"
-      @drop.prevent="drop(column.status)"
+      @drop.prevent="drop(column)"
     >
       <header class="flex items-center gap-2 px-3 pt-3 pb-2">
         <span class="size-2.5 rounded-full" :class="dot[statusColor[column.status]]" aria-hidden="true" />
-        <h3 class="text-sm font-medium">{{ t(`status.${column.status}`) }}</h3>
+        <h3 class="text-sm font-medium">{{ label(column.key) }}</h3>
         <UBadge
           :label="column.items.length"
           color="neutral"
@@ -89,7 +102,17 @@ const day = (v?: string) =>
             over = undefined;
           "
         >
-          <p class="truncate text-sm font-medium">{{ app.company }}</p>
+          <div class="flex items-center gap-2">
+            <p class="truncate text-sm font-medium">{{ app.company }}</p>
+            <UBadge
+              v-if="column.key === 'closed'"
+              :label="t(`status.${app.status}`)"
+              color="neutral"
+              variant="soft"
+              size="sm"
+              class="ml-auto shrink-0"
+            />
+          </div>
           <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
             <UIcon name="i-lucide-map-pin" class="size-3 shrink-0" />{{
               [app.location, app.country].filter(Boolean).join(', ')

@@ -100,7 +100,8 @@
     "kanban": "Kanban"
   },
   "kanban": {
-    "dropHere": "Déposer ici"
+    "dropHere": "Déposer ici",
+    "closed": "Sans suite"
   },
   "form": {
     "add": "Nouvelle candidature",
