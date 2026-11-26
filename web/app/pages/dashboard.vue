@@ -211,8 +211,13 @@ function openForm(app: Application) {
 
     <section>
       <h2 class="mb-3 text-sm font-semibold">{{ t('stats.interviews') }}</h2>
-      <div class="grid items-start gap-4 xl:grid-cols-[1fr_auto]">
-        <UCalendar v-model="calendarDay" class="justify-self-center rounded-lg border border-default p-2 xl:order-last">
+      <!-- Side by side the table stretches to the calendar's height; stacked, the calendar spans the width. -->
+      <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
+        <UCalendar
+          v-model="calendarDay"
+          class="self-start rounded-lg border border-default p-2 lg:order-last"
+          :ui="{ grid: 'w-full' }"
+        >
           <template #day="{ day: d }">
             <UChip :show="interviewDays.has(d.toString())" size="2xs">{{ d.day }}</UChip>
           </template>
