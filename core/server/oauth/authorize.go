@@ -159,7 +159,7 @@ func show(w http.ResponseWriter, status int, p page) {
 // texts are the words of the page, in English or French.
 type texts struct {
 	Lang, Title, Wants, Back, Local, Name, Password, ReadOnly, ReadOnlyHelp, Allow, Deny string
-	BadClient, BadCredentials, BadNameOrPassword, TooMany, Failed                  string
+	BadClient, BadCredentials, BadNameOrPassword, TooMany, Failed                        string
 }
 
 var english = texts{
@@ -174,8 +174,8 @@ var english = texts{
 	Allow:        "Allow", Deny: "Deny",
 	BadClient:      "This link is not a valid sign-in request: start again from the app you are connecting.",
 	BadCredentials: "Wrong password.", BadNameOrPassword: "Wrong name or password.",
-	TooMany:        "Too many wrong passwords: try again in {wait}.",
-	Failed:         "The server failed: try again.",
+	TooMany: "Too many wrong passwords: try again in {wait}.",
+	Failed:  "The server failed: try again.",
 }
 
 var french = texts{
@@ -190,8 +190,8 @@ var french = texts{
 	Allow:        "Autoriser", Deny: "Refuser",
 	BadClient:      "Ce lien n'est pas une demande de connexion valide : recommencez depuis l'application à connecter.",
 	BadCredentials: "Mot de passe incorrect.", BadNameOrPassword: "Nom ou mot de passe incorrect.",
-	TooMany:        "Trop de mots de passe incorrects : réessayez dans {wait}.",
-	Failed:         "Le serveur a échoué : réessayez.",
+	TooMany: "Trop de mots de passe incorrects : réessayez dans {wait}.",
+	Failed:  "Le serveur a échoué : réessayez.",
 }
 
 // language is French when the browser prefers it, English otherwise.
