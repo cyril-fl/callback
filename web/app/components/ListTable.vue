@@ -18,6 +18,8 @@ const props = defineProps<{
   }[];
   blank: () => Row;
   sort?: SortingState;
+  // A row it returns false for keeps no delete button.
+  deletable?: (row: Row) => boolean;
 }>();
 const rows = defineModel<Row[]>({ required: true });
 const { t } = useI18n();
@@ -82,6 +84,7 @@ const tableColumns = computed<TableColumn<Row>[]>(() => [
       </template>
       <template #actions-cell="{ row }">
         <UButton
+          v-if="!deletable || deletable(row.original)"
           :icon="icons.delete"
           color="neutral"
           variant="ghost"

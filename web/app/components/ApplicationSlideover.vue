@@ -42,9 +42,10 @@ const schema = computed(() => {
       interview_at: z.string(),
       contact_name: z.string(),
       contact_email: z.union([z.literal(''), z.email()], { error: t('form.invalidEmail') }),
-      interviews: z.array(
-        z.object({ at: z.string().min(1, t('form.required')), kind: z.string(), note: z.string().optional() }),
-      ),
+      interviews: z
+        .array(z.object({ at: z.string().min(1, t('form.required')), kind: z.string(), note: z.string().optional() }))
+        // From the interview step on, the pro plan keeps at least one.
+        .min(pro.value && PARTS[state.status].includes('interviews') ? 1 : 0, t('form.interviewRequired')),
       contacts: z.array(
         z
           .object({
@@ -88,6 +89,7 @@ const blank = (): State => ({
   contacts: [],
 });
 const state = reactive(blank());
+let saved = new WeakSet<Interview>();
 // The street and postal code stay folded until asked for, or filled.
 const fullAddress = ref(false);
 
@@ -106,6 +108,8 @@ watch(open, (isOpen) => {
   if (a) for (const key of Object.keys(next) as (keyof State)[]) Object.assign(next, { [key]: a[key] ?? next[key] });
   // Copies: the rows edited here are not the list's until saved.
   next.interviews = next.interviews.map((i) => ({ ...i }));
+  // A saved interview happened: it cannot be deleted, only a row added here can.
+  saved = new WeakSet(next.interviews);
   next.contacts = next.contacts.map((c) => ({ ...c }));
   // The pro plan keeps the e-mails as contacts: the recruiter's, and the one written as the site.
   if (pro.value) {
@@ -381,6 +385,7 @@ const phone = useMediaQuery('(max-width: 639px)');
               :columns="interviewColumns"
               :blank="(): Interview => ({ at: '', kind: 'other', note: '' })"
               :sort="[{ id: 'at', desc: true }]"
+              :deletable="(row: Interview) => !saved.has(toRaw(row))"
             />
             <ListTable
               v-if="shows('contacts')"
