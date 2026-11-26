@@ -1,0 +1,1 @@
+callback requires `github.com/cyril-fl/plum v0.1.0`, no `replace`. Plum is only used for `plumprimitive.Process` today: a new plum release matters when it covers something in `core/services/` or `cli/services/`. CI checks that `go list -deps ./cmd/callback` never shows bun nor `core/`: keep it true.

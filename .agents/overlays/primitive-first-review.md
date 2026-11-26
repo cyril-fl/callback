@@ -1,0 +1,1 @@
+callback: plum's `primitive` (Process) is the only plum package used so far. Shared project types live in `core/domain/` (`Filter`, `Error`, `Validate`, `TokenKind`...) and `core/services/` (`appfilter`, `password`): look there before adding a helper.

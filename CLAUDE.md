@@ -15,7 +15,7 @@ A job application tracker: one Go module at the root (`github.com/cyril-fl/callb
 
 ## Go rules
 
-- Processes follow the `plum-process` skill of tide: guarded steps, `HasErr()` then `GetErr()`, `bun.IDB` so tests pass a base or a transaction.
+- Processes follow the `plum-process` skill: guarded steps, `HasErr()` then `GetErr()`, `bun.IDB` so tests pass a base or a transaction.
 - The base has one connection (`core/services/sqlite`): never query the `*bun.DB` while a transaction from it is open, use the `bun.Tx`. Times are stored in UTC (`time.Now().UTC()`): SQLite compares them as text.
 - **No migration tool.** `createschema` creates missing tables and indexes and the columns a model gained, at every start. A rename, a type change or data to rewrite goes into `core/services/process/createschema/migrations.go` (append only). A new NOT NULL column needs a default. The columns of `applications` have no SQL default: bun leaves a defaulted column out of a batch insert when the first row has its zero value.
 - Errors: a process's sentinel errors are made with `domain.Invalid/Unauthorized/Forbidden/NotFound`, which `respond` maps to 400/401/403/404; anything else is a 500 logged without detail to the client.
@@ -29,3 +29,4 @@ A job application tracker: one Go module at the root (`github.com/cyril-fl/callb
 - One conventional commit per change (`feat:`/`fix:`/`refactor:`/`test:`/`docs:`/`chore:`/`style:`, checked by lefthook: `make setup`), work on `develop`, the user pushes.
 - The previous Vue/Express/Mongo app is at the `deprecated` tag.
 - `AGENTS.md` files are links to these `CLAUDE.md`: edit the `CLAUDE.md`.
+- The skills are global (`~/.claude/skills`: `go-tests`, `plum-process`, `commit`, `release`, `issue-hunt`, `cli-command`, `schema-column`, `app-screenshot`...); this project's part of each is `.agents/overlays/<skill>.md`, injected into the skill: edit the overlay, not the skill.
