@@ -209,13 +209,14 @@ function openForm(app: Application) {
       <p v-else class="text-xs text-muted">{{ t('common.empty') }}</p>
     </section>
 
-    <section>
+    <section class="@container">
       <h2 class="mb-3 text-sm font-semibold">{{ t('stats.interviews') }}</h2>
-      <!-- Side by side the table stretches to the calendar's height; stacked, the calendar spans the width. -->
-      <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
+      <!-- On the section's width, not the window's. Side by side, the table takes the calendar's height;
+           stacked, the calendar spans the width. -->
+      <div class="grid gap-4 @3xl:grid-cols-[1fr_auto]">
         <UCalendar
           v-model="calendarDay"
-          class="self-start rounded-lg border border-default p-2 lg:order-last"
+          class="self-start rounded-lg border border-default p-2 @3xl:order-last"
           :ui="{ grid: 'w-full' }"
         >
           <template #day="{ day: d }">
