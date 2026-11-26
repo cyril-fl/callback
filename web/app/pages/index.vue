@@ -272,9 +272,23 @@ const recordStatus = (ids: string[], status: Status) =>
 async function setStatus(app: Application, status: Status) {
   const from = app.status ?? 'applied';
   if (from === status || !canMove(from, status)) return;
-  if (needsForm(status, !!(app.interviews?.length || app.interview_at))) return openForm(app, status);
+  if (needsForm(status, !!(app.interviews?.length || app.interview_at))) return askInterview(app, status);
   const ids = [app.id];
   if (await write(ids, { status }, patch(ids, { status }))) recordStatus(ids, status);
+}
+
+// The interview modal: the move is written with the interviews it asked for, one undo for the status.
+const interviewOpen = ref(false);
+const moving = ref<{ app: Application; status: Status }>();
+function askInterview(app: Application, status: Status) {
+  moving.value = { app, status };
+  interviewOpen.value = true;
+}
+async function saveMove(set: Partial<Application>) {
+  if (!moving.value) return;
+  const { app, status } = moving.value;
+  const ids = [app.id];
+  if (await write(ids, set, patch(ids, set))) recordStatus(ids, status);
 }
 
 async function markFollowedUp(app: Application) {
@@ -307,10 +321,8 @@ function saved(item: Application) {
 
 const slideover = ref(false);
 const editing = ref<Application>();
-const editingStatus = ref<Status>();
-function openForm(app?: Application, status?: Status) {
+function openForm(app?: Application) {
   editing.value = app;
-  editingStatus.value = status;
   slideover.value = true;
 }
 
@@ -595,7 +607,8 @@ function exportCsv() {
       </div>
     </UContainer>
 
-    <ApplicationSlideover v-model:open="slideover" :application="editing" :status="editingStatus" @saved="saved" />
+    <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="saved" />
+    <InterviewModal v-model:open="interviewOpen" :application="moving?.app" :status="moving?.status" @save="saveMove" />
     <ConfirmModal
       v-model:open="confirmOpen"
       :title="t('delete.title')"

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { parseDate, today as todayDate, getLocalTimeZone, type CalendarDate } from '@internationalized/date';
 import { z } from 'zod';
-import type { Application, BatchResult, Status, Contact, Interview, NewApplication } from '~/types/items';
+import type { Application, BatchResult, Contact, Interview, NewApplication } from '~/types/items';
 import { STATUSES } from '~/types/items';
 import type { FormPart } from '~/utils/workflow';
 
-// status: the one a move asked for, set on open so the form shows its parts to fill.
-const props = defineProps<{ application?: Application; status?: Status }>();
+const props = defineProps<{ application?: Application }>();
 const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ saved: [app: Application] }>();
 
@@ -116,7 +115,6 @@ watch(open, (isOpen) => {
       next.website = '';
     }
   }
-  if (props.status) next.status = props.status;
   Object.assign(state, next);
   fullAddress.value = !!(state.street || state.postal_code);
   sources.refresh();
@@ -182,15 +180,7 @@ const detail = computed(() => {
 
 const day = (v: string) => new Date(`${v}T00:00:00`).toLocaleDateString('fr-FR');
 
-const interviewColumns = [
-  { key: 'at', label: t('form.at'), type: 'datetime-local' },
-  {
-    key: 'kind',
-    label: t('form.kind'),
-    items: (['hr', 'manager', 'tech', 'other'] as const).map((value) => ({ value, label: t(`form.kinds.${value}`) })),
-  },
-  { key: 'note', label: t('form.note') },
-] as const;
+const interviewColumns = useInterviewColumns();
 const contactColumns = [
   { key: 'name', label: t('form.name') },
   { key: 'email', label: t('form.email'), type: 'email' },
