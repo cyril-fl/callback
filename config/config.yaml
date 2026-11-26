@@ -6,7 +6,7 @@ commands:
   serve:
     use: "serve"
     short: "Serve the API"
-    long: "Serve the API on --addr, the web app of --web next to it, and the MCP over HTTP with its OAuth on --mcp-addr. On an empty base, {NAME}_PASSWORD sets the password of the account named {NAME}_USER (admin by default); {NAME}_USER renames the one account of a base."
+    long: "Serve the API on --addr, the web app of --web next to it, and the MCP over HTTP with its OAuth on --mcp-addr. On an empty base, {NAME}_PASSWORD sets the password of the account named {NAME}_USER (admin by default); {NAME}_USER renames the one account of a base. --mode multi holds several accounts, created by sign-up: without {NAME}_PASSWORD, the first to sign up becomes admin."
     example: "{NAME}_PASSWORD=change-me {name}-server serve --db ./data/{name}.db --web ./web/.output/public"
     args:
       - name: "addr"
@@ -38,6 +38,16 @@ commands:
         shorthand: ""
         value: ""
         usage: "Address the MCP is reachable at, --mcp-addr when empty: on the loopback, X-Forwarded-For is trusted"
+        type: "string"
+      - name: "mode"
+        shorthand: ""
+        value: "single"
+        usage: "single (one account, the login by password alone) or multi (accounts with a name, sign-up, admins); {NAME}_MODE when not given"
+        type: "string"
+      - name: "add-user-mode"
+        shorthand: ""
+        value: "invitation"
+        usage: "How accounts are created in the multi mode: invitation (by an admin's invitation) or public (anyone); {NAME}_ADD_USER_MODE when not given"
         type: "string"
   reset-password:
     use: "reset-password"

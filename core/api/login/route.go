@@ -17,7 +17,7 @@ import (
 )
 
 // Handler logs in: POST /api/login. The session token goes in an HttpOnly cookie, in the body only when the input
-// asks it (the CLI).
+// asks it (the CLI). The multi mode needs the account's name.
 // @Summary  Log in
 // @Tags     session
 // @Accept   json
@@ -28,7 +28,7 @@ import (
 // @Failure  401 {object} respond.Failure
 // @Failure  429 {object} respond.Failure
 // @Router   /api/login [post]
-func Handler(db bun.IDB) http.HandlerFunc {
+func Handler(db bun.IDB, mode domain.ServerMode) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input createsession.Input
 		if !respond.Decode(w, r, &input) {
@@ -40,7 +40,7 @@ func Handler(db bun.IDB) http.HandlerFunc {
 			return
 		}
 
-		process := createsession.Process(r.Context(), db, input)
+		process := createsession.Process(r.Context(), db, input, mode.Multi())
 		process.Run()
 		if process.HasErr() {
 			if !errors.Is(process.GetErr(), createsession.ErrBadCredentials) {
@@ -78,10 +78,13 @@ func Logout(db bun.IDB) http.HandlerFunc {
 	}
 }
 
-// MeResult is who asks: the kind of its token, and whether it only reads.
+// MeResult is who asks: the kind of its token, whether it only reads, its account and the server's mode.
 type MeResult struct {
 	Kind     domain.TokenKind `json:"kind" enums:"session,api,oauth"`
-	Name     string           `json:"name,omitempty" binding:"optional"`
+	Name     string           `json:"name,omitempty" binding:"optional"` // the token's, for an API token or an OAuth connection
+	User     string           `json:"user"`                              // the account's name
+	Admin    bool             `json:"admin"`                             // the account manages the others, in the multi mode
+	Mode     string           `json:"mode" enums:"single,multi"`
 	ReadOnly bool             `json:"read_only"`
 	Version  string           `json:"version"`
 }
@@ -93,9 +96,14 @@ type MeResult struct {
 // @Success  200 {object} login.MeResult
 // @Failure  401 {object} respond.Failure
 // @Router   /api/me [get]
-func Me() http.HandlerFunc {
+func Me(db bun.IDB, mode domain.ServerMode) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := auth.Current(r.Context())
-		respond.JSON(w, http.StatusOK, MeResult{Kind: token.Kind, Name: token.Name, ReadOnly: token.ReadOnly, Version: config.Version()})
+		var user domain.User
+		if err := db.NewSelect().Model(&user).Column("name", "admin").Where("id = ?", domain.UserID(r.Context())).Scan(r.Context()); err != nil {
+			respond.Error(w, r, err)
+			return
+		}
+		respond.JSON(w, http.StatusOK, MeResult{Kind: token.Kind, Name: token.Name, User: user.Name, Admin: user.Admin, Mode: mode.Mode, ReadOnly: token.ReadOnly, Version: config.Version()})
 	}
 }

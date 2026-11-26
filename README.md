@@ -1,6 +1,7 @@
 # callback — job application tracker
 
-Track job applications from a web app, a CLI and an MCP server for AI agents. Single user, one SQLite file.
+Track job applications from a web app, a CLI and an MCP server for AI agents. One account or several (see
+[Modes](#modes)), one SQLite file.
 
 - **`callback-server`**: the HTTP API (Go, SQLite), the web app it serves, and the MCP over HTTP with its OAuth sign-in.
 - **`callback`**: the CLI and the stdio MCP server, a client of the API only.
@@ -24,6 +25,7 @@ volume. Pushing a `v*` tag builds and publishes it (`:<version>` and `:latest`, 
    - `CALLBACK_PASSWORD`: the password, 8 characters or more. It is read only on the first start, when the base is
      empty; change it later with `docker compose -f compose.prod.yaml exec callback /callback-server --db /data/callback.db reset-password`.
    - `CALLBACK_USER` (optional, `admin` by default): the name of the account; set it later to rename the account.
+   - `CALLBACK_MODE` and `CALLBACK_ADD_USER_MODE` (optional): see [Modes](#modes).
    - `CALLBACK_ORIGIN`: the address you open in the browser, e.g. `https://callback.<tailnet>.ts.net`.
 2. If the GitHub package is private: `docker login ghcr.io` with a token that can read packages.
 3. `docker compose -f compose.prod.yaml up -d`. Update: `docker compose -f compose.prod.yaml pull && docker compose -f compose.prod.yaml up -d`.
@@ -53,6 +55,28 @@ base lacks, so the same file can be imported twice.
 A new job search: Settings → Danger zone deletes every application and its history (type `supprimer` to confirm),
 after a backup. The password, the settings and the tokens stay. Only a logged-in session can, never an API token or
 an agent.
+
+## Modes
+
+`--mode` (or `CALLBACK_MODE`) chooses how many accounts the server holds; the base is the same either way, every row
+belongs to an account.
+
+- **`single`** (default): one account, created on the first start from `CALLBACK_PASSWORD` and `CALLBACK_USER`. The
+  login is the password alone. The server refuses to start in this mode on a base of several accounts.
+- **`multi`**: several accounts, each logging in with its name (any case) and password, on the web app, the CLI and
+  the OAuth consent page of the MCP; each sees only its own applications, tokens and settings. `--add-user-mode` (or
+  `CALLBACK_ADD_USER_MODE`) says who may sign up:
+  - **`invitation`** (default): whoever holds an invitation link, which an admin makes in the settings (it serves
+    once, for 7 days);
+  - **`public`**: anyone who reaches the web app.
+
+  The first account of a base is an admin: `CALLBACK_PASSWORD` creates it on the first start, or, without it, the
+  first to sign up. Admins list the accounts, reset a password (a random one, shown once, which logs that account
+  out), delete an account with all its data, and make or revoke invitations. Only a logged-in session can, never an
+  API token or an agent.
+
+Moving from `single` to `multi` keeps the account and its data: log in with its name (`admin` unless
+`CALLBACK_USER` changed it).
 
 ## The CLI
 

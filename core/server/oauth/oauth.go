@@ -28,8 +28,8 @@ const (
 	defaultName = "MCP client"
 )
 
-// Routes adds the OAuth endpoints to mux, beside /mcp.
-func Routes(mux *http.ServeMux, db bun.IDB) {
+// Routes adds the OAuth endpoints to mux, beside /mcp; multi asks the account's name on the consent page.
+func Routes(mux *http.ServeMux, db bun.IDB, multi bool) {
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource", resource)
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource/mcp", resource)
 	mux.HandleFunc("GET /.well-known/oauth-authorization-server", server)
@@ -40,8 +40,8 @@ func Routes(mux *http.ServeMux, db bun.IDB) {
 		"/.well-known/oauth-authorization-server", "/register", "/token"} {
 		mux.HandleFunc("OPTIONS "+path, preflight)
 	}
-	mux.Handle("GET /authorize", authorize(db))
-	mux.Handle("POST /authorize", authorize(db))
+	mux.Handle("GET /authorize", authorize(db, multi))
+	mux.Handle("POST /authorize", authorize(db, multi))
 	mux.Handle("POST /token", token(db))
 }
 

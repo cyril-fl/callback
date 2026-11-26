@@ -10,6 +10,7 @@ import (
 	apiexportdata "github.com/cyril-fl/callback/core/api/export-data"
 	apiforgetapplications "github.com/cyril-fl/callback/core/api/forget-applications"
 	apiimportdata "github.com/cyril-fl/callback/core/api/import-data"
+	apiinvites "github.com/cyril-fl/callback/core/api/invites"
 	apilogin "github.com/cyril-fl/callback/core/api/login"
 	apipreferences "github.com/cyril-fl/callback/core/api/preferences"
 	apipurgeapplications "github.com/cyril-fl/callback/core/api/purge-applications"
@@ -22,19 +23,32 @@ import (
 	"github.com/cyril-fl/callback/core/api/services/auth"
 	"github.com/cyril-fl/callback/core/api/services/guard"
 	apitokens "github.com/cyril-fl/callback/core/api/tokens"
+	apiusers "github.com/cyril-fl/callback/core/api/users"
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/uptrace/bun"
 )
 
 // @title    callback API
 // @version  1.0
 
-// New gives the API, reachable by web pages from origin only (none when empty), with a valid token only.
-func New(db bun.IDB, origin string) http.Handler {
+// New gives the API, reachable by web pages from origin only (none when empty), with a valid token only, running in
+// mode: the routes of the accounts exist in the multi mode only, 404 otherwise.
+func New(db bun.IDB, origin string, mode domain.ServerMode) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("POST /api/login", apilogin.Handler(db))
+	mux.Handle("POST /api/login", apilogin.Handler(db, mode))
 	mux.Handle("POST /api/logout", apilogin.Logout(db))
-	mux.Handle("GET /api/me", apilogin.Me())
+	mux.Handle("GET /api/me", apilogin.Me(db, mode))
+	mux.Handle("GET /api/add-user", apiusers.Modes(mode))
+	if mode.Multi() {
+		mux.Handle("POST /api/signup", apiusers.Signup(db, mode))
+		mux.Handle("GET /api/users", auth.Admin(db, apiusers.List(db)))
+		mux.Handle("DELETE /api/users/{id}", auth.Admin(db, apiusers.Delete(db)))
+		mux.Handle("POST /api/users/{id}/password", auth.Admin(db, apiusers.ResetPassword(db)))
+		mux.Handle("GET /api/invites", auth.Admin(db, apiinvites.List(db)))
+		mux.Handle("POST /api/invites", auth.Admin(db, apiinvites.Create(db)))
+		mux.Handle("DELETE /api/invites/{id}", auth.Admin(db, apiinvites.Delete(db)))
+	}
 
 	mux.Handle("GET /api/applications", apireadapplications.Handler(db))
 	mux.Handle("POST /api/applications", apicreateapplications.Handler(db))

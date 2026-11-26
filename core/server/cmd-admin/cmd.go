@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -23,9 +24,10 @@ import (
 const DefaultUser = "admin"
 
 // EnsurePassword creates the account of a base that has none, named CALLBACK_USER (DefaultUser when unset) with the
-// password CALLBACK_PASSWORD: a server put up from a compose file is usable at once. On a base of one account,
-// CALLBACK_USER renames it; otherwise it does nothing.
-func EnsurePassword(ctx context.Context, db bun.IDB) error {
+// password CALLBACK_PASSWORD: a server put up from a compose file is usable at once. In the multi mode, without
+// CALLBACK_PASSWORD, the base waits for its first sign-up instead. On a base of one account, CALLBACK_USER renames
+// it; otherwise it does nothing.
+func EnsurePassword(ctx context.Context, db bun.IDB, multi bool) error {
 	var users []domain.User
 	if err := db.NewSelect().Model(&users).Column("id", "name").Limit(2).Scan(ctx); err != nil {
 		return err
@@ -39,7 +41,11 @@ func EnsurePassword(ctx context.Context, db bun.IDB) error {
 		return nil
 	}
 	pass := os.Getenv(config.Env("PASSWORD"))
-	if pass == "" {
+	switch {
+	case pass == "" && multi:
+		log.Print("the base has no account yet: the first to sign up runs the others")
+		return nil
+	case pass == "":
 		return fmt.Errorf("the base has no password yet: set %s", config.Env("PASSWORD"))
 	}
 	if name == "" {

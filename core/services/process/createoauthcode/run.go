@@ -15,9 +15,11 @@ import (
 // Lifetime is how long a code waits for its exchange: the client exchanges it at once.
 const Lifetime = time.Minute
 
-// Input is the consent of the OAuth page: the password, and what the client asked.
+// Input is the consent of the OAuth page: the name and password, and what the client asked.
 type Input struct {
+	Name          string // required when Multi, see createsession.CheckPassword
 	Password      string
+	Multi         bool
 	ClientID      string
 	RedirectURI   string
 	CodeChallenge string // S256 of the client's verifier
@@ -62,7 +64,7 @@ func (p *run) GetResult() string {
 
 // Methods
 func (p *run) checkPassword() {
-	userID, err := createsession.CheckPassword(p.ctx, p.db, p.input.Password)
+	userID, err := createsession.CheckPassword(p.ctx, p.db, p.input.Name, p.input.Password, p.input.Multi)
 	p.cache.userID = userID
 	p.SetErr(err)
 }

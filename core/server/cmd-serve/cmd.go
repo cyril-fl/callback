@@ -4,23 +4,28 @@ package cmdserve
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/cyril-fl/callback/config"
 	"github.com/cyril-fl/callback/core/api"
 	"github.com/cyril-fl/callback/core/api/services/guard"
 	"github.com/cyril-fl/callback/core/domain"
+	cmdadmin "github.com/cyril-fl/callback/core/server/cmd-admin"
 	"github.com/cyril-fl/callback/core/services/process/markunanswered"
 	"github.com/cyril-fl/callback/core/services/process/purgetokens"
 	"github.com/cyril-fl/callback/core/services/process/readpreferences"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/uptrace/bun"
 )
 
@@ -35,11 +40,22 @@ var slowRequest = time.Second
 
 // MCP mounts the MCP over HTTP and its OAuth on mux, the API's handler given for the tools to call in process.
 // Set by main once those packages exist; nil serves no MCP.
-var MCP func(mux *http.ServeMux, db bun.IDB, api http.Handler, version string)
+var MCP func(mux *http.ServeMux, db bun.IDB, api http.Handler, version string, mode domain.ServerMode)
 
-// Serve runs the API on db until SIGINT or SIGTERM; requests in progress finish first.
+// Serve runs the API on db until SIGINT or SIGTERM; requests in progress finish first. It first creates the account
+// of an empty base (cmdadmin.EnsurePassword), and refuses the single mode on a base of several accounts.
 func Serve(cobra *cobra.Command, db *bun.DB) error {
 	flags := cobra.Flags()
+	mode, err := serverMode(flags)
+	if err != nil {
+		return err
+	}
+	if err := cmdadmin.EnsurePassword(cobra.Context(), db, mode.Multi()); err != nil {
+		return err
+	}
+	if err := checkAccounts(cobra.Context(), db, mode); err != nil {
+		return err
+	}
 	addr, _ := flags.GetString("addr")
 	origin, _ := flags.GetString("origin")
 	web, _ := flags.GetString("web")
@@ -72,7 +88,7 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 		every(ctx, purgeInterval, cleanup)
 	}()
 
-	handler := api.New(db, origin)
+	handler := api.New(db, origin, mode)
 	if web != "" {
 		handler = withWeb(web, handler)
 	}
@@ -90,12 +106,12 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 
 	failed := make(chan error, 2)
 	go func() { failed <- server.ListenAndServe() }()
-	log.Printf("listening on %s", addr)
+	log.Printf("listening on %s, %s mode", addr, mode.Mode)
 	servers := []*http.Server{server}
 	if mcpAddr != "" && MCP != nil {
 		// The API's handler, without the web app nor the proxy: the tools call it in process.
 		mux := http.NewServeMux()
-		MCP(mux, db, api.New(db, origin), cobra.Root().Version)
+		MCP(mux, db, api.New(db, origin, mode), cobra.Root().Version, mode)
 		var mcpHandler http.Handler = mux
 		if onLoopback(mcpPublished) {
 			mcpHandler = withProxy(mcpHandler)
@@ -128,6 +144,43 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 		}
 	}
 	log.Print("stopped")
+	return nil
+}
+
+// serverMode reads --mode and --add-user-mode, or CALLBACK_MODE and CALLBACK_ADD_USER_MODE when the flag is not
+// given.
+func serverMode(flags *pflag.FlagSet) (domain.ServerMode, error) {
+	mode := domain.ServerMode{Mode: flagOrEnv(flags, "mode", "MODE"), AddUserMode: flagOrEnv(flags, "add-user-mode", "ADD_USER_MODE")}
+	switch {
+	case !slices.Contains(domain.Modes, mode.Mode):
+		return mode, fmt.Errorf("--mode must be one of %v, not %q", domain.Modes, mode.Mode)
+	case !slices.Contains(domain.AddUserModes, mode.AddUserMode):
+		return mode, fmt.Errorf("--add-user-mode must be one of %v, not %q", domain.AddUserModes, mode.AddUserMode)
+	}
+	return mode, nil
+}
+
+func flagOrEnv(flags *pflag.FlagSet, name, key string) string {
+	value, _ := flags.GetString(name)
+	if env := os.Getenv(config.Env(key)); env != "" && !flags.Changed(name) {
+		return env
+	}
+	return value
+}
+
+// checkAccounts refuses the single mode on a base of several accounts: its login, the password alone, could not
+// tell them apart.
+func checkAccounts(ctx context.Context, db bun.IDB, mode domain.ServerMode) error {
+	if mode.Multi() {
+		return nil
+	}
+	count, err := db.NewSelect().Model((*domain.User)(nil)).Count(ctx)
+	if err != nil {
+		return err
+	}
+	if count > 1 {
+		return fmt.Errorf("the base has %d accounts: serve it with --mode multi (%s=multi), the single mode holds one", count, config.Env("MODE"))
+	}
 	return nil
 }
 

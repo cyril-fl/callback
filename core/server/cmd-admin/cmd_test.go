@@ -25,24 +25,27 @@ func TestEnsurePassword(t *testing.T) {
 	}
 
 	t.Setenv(config.Env("PASSWORD"), "")
-	if err := cmdadmin.EnsurePassword(ctx, db); err == nil {
+	if err := cmdadmin.EnsurePassword(ctx, db, false); err == nil {
 		t.Error("no password: want an error")
+	}
+	if err := cmdadmin.EnsurePassword(ctx, db, true); err != nil || len(names()) != 0 {
+		t.Errorf("multi, no password: %v %v, want the base waiting for its first sign-up", names(), err)
 	}
 	t.Setenv(config.Env("PASSWORD"), "correct horse")
 	t.Setenv(config.Env("USER"), "")
-	if err := cmdadmin.EnsurePassword(ctx, db); err != nil || len(names()) != 1 || names()[0] != cmdadmin.DefaultUser {
+	if err := cmdadmin.EnsurePassword(ctx, db, false); err != nil || len(names()) != 1 || names()[0] != cmdadmin.DefaultUser {
 		t.Fatalf("created: %v %v", names(), err)
 	}
-	if _, err := createsession.CheckPassword(ctx, db, "correct horse"); err != nil {
+	if _, err := createsession.CheckPassword(ctx, db, "", "correct horse", false); err != nil {
 		t.Errorf("password: %v", err)
 	}
 	t.Setenv(config.Env("USER"), "cyril")
-	if err := cmdadmin.EnsurePassword(ctx, db); err != nil || names()[0] != "cyril" {
+	if err := cmdadmin.EnsurePassword(ctx, db, false); err != nil || names()[0] != "cyril" {
 		t.Errorf("renamed: %v %v", names(), err)
 	}
 	testdb.Account(t, db, "bob")
 	t.Setenv(config.Env("USER"), "zoe")
-	if err := cmdadmin.EnsurePassword(ctx, db); err != nil || len(names()) != 2 || names()[1] != "cyril" {
+	if err := cmdadmin.EnsurePassword(ctx, db, false); err != nil || len(names()) != 2 || names()[1] != "cyril" {
 		t.Errorf("two accounts: %v %v", names(), err)
 	}
 }

@@ -33,15 +33,17 @@ type page struct {
 	Text     texts
 	Host     string // where the code goes: the client is whoever holds this host
 	Loopback bool
+	Multi    bool   // the name field shows
+	Name     string // typed before a wrong password, shown again
 	ReadOnly bool
 	Error    string
 }
 
-// authorize is the consent page: the owner types the password, and allows the client, read-only if ticked. Its wrong
+// authorize is the consent page: the owner types the password, after the account's name when multi, and allows the client, read-only if ticked. Its wrong
 // passwords count with the login's (throttle.Passwords, same key), by address: it faces the Internet. A cross-site
 // POST cannot allow a client: it needs the password, and no other site can frame the page.
 // A client_id or redirect_uri that does not hold answers the page alone, never a redirect: it could go anywhere.
-func authorize(db bun.IDB) http.HandlerFunc {
+func authorize(db bun.IDB, multi bool) http.HandlerFunc {
 	failed := throttle.Passwords(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxBody)
@@ -67,7 +69,7 @@ func authorize(db bun.IDB) http.HandlerFunc {
 		}
 
 		target, _ := url.Parse(redirect)
-		shown := page{request: req, Text: text, Host: target.Host, Loopback: loopback(target.Hostname())}
+		shown := page{request: req, Text: text, Host: target.Host, Loopback: loopback(target.Hostname()), Multi: multi}
 		if r.Method == http.MethodGet {
 			show(w, http.StatusOK, shown)
 			return
@@ -78,6 +80,7 @@ func authorize(db bun.IDB) http.HandlerFunc {
 		}
 
 		shown.ReadOnly = r.PostForm.Get("read_only") == "on"
+		shown.Name = r.PostForm.Get("name")
 		key := throttle.AddressKey(r)
 		wait, err := failed.Try(r.Context(), key)
 		if err == nil && wait == 0 {
@@ -98,13 +101,16 @@ func authorize(db bun.IDB) http.HandlerFunc {
 		}
 
 		process := createoauthcode.Process(r.Context(), db, createoauthcode.Input{
-			Password: r.PostForm.Get("password"), ClientID: req.ClientID, RedirectURI: redirect,
+			Name: shown.Name, Password: r.PostForm.Get("password"), Multi: multi, ClientID: req.ClientID, RedirectURI: redirect,
 			CodeChallenge: req.CodeChallenge, ReadOnly: shown.ReadOnly,
 		})
 		process.Run()
 		if process.HasErr() {
 			if errors.Is(process.GetErr(), createsession.ErrBadCredentials) {
 				shown.Error = text.BadCredentials
+				if multi {
+					shown.Error = text.BadNameOrPassword
+				}
 				show(w, http.StatusUnauthorized, shown)
 				return
 			}
@@ -152,8 +158,8 @@ func show(w http.ResponseWriter, status int, p page) {
 
 // texts are the words of the page, in English or French.
 type texts struct {
-	Lang, Title, Wants, Back, Local, Password, ReadOnly, ReadOnlyHelp, Allow, Deny string
-	BadClient, BadCredentials, TooMany, Failed                                     string
+	Lang, Title, Wants, Back, Local, Name, Password, ReadOnly, ReadOnlyHelp, Allow, Deny string
+	BadClient, BadCredentials, BadNameOrPassword, TooMany, Failed                  string
 }
 
 var english = texts{
@@ -161,12 +167,13 @@ var english = texts{
 	Wants:        "wants to read and change all your job applications, as you can.",
 	Back:         "Once you allow it, you go back to",
 	Local:        "a program on this device: allow it only if you started the sign-in here.",
+	Name:         "Name",
 	Password:     "Password",
 	ReadOnly:     "Read only",
 	ReadOnlyHelp: "It reads the applications and changes nothing.",
 	Allow:        "Allow", Deny: "Deny",
 	BadClient:      "This link is not a valid sign-in request: start again from the app you are connecting.",
-	BadCredentials: "Wrong password.",
+	BadCredentials: "Wrong password.", BadNameOrPassword: "Wrong name or password.",
 	TooMany:        "Too many wrong passwords: try again in {wait}.",
 	Failed:         "The server failed: try again.",
 }
@@ -176,12 +183,13 @@ var french = texts{
 	Wants:        "veut lire et modifier toutes vos candidatures, comme vous.",
 	Back:         "Une fois autorisé, vous revenez sur",
 	Local:        "un programme de cet appareil : n'autorisez que si vous avez lancé la connexion ici.",
+	Name:         "Nom",
 	Password:     "Mot de passe",
 	ReadOnly:     "Lecture seule",
 	ReadOnlyHelp: "Il lit les candidatures et ne change rien.",
 	Allow:        "Autoriser", Deny: "Refuser",
 	BadClient:      "Ce lien n'est pas une demande de connexion valide : recommencez depuis l'application à connecter.",
-	BadCredentials: "Mot de passe incorrect.",
+	BadCredentials: "Mot de passe incorrect.", BadNameOrPassword: "Nom ou mot de passe incorrect.",
 	TooMany:        "Trop de mots de passe incorrects : réessayez dans {wait}.",
 	Failed:         "Le serveur a échoué : réessayez.",
 }
@@ -211,7 +219,7 @@ p { margin: 0 0 12px; }
 .muted { color: var(--muted); font-size: 13px; }
 .error { color: var(--error); }
 label { display: block; margin: 12px 0 4px; font-size: 13px; font-weight: 600; }
-input[type=password] { box-sizing: border-box; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
+input[type=password], input[type=text] { box-sizing: border-box; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
 .check { display: flex; gap: 8px; align-items: flex-start; margin-top: 16px; font-weight: normal; }
 .check span { display: block; }
 .buttons { display: flex; gap: 8px; margin-top: 20px; }
@@ -233,8 +241,10 @@ button[value=allow] { background: var(--accent); border-color: var(--accent); co
 <input type="hidden" name="state" value="{{.State}}">
 <input type="hidden" name="code_challenge" value="{{.CodeChallenge}}">
 <input type="hidden" name="code_challenge_method" value="S256">
-<label for="password">{{.Text.Password}}</label>
-<input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+{{if .Multi}}<label for="name">{{.Text.Name}}</label>
+<input id="name" name="name" type="text" value="{{.Name}}" autocomplete="username" required autofocus>
+{{end}}<label for="password">{{.Text.Password}}</label>
+<input id="password" name="password" type="password" autocomplete="current-password" required{{if not .Multi}} autofocus{{end}}>
 <label class="check"><input type="checkbox" name="read_only"{{if .ReadOnly}} checked{{end}}><span>{{.Text.ReadOnly}}<span class="muted">{{.Text.ReadOnlyHelp}}</span></span></label>
 <div class="buttons">
 <button type="submit" name="decision" value="allow">{{.Text.Allow}}</button>

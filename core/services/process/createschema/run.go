@@ -100,6 +100,7 @@ var models = []any{
 	(*domain.Token)(nil),
 	(*domain.OAuthCode)(nil),
 	(*domain.LoginFailure)(nil),
+	(*domain.Invite)(nil),
 }
 
 var indexes = []string{

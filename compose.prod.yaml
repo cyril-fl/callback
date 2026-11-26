@@ -12,6 +12,8 @@ services:
     environment:
       CALLBACK_PASSWORD: ${CALLBACK_PASSWORD:-}
       CALLBACK_USER: ${CALLBACK_USER:-}
+      CALLBACK_MODE: ${CALLBACK_MODE:-}
+      CALLBACK_ADD_USER_MODE: ${CALLBACK_ADD_USER_MODE:-}
     # --origin: the address the browser types, requests from any other page are refused. --published: the address
     # published on the host, so the server knows it sits behind a proxy on loopback.
     command: >-

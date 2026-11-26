@@ -9,6 +9,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/oapi-codegen/runtime v1.9.1
 	github.com/spf13/cobra v1.10.2
+	github.com/spf13/pflag v1.0.9
 	github.com/uptrace/bun v1.3.0
 	github.com/uptrace/bun/dialect/sqlitedialect v1.3.0
 	golang.org/x/crypto v0.59.0
@@ -86,7 +87,6 @@ require (
 	github.com/speakeasy-api/jsonpath v0.6.3 // indirect
 	github.com/speakeasy-api/openapi v1.24.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/sv-tools/openapi v0.4.0 // indirect
 	github.com/swaggo/swag/v2 v2.0.0-rc6 // indirect
 	github.com/tidwall/jsonc v0.3.3 // indirect

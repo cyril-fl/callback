@@ -29,8 +29,23 @@ components:
       - api_token
       - token
       type: object
+    createinvite.Result:
+      properties:
+        invite:
+          $ref: '#/components/schemas/domain.Invite'
+        token:
+          type: string
+      required:
+      - invite
+      - token
+      type: object
     createsession.Input:
       properties:
+        name:
+          description: |-
+            Name is the account's, any case: required in the multi mode, optional in the single one, where it must be the
+            one account's.
+          type: string
         password:
           type: string
         token:
@@ -48,6 +63,18 @@ components:
           type: string
       required:
       - expires_at
+      type: object
+    createuser.Input:
+      properties:
+        invite:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+      required:
+      - name
+      - password
       type: object
     deleteapplications.Input:
       properties:
@@ -293,6 +320,23 @@ components:
       - application_id
       - at
       type: object
+    domain.Invite:
+      properties:
+        created_at:
+          type: string
+        created_by:
+          description: the admin who made it
+          type: string
+        expires_at:
+          type: string
+        id:
+          type: string
+      required:
+      - created_at
+      - created_by
+      - expires_at
+      - id
+      type: object
     domain.NewApplication:
       properties:
         applied_at:
@@ -384,6 +428,22 @@ components:
       - plan
       - trash_days
       type: object
+    domain.ServerMode:
+      properties:
+        add_user_mode:
+          enum:
+          - invitation
+          - public
+          type: string
+        mode:
+          enum:
+          - single
+          - multi
+          type: string
+      required:
+      - add_user_mode
+      - mode
+      type: object
     domain.Status:
       enum:
       - applied
@@ -457,6 +517,28 @@ components:
       - TokenSession
       - TokenAPI
       - TokenOAuth
+    domain.User:
+      properties:
+        admin:
+          type: boolean
+        created_at:
+          type: string
+        id:
+          type: string
+        name:
+          description: unique case-insensitive, see createschema
+          type: string
+        preferences:
+          $ref: '#/components/schemas/domain.Preferences'
+          description: |-
+            Preferences are stored as JSON: readpreferences reads them over DefaultPreferences, so a preference added since
+            keeps its default. A pointer, so an insert without them writes the default {}, not zeros.
+      required:
+      - admin
+      - created_at
+      - id
+      - name
+      type: object
     forgetapplications.Input:
       properties:
         all:
@@ -498,17 +580,32 @@ components:
       type: object
     login.MeResult:
       properties:
+        admin:
+          description: the account manages the others, in the multi mode
+          type: boolean
         kind:
           $ref: '#/components/schemas/domain.TokenKind'
+        mode:
+          enum:
+          - single
+          - multi
+          type: string
         name:
+          description: the token's, for an API token or an OAuth connection
           type: string
         read_only:
           type: boolean
+        user:
+          description: the account's name
+          type: string
         version:
           type: string
       required:
+      - admin
       - kind
+      - mode
       - read_only
+      - user
       - version
       type: object
     purgeapplications.Result:
@@ -625,6 +722,13 @@ components:
       required:
       - set
       type: object
+    users.Reset:
+      properties:
+        password:
+          type: string
+      required:
+      - password
+      type: object
 externalDocs:
   description: ""
   url: ""
@@ -633,6 +737,18 @@ info:
   version: "1.0"
 openapi: 3.1.0
 paths:
+  /api/add-user:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domain.ServerMode'
+          description: OK
+      summary: 'How the server runs: its mode and how accounts are created'
+      tags:
+      - users
   /api/applications:
     delete:
       requestBody:
@@ -1046,6 +1162,100 @@ paths:
       summary: Restore an export
       tags:
       - data
+  /api/invites:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.Invite'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: List the invitations
+      tags:
+      - invites
+    post:
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createinvite.Result'
+          description: Created
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: Create an invitation
+      tags:
+      - invites
+  /api/invites/{id}:
+    delete:
+      parameters:
+      - description: Invitation id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: Revoke an invitation
+      tags:
+      - invites
   /api/login:
     post:
       requestBody:
@@ -1167,6 +1377,51 @@ paths:
       summary: Change the preferences
       tags:
       - preferences
+  /api/signup:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createuser.Input'
+              description: body
+              summary: body
+        description: body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createsession.Result'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Too Many Requests
+      summary: Create an account and log it in
+      tags:
+      - users
   /api/sources:
     get:
       responses:
@@ -1365,3 +1620,111 @@ paths:
       summary: Revoke a token
       tags:
       - tokens
+  /api/users:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/domain.User'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: List the accounts
+      tags:
+      - users
+  /api/users/{id}:
+    delete:
+      parameters:
+      - description: Account id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: Delete an account and all its data
+      tags:
+      - users
+  /api/users/{id}/password:
+    post:
+      parameters:
+      - description: Account id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users.Reset'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/respond.Failure'
+          description: Not Found
+      summary: Reset the password of an account
+      tags:
+      - users

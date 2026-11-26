@@ -21,7 +21,10 @@ var Cookie = config.Current.Name + "_session"
 const ReadOnlyHeader = "Callback-Read-Only"
 
 // public routes answer without a token.
-var public = map[string]bool{"POST /api/login": true}
+var public = map[string]bool{"POST /api/login": true, "GET /api/add-user": true, "POST /api/signup": true}
+
+// ErrNotAdmin refuses the routes of the accounts to an account that does not run them.
+var ErrNotAdmin = domain.Forbidden("this account does not manage the others")
 
 type key struct{}
 
@@ -53,7 +56,7 @@ func New(db bun.IDB, next http.Handler) http.Handler {
 				SetCookie(w, Token(r), token.ExpiresAt)
 			}
 		} else if manages(r) {
-			respond.Fail(w, http.StatusForbidden, "a token cannot manage the tokens, log out nor delete everything: log in")
+			respond.Fail(w, http.StatusForbidden, "a token cannot manage the tokens nor the accounts, log out nor delete everything: log in")
 			return
 		}
 		if token.ReadOnly {
@@ -68,12 +71,28 @@ func New(db bun.IDB, next http.Handler) http.Handler {
 	})
 }
 
-// manages tells the routes refused to an API or OAuth token: the tokens, the logout, the purge of everything and the
-// deletion for good from the trash. The mux has not matched the route yet, so this goes by
+// manages tells the routes refused to an API or OAuth token: the tokens, the accounts and invitations, the logout, the
+// purge of everything and the deletion for good from the trash. The mux has not matched the route yet, so this goes by
 // path; the mux redirects an unclean path (//, ..) instead of serving it.
 func manages(r *http.Request) bool {
 	path := r.URL.Path
-	return path == "/api/logout" || path == "/api/data" || r.Method == http.MethodDelete && path == "/api/applications/deleted" || path == "/api/tokens" || strings.HasPrefix(path, "/api/tokens/")
+	return path == "/api/logout" || path == "/api/data" || r.Method == http.MethodDelete && path == "/api/applications/deleted" || path == "/api/tokens" || strings.HasPrefix(path, "/api/tokens/") ||
+		path == "/api/users" || strings.HasPrefix(path, "/api/users/") || path == "/api/invites" || strings.HasPrefix(path, "/api/invites/")
+}
+
+// Admin runs next for an admin only: 403 otherwise.
+func Admin(db bun.IDB, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		admin, err := db.NewSelect().Model((*domain.User)(nil)).Where("id = ? AND admin", domain.UserID(r.Context())).Exists(r.Context())
+		switch {
+		case err != nil:
+			respond.Error(w, r, err)
+		case !admin:
+			respond.Error(w, r, ErrNotAdmin)
+		default:
+			next.ServeHTTP(w, r)
+		}
+	})
 }
 
 // Token is the request's token, "" without one.

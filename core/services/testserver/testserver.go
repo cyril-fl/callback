@@ -32,22 +32,35 @@ type Server struct {
 	Ctx context.Context
 }
 
-// Serve starts the API on a new base of one account whose password is Password, logged in once.
+// Single is the mode of Serve: the default of serve.
+var Single = domain.ServerMode{Mode: domain.Modes[0], AddUserMode: domain.AddUserModes[0]}
+
+// Serve starts the API in the single mode on a new base of one account whose password is Password, logged in once.
 func Serve(t testing.TB) *Server {
+	t.Helper()
+	return ServeMode(t, Single)
+}
+
+// ServeMode starts the API in mode on a new base of one admin account, named admin, whose password is Password,
+// logged in once.
+func ServeMode(t testing.TB, mode domain.ServerMode) *Server {
 	t.Helper()
 	db := testdb.New(t)
 	ctx := testdb.Account(t, db, "admin")
+	if _, err := db.NewUpdate().Model((*domain.User)(nil)).Set("admin = TRUE").Where("id = ?", domain.UserID(ctx)).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
 	password := setpassword.Process(ctx, db, domain.UserID(ctx), Password)
 	password.Run()
 	if password.HasErr() {
 		t.Fatal(password.GetErr())
 	}
-	session := createsession.Process(ctx, db, createsession.Input{Password: Password})
+	session := createsession.Process(ctx, db, createsession.Input{Name: "admin", Password: Password}, mode.Multi())
 	session.Run()
 	if session.HasErr() {
 		t.Fatal(session.GetErr())
 	}
-	server := httptest.NewServer(api.New(db, ""))
+	server := httptest.NewServer(api.New(db, "", mode))
 	t.Cleanup(server.Close)
 	return &Server{DB: db, URL: server.URL, Session: session.GetResult().Token, Ctx: ctx}
 }

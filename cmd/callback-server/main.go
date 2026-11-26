@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/domain"
 	cmdadmin "github.com/cyril-fl/callback/core/server/cmd-admin"
 	cmdserve "github.com/cyril-fl/callback/core/server/cmd-serve"
 	"github.com/cyril-fl/callback/core/server/mcphttp"
@@ -59,9 +60,6 @@ var cmdServe = &cobra.Command{
 	Example: cmd.Serve.Example,
 	Args:    cobra.NoArgs,
 	RunE: func(cobra *cobra.Command, args []string) error {
-		if err := cmdadmin.EnsurePassword(cobra.Context(), db); err != nil {
-			return err
-		}
 		return cmdserve.Serve(cobra, db)
 	},
 }
@@ -90,9 +88,9 @@ var cmdBackup = &cobra.Command{
 
 func init() {
 	// The MCP over HTTP and its OAuth share the --mcp-addr listener; the tools call the API in process.
-	cmdserve.MCP = func(mux *http.ServeMux, db bun.IDB, api http.Handler, version string) {
+	cmdserve.MCP = func(mux *http.ServeMux, db bun.IDB, api http.Handler, version string, mode domain.ServerMode) {
 		mux.Handle("/mcp", mcphttp.Handler(api, version))
-		oauth.Routes(mux, db)
+		oauth.Routes(mux, db, mode.Multi())
 	}
 
 	dbPath := os.Getenv(config.Env("DB"))

@@ -21,7 +21,7 @@ import (
 func TestFlow(t *testing.T) {
 	api := testserver.Serve(t)
 	mux := http.NewServeMux()
-	Routes(mux, api.DB)
+	Routes(mux, api.DB, false)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	// No redirect followed: the test reads where the page sends the browser.
@@ -262,5 +262,64 @@ func TestFlow(t *testing.T) {
 	login.Body.Close()
 	if login.StatusCode != http.StatusTooManyRequests {
 		t.Errorf("login after the consent's wrong passwords: %d, want 429: they share the count", login.StatusCode)
+	}
+}
+
+// In the multi mode the consent page asks the account's name too: a wrong name answers as a wrong password.
+func TestConsentMulti(t *testing.T) {
+	api := testserver.ServeMode(t, domain.ServerMode{Mode: "multi", AddUserMode: "invitation"})
+	mux := http.NewServeMux()
+	Routes(mux, api.DB, true)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	browser := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+
+	response, err := browser.Post(server.URL+"/register", "application/json", strings.NewReader(`{"client_name":"Claude","redirect_uris":["https://claude.ai/api/mcp/auth_callback"]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var registered struct {
+		ClientID string `json:"client_id"`
+	}
+	json.NewDecoder(response.Body).Decode(&registered)
+	response.Body.Close()
+	sum := sha256.Sum256([]byte(strings.Repeat("a", 50)))
+	asked := url.Values{
+		"response_type": {"code"}, "client_id": {registered.ClientID}, "redirect_uri": {"https://claude.ai/api/mcp/auth_callback"},
+		"code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])}, "code_challenge_method": {"S256"}, "decision": {"allow"},
+		"password": {testserver.Password},
+	}
+	post := func(name string) (*http.Response, string) {
+		t.Helper()
+		values := url.Values{"name": {name}}
+		for key, value := range asked {
+			values[key] = value
+		}
+		response, err := browser.PostForm(server.URL+"/authorize", values)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer response.Body.Close()
+		body, _ := io.ReadAll(response.Body)
+		return response, string(body)
+	}
+
+	page, err := browser.Get(server.URL + "/authorize?" + asked.Encode())
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, _ := io.ReadAll(page.Body)
+	page.Body.Close()
+	if !strings.Contains(string(body), `name="name"`) {
+		t.Error("the multi consent page has no name field")
+	}
+	if response, body := post("bob"); response.StatusCode != http.StatusUnauthorized || !strings.Contains(body, "Wrong name or password") || !strings.Contains(body, `value="bob"`) {
+		t.Errorf("wrong name: %d, want 401 and the page again with the name", response.StatusCode)
+	}
+	if response, _ := post(""); response.StatusCode != http.StatusUnauthorized {
+		t.Errorf("no name: %d, want 401", response.StatusCode)
+	}
+	if response, _ := post("Admin"); response.StatusCode != http.StatusFound || !strings.Contains(response.Header.Get("Location"), "code=") {
+		t.Errorf("right name: %d %s, want a redirect with a code", response.StatusCode, response.Header.Get("Location"))
 	}
 }

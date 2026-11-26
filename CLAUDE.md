@@ -1,6 +1,6 @@
 # callback
 
-A job application tracker: one Go module at the root (`github.com/cyril-fl/callback`: the API, the CLI and the MCP) and a Nuxt web app (`web/`), on SQLite. Single account. The patterns come from tide (`~/Devloppement/go/notes/main`), without its accounts, Postgres and S3.
+A job application tracker: one Go module at the root (`github.com/cyril-fl/callback`: the API, the CLI and the MCP) and a Nuxt web app (`web/`), on SQLite. Two modes (`--mode single|multi`): one account logging in by password, or several with a name, sign-up by invitation or public, and admins; the schema is multi-user either way. The patterns come from tide (`~/Devloppement/go/notes/main`), without its Postgres and S3.
 
 - `cmd/`: the two binaries. `callback-server` (`cmd/callback-server/`, `core/server/`) is the only one on the base: `serve` (the API, the web app with `--web`, the MCP over HTTP and its OAuth with `--mcp-addr`), `reset-password`, `backup <file>`. `callback` (`cmd/callback/`, `cli/`) is the CLI and the stdio MCP (`callback mcp`), a client of the API only: `go list -deps ./cmd/callback` never shows bun nor `core/` (CI checks it).
 - `config/`: `config.yaml`, the commands, their help and flags, built in.
@@ -21,7 +21,7 @@ A job application tracker: one Go module at the root (`github.com/cyril-fl/callb
 - Every application, deleted application, token and OAuth code has a `user_id`: a process reads and writes the account of `domain.UserID(ctx)` only (auth puts it in the request's ctx; tests use `testdb.Account`). The status history and the follow-ups go through their application (`appfilter.History`).
 - Errors: a process's sentinel errors are made with `domain.Invalid/Unauthorized/Forbidden/NotFound`, which `respond` maps to 400/401/403/404; anything else is a 500 logged without detail to the client.
 - Writes are batches: `POST /api/applications` takes an array, `PATCH` takes `ops`, `DELETE` ids or filters. One transaction, valid items written, invalid ones in `failed`; an empty filter is refused (it would match everything). The web app, the CLI and the MCP use these same routes.
-- Auth (`core/api/services/auth`): a session (cookie `callback_session` or Bearer), an API token (`callback_…`) or an OAuth connection. Tokens other than sessions cannot manage tokens, log out, purge (`DELETE /api/data`) nor delete from the trash for good (`DELETE /api/applications/deleted`); a read-only token only GETs and its answers carry `Callback-Read-Only: true`. Wrong passwords make the address wait (`throttle`, shared with the OAuth consent page).
+- Auth (`core/api/services/auth`): a session (cookie `callback_session` or Bearer), an API token (`callback_…`) or an OAuth connection. Tokens other than sessions cannot manage tokens nor accounts and invitations (admin only, 404 in the single mode), log out, purge (`DELETE /api/data`) nor delete from the trash for good (`DELETE /api/applications/deleted`); a read-only token only GETs and its answers carry `Callback-Read-Only: true`. Wrong passwords make the address wait (`throttle`, shared with the OAuth consent page).
 - The MCP has few tools, all batch: one tool call is one API request. `cli/cmd-mcp/cmd_test.go` holds the budget (tool count and bytes): optimise what exists before adding.
 
 ## Working with the user
