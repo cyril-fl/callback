@@ -83,6 +83,7 @@ Moving from `single` to `multi` keeps the account and its data: log in with its 
 ```sh
 go install github.com/cyril-fl/callback/cmd/callback@latest
 callback login https://callback.<tailnet>.ts.net        # asks the password (or CALLBACK_PASSWORD)
+callback login https://callback.example.com --user alice   # multi mode: the account name, asked when not given
 callback add --company Acme --location Paris --country France --source job_post --source-detail https://jobs.acme.example/42
 callback add --file applications.json             # a JSON array, or - for stdin
 callback ls --status interview,offer -q acme      # --json for scripts

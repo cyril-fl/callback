@@ -10,6 +10,7 @@ import (
 	"github.com/cyril-fl/callback/cli/services/apiclient"
 	"github.com/cyril-fl/callback/cli/services/apiclient/apitest"
 	"github.com/cyril-fl/callback/config"
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/testserver"
 )
 
@@ -116,5 +117,35 @@ func TestAccount(t *testing.T) {
 	}
 	if _, err := run(t, "whoami"); err != apiclient.ErrNoSession {
 		t.Errorf("whoami after logout: %v", err)
+	}
+}
+
+// TestLoginMulti logs in to a server of several accounts: the name from --user, refused without it off a terminal.
+func TestLoginMulti(t *testing.T) {
+	server := testserver.ServeMode(t, domain.ServerMode{Mode: domain.Modes[1], AddUserMode: domain.AddUserModes[0]})
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv(config.Env("URL"), "")
+	t.Setenv(config.Env("SESSION"), "")
+	t.Setenv(config.Env("PASSWORD"), testserver.Password)
+	stdin, _ := os.Open(os.DevNull)
+	defer stdin.Close()
+	before := os.Stdin
+	os.Stdin = stdin
+	defer func() { os.Stdin = before }()
+
+	if _, err := run(t, "login", server.URL); err == nil || !strings.Contains(err.Error(), "--user") {
+		t.Errorf("login without --user off a terminal: %v", err)
+	}
+	if _, err := run(t, "login", server.URL, "--user", "nobody"); err == nil {
+		t.Error("login with a wrong user: no error")
+	}
+	must(t, "login", server.URL, "--user", "admin")
+	if out := must(t, "whoami"); !strings.HasPrefix(out, "session of admin (admin) on "+server.URL) {
+		t.Errorf("whoami = %q", out)
+	}
+	var me apiclient.LoginMeResult
+	json.Unmarshal([]byte(must(t, "whoami", "--json")), &me)
+	if me.User != "admin" || !me.Admin || me.Mode != apiclient.LoginMeResultModeMulti {
+		t.Errorf("whoami --json = %+v", me)
 	}
 }

@@ -2,6 +2,7 @@
 package cmdaccount
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,18 +17,27 @@ import (
 	"golang.org/x/term"
 )
 
-// Login opens a session on the server of args[0] with its password, and keeps it in the session file.
+// Login opens a session on the server of args[0] with its password, and the account's name of --user (asked on a
+// server in the multi mode), and keeps it in the session file.
 func Login(cobra *cobra.Command, args []string) error {
-	password, err := readPassword()
-	if err != nil {
-		return err
-	}
 	server := strings.TrimRight(args[0], "/")
 	client, err := apiclient.New(server)
 	if err != nil {
 		return err
 	}
-	result, err := apiclient.Decode[apiclient.CreatesessionResult](client.PostApiLogin(cobra.Context(), apiclient.CreatesessionInput{Password: password, Token: new(true)}))
+	name, err := readName(cobra, client)
+	if err != nil {
+		return err
+	}
+	password, err := readPassword()
+	if err != nil {
+		return err
+	}
+	in := apiclient.CreatesessionInput{Password: password, Token: new(true)}
+	if name != "" {
+		in.Name = &name
+	}
+	result, err := apiclient.Decode[apiclient.CreatesessionResult](client.PostApiLogin(cobra.Context(), in))
 	if err != nil {
 		return err
 	}
@@ -39,6 +49,26 @@ func Login(cobra *cobra.Command, args []string) error {
 	}
 	fmt.Println("Logged in to", server)
 	return nil
+}
+
+// readName takes --user, else asks it on the terminal when the server is in the multi mode; "" in the single one.
+func readName(cobra *cobra.Command, client *apiclient.ClientWithResponses) (string, error) {
+	if name, _ := cobra.Flags().GetString("user"); name != "" {
+		return name, nil
+	}
+	mode, err := apiclient.Decode[apiclient.DomainServerMode](client.GetApiAddUser(cobra.Context()))
+	if err != nil || mode.Mode != apiclient.DomainServerModeModeMulti {
+		return "", err
+	}
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return "", errors.New("the server holds several accounts: give --user, or run on a terminal")
+	}
+	fmt.Fprint(os.Stderr, "User: ")
+	name, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if name = strings.TrimSpace(name); name == "" && err == nil {
+		err = errors.New("no user given")
+	}
+	return name, err
 }
 
 // readPassword takes CALLBACK_PASSWORD, else asks it on the terminal without echo.
@@ -106,6 +136,12 @@ func Whoami(cobra *cobra.Command, _ []string) error {
 	}
 	if me.ReadOnly {
 		who += " (read-only)"
+	}
+	if me.Mode == apiclient.LoginMeResultModeMulti {
+		who += " of " + me.User
+		if me.Admin {
+			who += " (admin)"
+		}
 	}
 	fmt.Printf("%s on %s, server %s\n", who, session.URL, me.Version)
 	return nil

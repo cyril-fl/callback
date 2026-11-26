@@ -72,14 +72,18 @@ commands:
   login:
     use: "login <url>"
     short: "Log in to a server"
-    long: "Log in to the server at <url> with its password, read from {NAME}_PASSWORD or asked on the terminal. The session is kept in ~/.config/{name}/session.json."
-    example: "{name} login https://callback.example.com"
+    long: "Log in to the server at <url> with its password, read from {NAME}_PASSWORD or asked on the terminal. A server in the multi mode also needs the account's name: --user, or asked on the terminal. The session is kept in ~/.config/{name}/session.json."
+    example: "{name} login https://callback.example.com\n{name} login https://callback.example.com --user alice"
+    args:
+      - name: "user"
+        type: "string"
+        usage: "Name of the account, needed by a server in the multi mode (asked on the terminal when not given)"
   logout:
     use: "logout"
     short: "Log out of the server"
   whoami:
     use: "whoami"
-    short: "Show the server and the token in use"
+    short: "Show the server, the token and the account in use"
     args:
       - name: "json"
         type: "bool"
