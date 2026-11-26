@@ -13,4 +13,5 @@ test('a move opens the form when the interviews are missing', () => {
   assert.ok(needsForm('interview', false));
   assert.equal(needsForm('interview', true), false);
   assert.equal(needsForm('rejected', false), false);
+  assert.equal(needsForm('offer', false), false);
 });

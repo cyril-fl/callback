@@ -16,6 +16,8 @@ export const PARTS: Record<WorkflowStatus, FormPart[]> = {
 export const showsPart = (status: WorkflowStatus, part: FormPart, filled = false) =>
   filled || PARTS[status].includes(part);
 
-// A move to a status whose parts are still empty opens the form to fill them, instead of saving blind.
-export const needsForm = (to: WorkflowStatus, hasInterview: boolean) =>
-  PARTS[to].includes('interviews') && !hasInterview;
+// Only the interview step requires an interview: an offer can come without one.
+export const requiresInterview = (status: WorkflowStatus) => status === 'interview';
+
+// A move to the interview step without one opens the modal to fill it, instead of saving blind.
+export const needsForm = (to: WorkflowStatus, hasInterview: boolean) => requiresInterview(to) && !hasInterview;

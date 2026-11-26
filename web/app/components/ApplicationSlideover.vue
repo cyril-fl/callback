@@ -45,7 +45,7 @@ const schema = computed(() => {
       interviews: z
         .array(z.object({ at: z.string().min(1, t('form.required')), kind: z.string(), note: z.string().optional() }))
         // From the interview step on, the pro plan keeps at least one.
-        .min(pro.value && PARTS[state.status].includes('interviews') ? 1 : 0, t('form.interviewRequired')),
+        .min(pro.value && requiresInterview(state.status) ? 1 : 0, t('form.interviewRequired')),
       contacts: z.array(
         z
           .object({
