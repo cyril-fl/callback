@@ -136,6 +136,11 @@ components:
           type: string
         contact_name:
           type: string
+        contacts:
+          items:
+            $ref: '#/components/schemas/domain.Contact'
+          type: array
+          uniqueItems: false
         country:
           type: string
         created_at:
@@ -149,6 +154,13 @@ components:
           description: InterviewAt is the next interview's local date and time.
           example: 2026-01-31T14:30
           type: string
+        interviews:
+          description: Interviews and Contacts are read with the application when
+            no fields are asked, or when fields name them.
+          items:
+            $ref: '#/components/schemas/domain.Interview'
+          type: array
+          uniqueItems: false
         location:
           description: Location is the city; Street, PostalCode and Country complete
             the address when known.
@@ -261,6 +273,11 @@ components:
           type: string
         contact_name:
           type: string
+        contacts:
+          items:
+            $ref: '#/components/schemas/domain.Contact'
+          type: array
+          uniqueItems: false
         country:
           type: string
         followed_up:
@@ -268,9 +285,16 @@ components:
             now, and the status counts as news again.'
           type: boolean
         interview_at:
-          description: InterviewAt, ContactName and ContactEmail are cleared by "".
           example: 2026-01-31T14:30
           type: string
+        interviews:
+          description: |-
+            Interviews and Contacts replace the lists whole. Without them, interview_at sets the last interview's date
+            ("" removes it), contact_name and contact_email the first contact's (both "" remove it).
+          items:
+            $ref: '#/components/schemas/domain.Interview'
+          type: array
+          uniqueItems: false
         location:
           type: string
         postal_code:
@@ -299,6 +323,15 @@ components:
             mistake leaves no step in the history.
           type: boolean
         website:
+          type: string
+      type: object
+    domain.Contact:
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        role:
           type: string
       type: object
     domain.Country:
@@ -342,6 +375,30 @@ components:
       - application_id
       - at
       type: object
+    domain.Interview:
+      properties:
+        at:
+          example: 2026-01-31T14:30
+          type: string
+        kind:
+          $ref: '#/components/schemas/domain.InterviewKind'
+        note:
+          type: string
+      required:
+      - at
+      type: object
+    domain.InterviewKind:
+      enum:
+      - hr
+      - manager
+      - tech
+      - other
+      type: string
+      x-enum-varnames:
+      - InterviewHR
+      - InterviewManager
+      - InterviewTech
+      - InterviewOther
     domain.Invite:
       properties:
         created_at:
@@ -372,11 +429,23 @@ components:
           type: string
         contact_name:
           type: string
+        contacts:
+          items:
+            $ref: '#/components/schemas/domain.Contact'
+          type: array
+          uniqueItems: false
         country:
           type: string
         interview_at:
           example: 2026-01-31T14:30
           type: string
+        interviews:
+          description: Interviews and Contacts are the lists; without them interview_at
+            and the contact make one of each.
+          items:
+            $ref: '#/components/schemas/domain.Interview'
+          type: array
+          uniqueItems: false
         location:
           type: string
         postal_code:

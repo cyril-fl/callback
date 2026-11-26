@@ -10,6 +10,7 @@ import (
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
+	"github.com/cyril-fl/callback/core/services/applists"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -122,6 +123,11 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 	if err := tx.NewSelect().Model(&applications).ApplyQueryBuilder(appfilter.Where(ctx, op.Filter)).Scan(ctx); err != nil {
 		return err
 	}
+	if op.Set.ChangesLists() {
+		if err := applists.Load(ctx, tx, applications); err != nil {
+			return err
+		}
+	}
 	for _, id := range missing(op.IDs, applications) {
 		fail(id, domain.NotFound("application not found"))
 	}
@@ -161,6 +167,11 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 		}
 		if _, err := tx.NewUpdate().Model(&application).WherePK().ExcludeColumn("id", "created_at").Exec(ctx); err != nil {
 			return err
+		}
+		if op.Set.ChangesLists() {
+			if err := applists.Save(ctx, tx, []domain.Application{application}); err != nil {
+				return err
+			}
 		}
 		if application.Status != before && !op.Set.UndoStatus {
 			change := domain.StatusChange{ApplicationID: application.ID, From: before, Status: application.Status, At: now}

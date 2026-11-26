@@ -111,6 +111,9 @@ type Application struct {
 	UpdatedAt    time.Time `bun:",notnull" json:"updated_at,omitzero" binding:"optional"`
 	// FollowedUpAt is the last follow-up, set by an update with followed_up.
 	FollowedUpAt time.Time `bun:",nullzero" json:"followed_up_at,omitzero" binding:"optional"`
+	// Interviews and Contacts are read with the application when no fields are asked, or when fields name them.
+	Interviews []Interview `bun:"rel:has-many,join:id=application_id" json:"interviews,omitempty" binding:"optional"`
+	Contacts   []Contact   `bun:"rel:has-many,join:id=application_id" json:"contacts,omitempty" binding:"optional"`
 	// Truncated tells that comment was cut at max_chars.
 	Truncated bool `bun:"-" json:"truncated,omitempty" binding:"optional"`
 }
@@ -132,6 +135,7 @@ func (a *Application) Normalize() {
 	a.InterviewAt = strings.TrimSpace(a.InterviewAt)
 	a.ContactName = strings.TrimSpace(a.ContactName)
 	a.ContactEmail = strings.TrimSpace(a.ContactEmail)
+	a.normalizeLists()
 	if a.Source == "" {
 		a.Source = SourceSpontaneous
 	}
@@ -159,10 +163,8 @@ func (a *Application) Validate() error {
 		{!slices.Contains(Statuses, a.Status), ErrInvalidStatus},
 		{a.Rating < 0 || a.Rating > 5, ErrInvalidRating},
 		{!IsDate(a.AppliedAt), ErrInvalidDate},
-		{a.InterviewAt != "" && !isDateTime(a.InterviewAt), ErrInvalidInterview},
-		{a.ContactEmail != "" && !isEmail(a.ContactEmail), ErrInvalidContact},
 	}
-	var errs []error
+	errs := a.listErrors()
 	for _, check := range checks {
 		if check.bad {
 			errs = append(errs, check.err)
@@ -257,11 +259,14 @@ type NewApplication struct {
 	InterviewAt  string `json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
 	ContactName  string `json:"contact_name,omitempty" binding:"optional"`
 	ContactEmail string `json:"contact_email,omitempty" binding:"optional"`
+	// Interviews and Contacts are the lists; without them interview_at and the contact make one of each.
+	Interviews []Interview `json:"interviews,omitempty" binding:"optional"`
+	Contacts   []Contact   `json:"contacts,omitempty" binding:"optional"`
 }
 
 // Application is the new application, not yet stored: no id nor timestamps.
 func (n NewApplication) Application() Application {
-	return Application{Company: n.Company, Title: n.Title, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt, InterviewAt: n.InterviewAt, ContactName: n.ContactName, ContactEmail: n.ContactEmail}
+	return Application{Company: n.Company, Title: n.Title, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt, InterviewAt: n.InterviewAt, ContactName: n.ContactName, ContactEmail: n.ContactEmail, Interviews: n.Interviews, Contacts: n.Contacts}
 }
 
 // Changes are the fields an update sets; a field left out keeps its value.
@@ -280,10 +285,13 @@ type Changes struct {
 	Rating       *int    `json:"rating,omitempty" binding:"optional"`
 	Comment      *string `json:"comment,omitempty" binding:"optional"`
 	AppliedAt    *string `json:"applied_at,omitempty" binding:"optional" example:"2026-01-31"`
-	// InterviewAt, ContactName and ContactEmail are cleared by "".
-	InterviewAt  *string `json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
-	ContactName  *string `json:"contact_name,omitempty" binding:"optional"`
-	ContactEmail *string `json:"contact_email,omitempty" binding:"optional"`
+	// Interviews and Contacts replace the lists whole. Without them, interview_at sets the last interview's date
+	// ("" removes it), contact_name and contact_email the first contact's (both "" remove it).
+	Interviews   *[]Interview `json:"interviews,omitempty" binding:"optional"`
+	Contacts     *[]Contact   `json:"contacts,omitempty" binding:"optional"`
+	InterviewAt  *string      `json:"interview_at,omitempty" binding:"optional" example:"2026-01-31T14:30"`
+	ContactName  *string      `json:"contact_name,omitempty" binding:"optional"`
+	ContactEmail *string      `json:"contact_email,omitempty" binding:"optional"`
 	// FollowedUp records a follow-up now: followed_up_at becomes now, and the status counts as news again.
 	FollowedUp bool `json:"followed_up,omitempty" binding:"optional"`
 	// UndoStatus takes the status back to the one before its last change and forgets that change: a status set by
@@ -323,6 +331,7 @@ func (c Changes) Apply(a *Application) {
 	set(&a.InterviewAt, c.InterviewAt)
 	set(&a.ContactName, c.ContactName)
 	set(&a.ContactEmail, c.ContactEmail)
+	c.applyLists(a)
 }
 
 func set[T any](field *T, value *T) {

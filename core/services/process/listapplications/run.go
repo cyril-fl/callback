@@ -10,6 +10,7 @@ import (
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
+	"github.com/cyril-fl/callback/core/services/applists"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -20,8 +21,11 @@ const DefaultSort = "-applied_at"
 // Sorts are the columns a list sorts on, - first for the descending order.
 var Sorts = []string{"applied_at", "company", "location", "source", "status", "rating", "followed_up_at", "created_at", "updated_at"}
 
+// Lists are the fields read from their own tables: asked by fields, or there when no fields are.
+var Lists = []string{"interviews", "contacts"}
+
 var (
-	ErrInvalidField  = domain.Invalid("fields are among id, company, location, website, source, source_detail, status, rating, comment, applied_at, created_at, updated_at, followed_up_at")
+	ErrInvalidField  = domain.Invalid("fields are among id, company, title, location, website, source, source_detail, status, rating, comment, applied_at, interview_at, contact_name, contact_email, interviews, contacts, created_at, updated_at, followed_up_at")
 	ErrInvalidSort   = domain.Invalid("sort is one of applied_at, company, location, source, status, rating, followed_up_at, created_at, updated_at, - first to reverse it")
 	ErrInvalidPaging = domain.Invalid("limit, offset and max_chars are 0 or more")
 )
@@ -85,7 +89,7 @@ func (p *run) ensureInput() {
 		return
 	}
 	for _, field := range p.input.Fields {
-		if !slices.Contains(domain.Columns, field) {
+		if !slices.Contains(domain.Columns, field) && !slices.Contains(Lists, field) {
 			p.SetErr(ErrInvalidField)
 			return
 		}
@@ -141,7 +145,13 @@ func (p *run) loadApplications() {
 		}
 		query = query.Offset(int64(p.input.Offset))
 	}
-	p.SetErr(query.Scan(p.ctx))
+	if err := query.Scan(p.ctx); err != nil {
+		p.SetErr(err)
+		return
+	}
+	if len(p.input.Fields) == 0 || slices.ContainsFunc(p.input.Fields, func(field string) bool { return slices.Contains(Lists, field) }) {
+		p.SetErr(applists.Load(p.ctx, p.db, p.cache.result.Applications))
+	}
 }
 
 func (p *run) cutComments() {
@@ -163,7 +173,7 @@ func (p *run) cutComments() {
 func columns(fields []string) []string {
 	result := []string{"id"}
 	for _, field := range fields {
-		if !slices.Contains(result, field) {
+		if !slices.Contains(result, field) && !slices.Contains(Lists, field) {
 			result = append(result, field)
 		}
 	}

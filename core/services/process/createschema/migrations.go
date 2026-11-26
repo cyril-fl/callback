@@ -32,6 +32,8 @@ var migrations = []migration{
 	{id: "users-from-settings", sqliteOnly: true, run: usersFromSettings},
 	// Countries were free text: they become codes of domain.Countries, an unknown one goes to the comment.
 	{id: "country-codes", run: countryCodes},
+	// An application had one interview and one contact: they start the lists, in the trash too.
+	{id: "interviews-contacts", run: interviewsContacts},
 }
 
 // migration is a query, or run when SQL alone cannot do it.
@@ -151,6 +153,42 @@ func countryCodes(ctx context.Context, tx bun.Tx) error {
 		if _, err := tx.NewUpdate().Table("users").Set("preferences = ?", string(stored)).Where("id = ?", u.ID).Exec(ctx); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// interviewsContacts makes the lists of the applications, and of the trash, from interview_at and the contact.
+func interviewsContacts(ctx context.Context, tx bun.Tx) error {
+	var applications []domain.Application
+	if err := tx.NewSelect().Model(&applications).Column("id", "interview_at", "contact_name", "contact_email").Scan(ctx); err != nil {
+		return err
+	}
+	var deleted []domain.DeletedApplication
+	if err := tx.NewSelect().Model(&deleted).Scan(ctx); err != nil {
+		return err
+	}
+	for _, d := range deleted {
+		d.Application.ID = d.ID
+		applications = append(applications, d.Application)
+	}
+	var interviews []domain.Interview
+	var contacts []domain.Contact
+	for _, a := range applications {
+		if a.InterviewAt != "" {
+			interviews = append(interviews, domain.Interview{ApplicationID: a.ID, At: a.InterviewAt, Kind: domain.InterviewOther})
+		}
+		if a.ContactName != "" || a.ContactEmail != "" {
+			contacts = append(contacts, domain.Contact{ApplicationID: a.ID, Name: a.ContactName, Email: a.ContactEmail})
+		}
+	}
+	if len(interviews) > 0 {
+		if _, err := tx.NewInsert().Model(&interviews).Exec(ctx); err != nil {
+			return err
+		}
+	}
+	if len(contacts) > 0 {
+		_, err := tx.NewInsert().Model(&contacts).Exec(ctx)
+		return err
 	}
 	return nil
 }

@@ -102,6 +102,8 @@ var models = []any{
 	(*domain.DeletedApplication)(nil),
 	(*domain.StatusChange)(nil),
 	(*domain.FollowUp)(nil),
+	(*domain.Interview)(nil),
+	(*domain.Contact)(nil),
 	(*domain.Token)(nil),
 	(*domain.OAuthCode)(nil),
 	(*domain.LoginFailure)(nil),
@@ -115,5 +117,7 @@ var indexes = []string{
 	`CREATE INDEX IF NOT EXISTS idx_applications_applied_at ON applications (applied_at)`,
 	`CREATE INDEX IF NOT EXISTS idx_status_changes_application ON status_changes (application_id, at)`,
 	`CREATE INDEX IF NOT EXISTS idx_follow_ups_application ON follow_ups (application_id, at)`,
+	`CREATE INDEX IF NOT EXISTS idx_interviews_application ON interviews (application_id, at)`,
+	`CREATE INDEX IF NOT EXISTS idx_contacts_application ON contacts (application_id)`,
 	`CREATE UNIQUE INDEX IF NOT EXISTS ux_tokens_refresh_hash ON tokens (refresh_hash) WHERE refresh_hash IS NOT NULL`,
 }

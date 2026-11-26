@@ -201,3 +201,39 @@ func sqliteOnly(t *testing.T, db *bun.DB) {
 		t.Skip("a SQLite-era migration")
 	}
 }
+
+// interview_at and the contact of an application, or of the trash, start its lists.
+func TestInterviewsContacts(t *testing.T) {
+	db := testdb.New(t)
+	ctx := context.Background()
+	now := time.Now().UTC()
+	a := domain.Application{ID: "a", Company: "Acme", Location: "Paris", Source: domain.SourceSpontaneous, Status: domain.StatusInterview, AppliedAt: "2026-01-10", InterviewAt: "2026-01-20T10:00", ContactEmail: "rh@acme.fr", CreatedAt: now, UpdatedAt: now}
+	b := domain.Application{ID: "b", Company: "Globex", Location: "Lyon", Source: domain.SourceSpontaneous, Status: domain.StatusApplied, AppliedAt: "2026-01-10", ContactName: "Léa", CreatedAt: now, UpdatedAt: now}
+	if _, err := db.NewInsert().Model(&a).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.NewInsert().Model(&domain.DeletedApplication{ID: "b", Application: b, DeletedAt: now}).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM migrations WHERE id = 'interviews-contacts'`); err != nil {
+		t.Fatal(err)
+	}
+	again := createschema.Process(ctx, db)
+	if again.Run(); again.HasErr() {
+		t.Fatal(again.GetErr())
+	}
+	var interviews []domain.Interview
+	var contacts []domain.Contact
+	if err := db.NewSelect().Model(&interviews).Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.NewSelect().Model(&contacts).Order("application_id").Scan(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if len(interviews) != 1 || interviews[0].ApplicationID != "a" || interviews[0].At != "2026-01-20T10:00" || interviews[0].Kind != domain.InterviewOther {
+		t.Errorf("interviews = %+v", interviews)
+	}
+	if len(contacts) != 2 || contacts[0].Email != "rh@acme.fr" || contacts[1].ApplicationID != "b" || contacts[1].Name != "Léa" {
+		t.Errorf("contacts = %+v", contacts)
+	}
+}

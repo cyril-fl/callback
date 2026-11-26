@@ -7,6 +7,7 @@ import (
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
+	"github.com/cyril-fl/callback/core/services/applists"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -59,6 +60,20 @@ func (p *run) loadBackup() {
 		}
 		if err := tx.NewSelect().Model(&backup.Deleted).Where("user_id = ?", user).Order("da.deleted_at", "da.id").Scan(ctx); err != nil {
 			return err
+		}
+		if err := applists.Load(ctx, tx, backup.Applications); err != nil {
+			return err
+		}
+		trashed := make([]domain.Application, len(backup.Deleted))
+		for i, d := range backup.Deleted {
+			trashed[i] = d.Application
+			trashed[i].ID = d.ID
+		}
+		if err := applists.Load(ctx, tx, trashed); err != nil {
+			return err
+		}
+		for i := range backup.Deleted {
+			backup.Deleted[i].Application.Interviews, backup.Deleted[i].Application.Contacts = trashed[i].Interviews, trashed[i].Contacts
 		}
 		if err := tx.NewSelect().Model(&backup.StatusChanges).ApplyQueryBuilder(appfilter.History(ctx)).Order("sc.id").Scan(ctx); err != nil {
 			return err

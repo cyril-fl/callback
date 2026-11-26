@@ -8,6 +8,7 @@ import (
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
+	"github.com/cyril-fl/callback/core/services/applists"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -98,6 +99,9 @@ func (p *run) saveApplications() {
 	}
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		if _, err := tx.NewInsert().Model(&p.cache.valid).Exec(ctx); err != nil {
+			return err
+		}
+		if err := applists.Save(ctx, tx, p.cache.valid); err != nil {
 			return err
 		}
 		_, err := tx.NewInsert().Model(&changes).Exec(ctx)

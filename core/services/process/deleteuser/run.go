@@ -52,7 +52,7 @@ func (p *run) deleteUser() {
 	// The history goes through the applications of the account deleted, not of the admin.
 	history := appfilter.History(domain.WithUser(p.ctx, p.userID))
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil)} {
+		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil), (*domain.Interview)(nil), (*domain.Contact)(nil)} {
 			if _, err := tx.NewDelete().Model(model).ApplyQueryBuilder(history).Exec(ctx); err != nil {
 				return err
 			}

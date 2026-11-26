@@ -1769,6 +1769,7 @@ export interface components {
             company?: string;
             contact_email?: string;
             contact_name?: string;
+            contacts?: components["schemas"]["domain.Contact"][];
             country?: string;
             created_at?: string;
             /** @description FollowedUpAt is the last follow-up, set by an update with followed_up. */
@@ -1779,6 +1780,8 @@ export interface components {
              * @example 2026-01-31T14:30
              */
             interview_at?: string;
+            /** @description Interviews and Contacts are read with the application when no fields are asked, or when fields name them. */
+            interviews?: components["schemas"]["domain.Interview"][];
             /** @description Location is the city; Street, PostalCode and Country complete the address when known. */
             location?: string;
             postal_code?: string;
@@ -1824,14 +1827,17 @@ export interface components {
             company?: string;
             contact_email?: string;
             contact_name?: string;
+            contacts?: components["schemas"]["domain.Contact"][];
             country?: string;
             /** @description FollowedUp records a follow-up now: followed_up_at becomes now, and the status counts as news again. */
             followed_up?: boolean;
-            /**
-             * @description InterviewAt, ContactName and ContactEmail are cleared by "".
-             * @example 2026-01-31T14:30
-             */
+            /** @example 2026-01-31T14:30 */
             interview_at?: string;
+            /**
+             * @description Interviews and Contacts replace the lists whole. Without them, interview_at sets the last interview's date
+             *     ("" removes it), contact_name and contact_email the first contact's (both "" remove it).
+             */
+            interviews?: components["schemas"]["domain.Interview"][];
             location?: string;
             postal_code?: string;
             rating?: number;
@@ -1851,6 +1857,11 @@ export interface components {
             undo_status?: boolean;
             website?: string;
         };
+        "domain.Contact": {
+            email?: string;
+            name?: string;
+            role?: string;
+        };
         "domain.Country": {
             /** @example IT */
             code: string;
@@ -1869,6 +1880,14 @@ export interface components {
             application_id: string;
             at: string;
         };
+        "domain.Interview": {
+            /** @example 2026-01-31T14:30 */
+            at: string;
+            kind?: components["schemas"]["domain.InterviewKind"];
+            note?: string;
+        };
+        /** @enum {string} */
+        "domain.InterviewKind": "hr" | "manager" | "tech" | "other";
         "domain.Invite": {
             created_at: string;
             /** @description the admin who made it */
@@ -1883,9 +1902,12 @@ export interface components {
             company: string;
             contact_email?: string;
             contact_name?: string;
+            contacts?: components["schemas"]["domain.Contact"][];
             country?: string;
             /** @example 2026-01-31T14:30 */
             interview_at?: string;
+            /** @description Interviews and Contacts are the lists; without them interview_at and the contact make one of each. */
+            interviews?: components["schemas"]["domain.Interview"][];
             location: string;
             postal_code?: string;
             rating?: number;

@@ -4,10 +4,12 @@ package importdata
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/appfilter"
+	"github.com/cyril-fl/callback/core/services/applists"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -131,6 +133,13 @@ func (p *run) restore() {
 			return err
 		}
 		p.cache.result.Added, p.cache.result.Deleted = len(applications), len(deleted)
+		lists := slices.Clone(applications)
+		for _, d := range deleted {
+			lists = append(lists, d.Application)
+		}
+		if err := applists.Save(ctx, tx, lists); err != nil {
+			return err
+		}
 
 		// The history of an application added only: the ones the base kept have theirs.
 		var changes []domain.StatusChange

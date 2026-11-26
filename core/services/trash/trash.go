@@ -77,7 +77,7 @@ func Forget(ctx context.Context, tx bun.IDB, picked *bun.SelectQuery) ([]string,
 	if err := tx.NewRaw("DELETE FROM deleted_applications WHERE id IN (?) AND user_id = ? RETURNING id", picked, domain.UserID(ctx)).Scan(ctx, &ids); err != nil || len(ids) == 0 {
 		return nil, err
 	}
-	for _, table := range []string{"status_changes", "follow_ups"} {
+	for _, table := range []string{"status_changes", "follow_ups", "interviews", "contacts"} {
 		if _, err := tx.NewRaw("DELETE FROM ? WHERE application_id IN (?)", bun.Ident(table), bun.List(ids)).Exec(ctx); err != nil {
 			return nil, err
 		}

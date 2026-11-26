@@ -48,7 +48,7 @@ const schema = computed(() => {
 });
 
 const today = () => todayDate(getLocalTimeZone()).toString();
-type State = Required<Omit<NewApplication, 'status'>> & { status: NonNullable<NewApplication['status']> };
+type State = Required<Omit<NewApplication, 'status' | 'interviews' | 'contacts'>> & { status: NonNullable<NewApplication['status']> };
 const blank = (): State => ({
   company: '',
   title: '',

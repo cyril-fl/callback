@@ -43,6 +43,30 @@ func (e CreateapitokenInputExpiresIn) Valid() bool {
 	}
 }
 
+// Defines values for DomainInterviewKind.
+const (
+	InterviewHR      DomainInterviewKind = "hr"
+	InterviewManager DomainInterviewKind = "manager"
+	InterviewOther   DomainInterviewKind = "other"
+	InterviewTech    DomainInterviewKind = "tech"
+)
+
+// Valid indicates whether the value is a known member of the DomainInterviewKind enum.
+func (e DomainInterviewKind) Valid() bool {
+	switch e {
+	case InterviewHR:
+		return true
+	case InterviewManager:
+		return true
+	case InterviewOther:
+		return true
+	case InterviewTech:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DomainPreferenceChangesPlan.
 const (
 	DomainPreferenceChangesPlanBase DomainPreferenceChangesPlan = "base"
@@ -295,13 +319,14 @@ type DeleteapplicationsInput struct {
 
 // DomainApplication defines model for domain.Application.
 type DomainApplication struct {
-	AppliedAt    *string `json:"applied_at,omitempty"`
-	Comment      *string `json:"comment,omitempty"`
-	Company      *string `json:"company,omitempty"`
-	ContactEmail *string `json:"contact_email,omitempty"`
-	ContactName  *string `json:"contact_name,omitempty"`
-	Country      *string `json:"country,omitempty"`
-	CreatedAt    *string `json:"created_at,omitempty"`
+	AppliedAt    *string          `json:"applied_at,omitempty"`
+	Comment      *string          `json:"comment,omitempty"`
+	Company      *string          `json:"company,omitempty"`
+	ContactEmail *string          `json:"contact_email,omitempty"`
+	ContactName  *string          `json:"contact_name,omitempty"`
+	Contacts     *[]DomainContact `json:"contacts,omitempty"`
+	Country      *string          `json:"country,omitempty"`
+	CreatedAt    *string          `json:"created_at,omitempty"`
 
 	// FollowedUpAt FollowedUpAt is the last follow-up, set by an update with followed_up.
 	FollowedUpAt *string `json:"followed_up_at,omitempty"`
@@ -309,6 +334,9 @@ type DomainApplication struct {
 
 	// InterviewAt InterviewAt is the next interview's local date and time.
 	InterviewAt *string `json:"interview_at,omitempty"`
+
+	// Interviews Interviews and Contacts are read with the application when no fields are asked, or when fields name them.
+	Interviews *[]DomainInterview `json:"interviews,omitempty"`
 
 	// Location Location is the city; Street, PostalCode and Country complete the address when known.
 	Location     *string       `json:"location,omitempty"`
@@ -358,25 +386,28 @@ type DomainBatchResult struct {
 
 // DomainChanges defines model for domain.Changes.
 type DomainChanges struct {
-	AppliedAt    *string `json:"applied_at,omitempty"`
-	Comment      *string `json:"comment,omitempty"`
-	Company      *string `json:"company,omitempty"`
-	ContactEmail *string `json:"contact_email,omitempty"`
-	ContactName  *string `json:"contact_name,omitempty"`
-	Country      *string `json:"country,omitempty"`
+	AppliedAt    *string          `json:"applied_at,omitempty"`
+	Comment      *string          `json:"comment,omitempty"`
+	Company      *string          `json:"company,omitempty"`
+	ContactEmail *string          `json:"contact_email,omitempty"`
+	ContactName  *string          `json:"contact_name,omitempty"`
+	Contacts     *[]DomainContact `json:"contacts,omitempty"`
+	Country      *string          `json:"country,omitempty"`
 
 	// FollowedUp FollowedUp records a follow-up now: followed_up_at becomes now, and the status counts as news again.
-	FollowedUp *bool `json:"followed_up,omitempty"`
+	FollowedUp  *bool   `json:"followed_up,omitempty"`
+	InterviewAt *string `json:"interview_at,omitempty"`
 
-	// InterviewAt InterviewAt, ContactName and ContactEmail are cleared by "".
-	InterviewAt  *string       `json:"interview_at,omitempty"`
-	Location     *string       `json:"location,omitempty"`
-	PostalCode   *string       `json:"postal_code,omitempty"`
-	Rating       *int          `json:"rating,omitempty"`
-	Source       *string       `json:"source,omitempty"`
-	SourceDetail *string       `json:"source_detail,omitempty"`
-	Status       *DomainStatus `json:"status,omitempty"`
-	Street       *string       `json:"street,omitempty"`
+	// Interviews Interviews and Contacts replace the lists whole. Without them, interview_at sets the last interview's date
+	// ("" removes it), contact_name and contact_email the first contact's (both "" remove it).
+	Interviews   *[]DomainInterview `json:"interviews,omitempty"`
+	Location     *string            `json:"location,omitempty"`
+	PostalCode   *string            `json:"postal_code,omitempty"`
+	Rating       *int               `json:"rating,omitempty"`
+	Source       *string            `json:"source,omitempty"`
+	SourceDetail *string            `json:"source_detail,omitempty"`
+	Status       *DomainStatus      `json:"status,omitempty"`
+	Street       *string            `json:"street,omitempty"`
 
 	// Title Title is cleared by "".
 	Title *string `json:"title,omitempty"`
@@ -388,6 +419,13 @@ type DomainChanges struct {
 	// mistake leaves no step in the history.
 	UndoStatus *bool   `json:"undo_status,omitempty"`
 	Website    *string `json:"website,omitempty"`
+}
+
+// DomainContact defines model for domain.Contact.
+type DomainContact struct {
+	Email *string `json:"email,omitempty"`
+	Name  *string `json:"name,omitempty"`
+	Role  *string `json:"role,omitempty"`
 }
 
 // DomainCountry defines model for domain.Country.
@@ -411,6 +449,16 @@ type DomainFollowUp struct {
 	At            string `json:"at"`
 }
 
+// DomainInterview defines model for domain.Interview.
+type DomainInterview struct {
+	At   string               `json:"at"`
+	Kind *DomainInterviewKind `json:"kind,omitempty"`
+	Note *string              `json:"note,omitempty"`
+}
+
+// DomainInterviewKind defines model for domain.InterviewKind.
+type DomainInterviewKind string
+
 // DomainInvite defines model for domain.Invite.
 type DomainInvite struct {
 	CreatedAt string `json:"created_at"`
@@ -423,22 +471,26 @@ type DomainInvite struct {
 
 // DomainNewApplication defines model for domain.NewApplication.
 type DomainNewApplication struct {
-	AppliedAt    *string       `json:"applied_at,omitempty"`
-	Comment      *string       `json:"comment,omitempty"`
-	Company      string        `json:"company"`
-	ContactEmail *string       `json:"contact_email,omitempty"`
-	ContactName  *string       `json:"contact_name,omitempty"`
-	Country      *string       `json:"country,omitempty"`
-	InterviewAt  *string       `json:"interview_at,omitempty"`
-	Location     string        `json:"location"`
-	PostalCode   *string       `json:"postal_code,omitempty"`
-	Rating       *int          `json:"rating,omitempty"`
-	Source       *string       `json:"source,omitempty"`
-	SourceDetail *string       `json:"source_detail,omitempty"`
-	Status       *DomainStatus `json:"status,omitempty"`
-	Street       *string       `json:"street,omitempty"`
-	Title        *string       `json:"title,omitempty"`
-	Website      *string       `json:"website,omitempty"`
+	AppliedAt    *string          `json:"applied_at,omitempty"`
+	Comment      *string          `json:"comment,omitempty"`
+	Company      string           `json:"company"`
+	ContactEmail *string          `json:"contact_email,omitempty"`
+	ContactName  *string          `json:"contact_name,omitempty"`
+	Contacts     *[]DomainContact `json:"contacts,omitempty"`
+	Country      *string          `json:"country,omitempty"`
+	InterviewAt  *string          `json:"interview_at,omitempty"`
+
+	// Interviews Interviews and Contacts are the lists; without them interview_at and the contact make one of each.
+	Interviews   *[]DomainInterview `json:"interviews,omitempty"`
+	Location     string             `json:"location"`
+	PostalCode   *string            `json:"postal_code,omitempty"`
+	Rating       *int               `json:"rating,omitempty"`
+	Source       *string            `json:"source,omitempty"`
+	SourceDetail *string            `json:"source_detail,omitempty"`
+	Status       *DomainStatus      `json:"status,omitempty"`
+	Street       *string            `json:"street,omitempty"`
+	Title        *string            `json:"title,omitempty"`
+	Website      *string            `json:"website,omitempty"`
 }
 
 // DomainPreferenceChanges defines model for domain.PreferenceChanges.
