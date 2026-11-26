@@ -11,6 +11,7 @@ import type {
 } from '~/types/items';
 
 const { t } = useI18n();
+const { icons } = useIcons();
 const api = useApi();
 const logout = useLogout();
 const toast = useToast();
@@ -26,7 +27,7 @@ const mode = computed({
 });
 
 const modes = ['light', 'dark', 'system'] as const;
-const modeIcons = { light: 'i-lucide-sun', dark: 'i-lucide-moon', system: 'i-lucide-monitor' };
+const modeIcons = { light: icons.lightMode, dark: icons.darkMode, system: icons.systemMode };
 const modeItems = modes.map((value) => ({
   value,
   label: t(`settings.${value}`),
@@ -251,7 +252,7 @@ async function revoke() {
         <li class="flex flex-wrap items-center gap-4 px-4 py-3">
           <p class="min-w-0 flex-1 text-sm">{{ t('nav.logout') }}</p>
           <UButton
-            icon="i-lucide-log-out"
+            :icon="icons.logout"
             :label="t('nav.logout')"
             :ui="{ label: 'max-sm:sr-only' }"
             color="neutral"
@@ -322,7 +323,7 @@ async function revoke() {
           />
         </li>
         <li v-for="deleted in trash" :key="deleted.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
-          <UIcon name="i-lucide-trash-2" class="size-4 shrink-0 text-muted" />
+          <UIcon :name="icons.trash" class="size-4 shrink-0 text-muted" />
           <div class="min-w-0 flex-1 basis-48">
             <p class="truncate text-sm">
               {{ [deleted.application.company, deleted.application.location].filter(Boolean).join(' · ') }}
@@ -330,7 +331,7 @@ async function revoke() {
             <p class="text-xs text-muted">{{ t('settings.deletedAt') }} {{ when(deleted.deleted_at) }}</p>
           </div>
           <UButton
-            icon="i-lucide-undo-2"
+            :icon="icons.restore"
             :label="t('settings.restore')"
             :ui="{ label: 'max-sm:sr-only' }"
             color="neutral"
@@ -338,7 +339,7 @@ async function revoke() {
             @click="restore(deleted)"
           />
           <UButton
-            icon="i-lucide-trash-2"
+            :icon="icons.delete"
             :aria-label="t('settings.forget')"
             color="error"
             variant="ghost"
@@ -363,7 +364,7 @@ async function revoke() {
         <UCheckbox v-model="form.read_only" :label="t('settings.readOnly')" class="mb-2" />
         <UButton
           type="submit"
-          icon="i-lucide-key-round"
+          :icon="icons.apiToken"
           color="neutral"
           variant="outline"
           :loading="creating"
@@ -383,7 +384,7 @@ async function revoke() {
         >
           <template #trailing>
             <UButton
-              icon="i-lucide-copy"
+              :icon="icons.copy"
               :aria-label="t('settings.copy')"
               color="neutral"
               variant="link"
@@ -396,7 +397,7 @@ async function revoke() {
 
       <ul v-if="tokens?.length" class="mt-3 divide-y divide-default rounded-lg border border-default">
         <li v-for="token in tokens" :key="token.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
-          <UIcon name="i-lucide-key-round" class="size-4 shrink-0 text-muted" />
+          <UIcon :name="icons.apiToken" class="size-4 shrink-0 text-muted" />
           <div class="min-w-0 flex-1 basis-48">
             <p class="flex min-w-0 items-center gap-2 text-sm">
               <span class="truncate">{{ token.name }}</span>
@@ -415,7 +416,7 @@ async function revoke() {
             </p>
           </div>
           <UButton
-            icon="i-lucide-trash-2"
+            :icon="icons.delete"
             :label="t('settings.revoke')"
             :ui="{ label: 'max-sm:sr-only' }"
             color="neutral"
@@ -432,14 +433,14 @@ async function revoke() {
       <div class="flex flex-wrap items-center gap-4 rounded-lg border border-default px-4 py-3">
         <p class="flex-1 basis-48 text-xs text-muted">{{ t('settings.backupHelp') }}</p>
         <UButton
-          icon="i-lucide-download"
+          :icon="icons.export"
           :label="t('settings.export')"
           color="neutral"
           variant="outline"
           @click="exportJson"
         />
         <UButton
-          icon="i-lucide-upload"
+          :icon="icons.import"
           :label="t('settings.import')"
           color="neutral"
           variant="outline"

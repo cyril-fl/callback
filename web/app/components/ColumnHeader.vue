@@ -18,6 +18,7 @@ const model = defineModel<string>();
 // The filter's popover, open from outside too (a shortcut).
 const open = defineModel<boolean>('open', { default: false });
 const { t } = useI18n();
+const { icons } = useIcons();
 
 const trigger = computed(
   () =>
@@ -25,7 +26,7 @@ const trigger = computed(
       label: props.label,
       color: props.active ? 'primary' : 'neutral',
       variant: props.active ? 'soft' : 'ghost',
-      trailingIcon: 'i-lucide-chevron-down',
+      trailingIcon: icons.chevronDown,
     }) as const,
 );
 function pick(item?: CommandPaletteItem) {
@@ -66,7 +67,7 @@ const items = computed(() => [
         <UInput
           v-model="model"
           variant="none"
-          icon="i-lucide-search"
+          :icon="icons.search"
           :placeholder="t('table.search')"
           :aria-label="t('table.search')"
           autofocus
@@ -80,13 +81,7 @@ const items = computed(() => [
       variant="ghost"
       size="xs"
       :class="!sorted && 'text-dimmed'"
-      :icon="
-        sorted === 'asc'
-          ? 'i-lucide-arrow-up-narrow-wide'
-          : sorted === 'desc'
-            ? 'i-lucide-arrow-down-wide-narrow'
-            : 'i-lucide-arrow-up-down'
-      "
+      :icon="sorted === 'asc' ? icons.ascending : sorted === 'desc' ? icons.descending : icons.sort"
       :aria-label="`${t('table.sortBy')} ${label}`"
       @click="emit('sort')"
     />

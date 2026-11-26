@@ -9,6 +9,7 @@ const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ saved: [app: Application] }>();
 
 const { t } = useI18n();
+const { icons } = useIcons();
 const api = useApi();
 const toast = useToast();
 const sources = useSources();
@@ -217,7 +218,7 @@ async function submit() {
           variant="link"
           color="neutral"
           size="sm"
-          icon="i-lucide-map-pin-plus"
+          :icon="icons.fullAddress"
           :label="t('form.fullAddress')"
           class="-mt-2 px-0"
           @click="fullAddress = true"
@@ -251,7 +252,7 @@ async function submit() {
                     color="neutral"
                     variant="link"
                     size="sm"
-                    icon="i-lucide-calendar"
+                    :icon="icons.calendar"
                     :aria-label="t('form.pickDate')"
                     class="px-0"
                   />
@@ -282,7 +283,7 @@ async function submit() {
             variant="link"
             color="neutral"
             size="sm"
-            icon="i-lucide-user-plus"
+            :icon="icons.contact"
             :label="t('form.contact')"
             class="-mt-2 px-0"
             @click="contact = true"
@@ -292,8 +293,8 @@ async function submit() {
         <UFormField name="rating" :label="t('form.rating')">
           <UInputRating
             v-model="state.rating"
-            icon="i-callback-star-filled"
-            empty-icon="i-lucide-star"
+            :icon="icons.rating"
+            :empty-icon="icons.ratingEmpty"
             clearable
             size="lg"
           />

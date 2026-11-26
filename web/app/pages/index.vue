@@ -5,6 +5,7 @@ import { STATUSES } from '~/types/items';
 import { today as todayDate, getLocalTimeZone } from '@internationalized/date';
 
 const { t } = useI18n();
+const { icons } = useIcons();
 const api = useApi();
 const sources = useSources();
 const places = usePlaces();
@@ -216,7 +217,7 @@ const dataColumns: TableColumn<Application>[] = [
       h('div', { class: 'flex justify-end' }, [
         h('span', { class: 'sr-only' }, t('table.actions')),
         h(UButton, {
-          icon: 'i-lucide-rotate-ccw',
+          icon: icons.reset,
           color: 'neutral',
           variant: 'ghost',
           class: !filtered.value && 'invisible',
@@ -400,7 +401,7 @@ function exportCsv() {
 
     <!-- The table resets from its header; the kanban has none. -->
     <div v-if="filtered && view === 'kanban'">
-      <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="ghost" :label="t('table.reset')" @click="reset" />
+      <UButton :icon="icons.reset" color="neutral" variant="ghost" :label="t('table.reset')" @click="reset" />
     </div>
     <Teleport defer to="#header-actions">
       <div class="flex items-center gap-2">
@@ -408,8 +409,8 @@ function exportCsv() {
         <UToggleGroup
           :model-value="view"
           :items="[
-            { value: 'table', icon: 'i-lucide-table', 'aria-label': t('view.table') },
-            { value: 'kanban', icon: 'i-lucide-columns-3', 'aria-label': t('view.kanban') },
+            { value: 'table', icon: icons.table, 'aria-label': t('view.table') },
+            { value: 'kanban', icon: icons.kanban, 'aria-label': t('view.kanban') },
           ]"
           color="neutral"
           variant="outline"
@@ -418,7 +419,7 @@ function exportCsv() {
         />
         <UButton
           v-if="pro"
-          icon="i-lucide-download"
+          :icon="icons.export"
           color="neutral"
           variant="outline"
           :aria-label="t('table.export')"
@@ -426,12 +427,7 @@ function exportCsv() {
           @click="exportCsv"
         />
         <UTooltip :text="t('common.add')" :kbds="shortcuts.add">
-          <UButton
-            icon="i-lucide-plus"
-            :label="t('common.add')"
-            :ui="{ label: 'max-sm:sr-only' }"
-            @click="openForm()"
-          />
+          <UButton :icon="icons.add" :label="t('common.add')" :ui="{ label: 'max-sm:sr-only' }" @click="openForm()" />
         </UTooltip>
       </div>
     </Teleport>
@@ -455,7 +451,7 @@ function exportCsv() {
       :loading="loadStatus === 'pending'"
       :sorting-options="{ manualSorting: true }"
     >
-      <template #empty><UEmpty icon="i-lucide-inbox" :title="t('common.empty')" variant="naked" /></template>
+      <template #empty><UEmpty :icon="icons.empty" :title="t('common.empty')" variant="naked" /></template>
       <template #company-cell="{ row }">
         <a
           v-if="row.original.website"
@@ -480,7 +476,7 @@ function exportCsv() {
           target="_blank"
           rel="noopener noreferrer"
           :label="t('source.job_post')"
-          trailing-icon="i-lucide-external-link"
+          :trailing-icon="icons.website"
           variant="subtle"
           class="hover:underline"
         />
@@ -489,7 +485,7 @@ function exportCsv() {
           as="a"
           :href="`mailto:${row.original.source_detail}`"
           :label="t('source.recruiter')"
-          trailing-icon="i-lucide-mail"
+          :trailing-icon="icons.mail"
           variant="subtle"
           class="hover:underline"
         />
@@ -504,14 +500,14 @@ function exportCsv() {
             class="cursor-pointer"
             :aria-label="`${t('table.changeStatus')} : ${t(`status.${row.original.status ?? 'applied'}`)}`"
             :label="t(`status.${row.original.status ?? 'applied'}`)"
-            trailing-icon="i-lucide-chevron-down"
+            :trailing-icon="icons.chevronDown"
           />
         </UDropdownMenu>
       </template>
       <template #rating-cell="{ row }">
         <UInputRating
-          icon="i-callback-star-filled"
-          empty-icon="i-lucide-star"
+          :icon="icons.rating"
+          :empty-icon="icons.ratingEmpty"
           :model-value="row.original.rating ?? 0"
           readonly
           size="xs"
@@ -537,7 +533,7 @@ function exportCsv() {
           "
         >
           <UButton
-            icon="i-lucide-bell-ring"
+            :icon="icons.followUp"
             color="neutral"
             variant="ghost"
             :aria-label="t('table.markFollowedUp')"
@@ -548,14 +544,14 @@ function exportCsv() {
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
           <UButton
-            icon="i-lucide-pencil"
+            :icon="icons.edit"
             color="neutral"
             variant="ghost"
             :aria-label="t('common.edit')"
             @click="openForm(row.original)"
           />
           <UButton
-            icon="i-lucide-trash-2"
+            :icon="icons.delete"
             color="error"
             variant="ghost"
             :aria-label="t('common.delete')"
@@ -574,7 +570,7 @@ function exportCsv() {
             color="neutral"
             variant="outline"
             size="sm"
-            trailing-icon="i-lucide-chevron-down"
+            :trailing-icon="icons.chevronDown"
             :label="t('table.batchStatus')"
           />
         </UDropdownMenu>
@@ -584,7 +580,7 @@ function exportCsv() {
             color="error"
             variant="outline"
             size="sm"
-            icon="i-lucide-trash-2"
+            :icon="icons.delete"
             :label="t('common.delete')"
             @click="askDeleteSelected"
           />

@@ -14,6 +14,7 @@ Dev API: `CALLBACK_PASSWORD=... go run ./cmd/callback-server serve --db <file> -
 - Every text is in `i18n/locales/fr.json`; add `en.json` when English comes.
 - Values are stored raw by the API: never `v-html`.
 - Icon buttons carry an `aria-label`. Confirmations use a modal (`ConfirmModal`), never `window.confirm`.
+- Icons come from `useIcons()`, keyboard shortcuts from `useShortcuts()`: never an `i-…` name or a key in a component.
 - Use Nuxt UI components and tokens (`text-muted`, `bg-elevated`), not raw colors.
 - Logic worth a test (computations, parsing, escaping) goes to `app/utils/` as plain functions, auto-imported by Nuxt and imported by the tests; pages keep the wiring.
 - The API is the contract: if a change is needed there, report it, do not work around it here.

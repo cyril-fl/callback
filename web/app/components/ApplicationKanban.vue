@@ -14,6 +14,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { icons } = useIcons();
 
 // The ends nobody works on share one column, "closed": a drop there is a rejection, no_reply is set by the server.
 const CLOSED: Status[] = ['rejected', 'no_reply'];
@@ -38,9 +39,8 @@ const dot: Record<string, string> = {
 };
 // A source the user named gets a tag.
 const sourceIcon = (source?: string) =>
-  ({ spontaneous: 'i-lucide-send', job_post: 'i-lucide-briefcase', recruiter: 'i-lucide-user-round' })[
-    source ?? 'spontaneous'
-  ] ?? 'i-lucide-tag';
+  ({ spontaneous: icons.spontaneous, job_post: icons.jobPost, recruiter: icons.recruiter })[source ?? 'spontaneous'] ??
+  icons.otherSource;
 const sources = useSources();
 
 // A drag moves a card to another column; a click opens it. The form changes the status from the keyboard.
@@ -106,14 +106,14 @@ const day = (v?: string) =>
             <p class="truncate text-sm font-medium">{{ app.company }}</p>
             <UTooltip v-if="column.key === 'closed'" :text="t(`status.${app.status}`)">
               <UIcon
-                :name="app.status === 'no_reply' ? 'i-lucide-hourglass' : 'i-lucide-circle-x'"
+                :name="app.status === 'no_reply' ? icons.noReply : icons.rejected"
                 class="ml-auto size-3.5 shrink-0 text-muted"
                 :aria-label="t(`status.${app.status}`)"
               />
             </UTooltip>
           </div>
           <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
-            <UIcon name="i-lucide-map-pin" class="size-3 shrink-0" />{{
+            <UIcon :name="icons.location" class="size-3 shrink-0" />{{
               [app.location, app.country].filter(Boolean).join(', ')
             }}
           </p>
@@ -123,15 +123,15 @@ const day = (v?: string) =>
             </UTooltip>
             <UInputRating
               v-if="app.rating"
-              icon="i-callback-star-filled"
-              empty-icon="i-lucide-star"
+              :icon="icons.rating"
+              :empty-icon="icons.ratingEmpty"
               :model-value="app.rating"
               readonly
               size="xs"
             />
             <UTooltip v-if="canFollowUp(app, followUpSince)" :text="t('table.markFollowedUp')">
               <UButton
-                icon="i-lucide-bell-ring"
+                :icon="icons.followUp"
                 color="neutral"
                 variant="ghost"
                 size="xs"
