@@ -30,7 +30,7 @@ const links = computed(() => [
       <template #right>
         <!-- A page's own actions, teleported here (the list's view, export and add). -->
         <!-- Too wide for a phone: the actions scroll sideways, not the page. -->
-        <div id="header-actions" class="flex min-w-0 items-center gap-2 overflow-x-auto *:shrink-0" />
+        <div id="header-actions" class="flex min-w-0 items-center gap-2 overflow-x-auto rounded-md *:shrink-0" />
       </template>
     </UHeader>
     <UContainer class="py-6">
