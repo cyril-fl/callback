@@ -3,6 +3,7 @@ export function useShortcuts() {
   const shortcuts = {
     search: ['/'],
     add: ['alt', 'n'],
+    save: ['meta', 's'],
     selectAll: ['meta', 'a'],
     undo: ['meta', 'z'],
     redo: ['meta', 'y'],

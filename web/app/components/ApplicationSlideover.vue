@@ -90,11 +90,19 @@ const blank = (): State => ({
 });
 const state = reactive(blank());
 let saved = new WeakSet<Interview>();
+// The form as loaded: closing it changed asks before the changes are lost.
+const initial = ref('');
+const dirty = computed(() => JSON.stringify(state) !== initial.value);
+const discardOpen = ref(false);
+function requestClose() {
+  if (dirty.value) discardOpen.value = true;
+  else open.value = false;
+}
 // The street and postal code stay folded until asked for, or filled.
 const fullAddress = ref(false);
 
 // Reload the form each time the slideover opens, from the edited row or empty.
-watch(open, (isOpen) => {
+watch(open, async (isOpen) => {
   if (!isOpen) return;
   const a = props.application;
   // A new application starts at the default city and country of the settings.
@@ -123,6 +131,9 @@ watch(open, (isOpen) => {
   fullAddress.value = !!(state.street || state.postal_code);
   sources.refresh();
   places.refresh();
+  // After the watchers the load sets off (the recruiter row).
+  await nextTick();
+  initial.value = JSON.stringify(state);
 });
 
 // The date picker works on a CalendarDate, the API on "2026-01-31".
@@ -234,20 +245,27 @@ async function submit() {
   }
 }
 
+const form = useTemplateRef('form');
+const { key } = useShortcuts();
+defineShortcuts({
+  [key('save')]: { usingInput: true, handler: () => open.value && !loading.value && form.value?.submit() },
+});
+
 // On a phone the form is a sheet rising from the bottom.
 const phone = useMediaQuery('(max-width: 639px)');
 </script>
 
 <template>
   <USlideover
-    v-model:open="open"
+    :open="open"
     :title="application ? t('form.edit') : t('form.add')"
     :description="application ? t('form.edit') : t('form.add')"
     :side="phone ? 'bottom' : 'right'"
     :ui="{ description: 'sr-only', content: phone ? 'max-h-[90dvh] rounded-t-2xl' : pro ? 'sm:max-w-xl' : undefined }"
+    @update:open="(v) => (v ? (open = true) : requestClose())"
   >
     <template #body>
-      <UForm id="application-form" :schema="schema" :state="state" class="space-y-8" @submit="submit">
+      <UForm id="application-form" ref="form" :schema="schema" :state="state" class="space-y-8" @submit="submit">
         <fieldset class="space-y-4">
           <legend
             class="mb-3 w-full border-b border-default pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
@@ -419,9 +437,16 @@ const phone = useMediaQuery('(max-width: 639px)');
     </template>
     <template #footer>
       <div class="flex w-full justify-end gap-2">
-        <UButton color="neutral" variant="outline" :label="t('common.cancel')" @click="open = false" />
+        <UButton color="neutral" variant="outline" :label="t('common.cancel')" @click="requestClose" />
         <UButton type="submit" form="application-form" :loading="loading" :label="t('common.save')" />
       </div>
+      <ConfirmModal
+        v-model:open="discardOpen"
+        :title="t('form.discardTitle')"
+        :message="t('form.discardMessage')"
+        :confirm-label="t('form.discard')"
+        @confirm="open = false"
+      />
     </template>
   </USlideover>
 </template>

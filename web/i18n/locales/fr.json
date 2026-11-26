@@ -116,6 +116,9 @@
   "form": {
     "add": "Nouvelle candidature",
     "edit": "Modifier",
+    "discardTitle": "Abandonner les modifications ?",
+    "discardMessage": "Les modifications de ce formulaire ne sont pas enregistrées.",
+    "discard": "Abandonner",
     "company": "Entreprise",
     "title": "Poste",
     "location": "Lieu",
