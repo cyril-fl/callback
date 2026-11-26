@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { parseDate, today as todayDate, getLocalTimeZone, type CalendarDate } from '@internationalized/date';
 import { z } from 'zod';
-import type { Application, BatchResult, Contact, Interview, NewApplication } from '~/types/items';
+import type { Application, BatchResult, Status, Contact, Interview, NewApplication } from '~/types/items';
 import { STATUSES } from '~/types/items';
 import type { FormPart } from '~/utils/workflow';
 
-const props = defineProps<{ application?: Application }>();
+// status: the one a move asked for, set on open so the form shows its parts to fill.
+const props = defineProps<{ application?: Application; status?: Status }>();
 const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ saved: [app: Application] }>();
 
@@ -115,6 +116,7 @@ watch(open, (isOpen) => {
       next.website = '';
     }
   }
+  if (props.status) next.status = props.status;
   Object.assign(state, next);
   fullAddress.value = !!(state.street || state.postal_code);
   sources.refresh();

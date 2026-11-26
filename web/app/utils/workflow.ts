@@ -28,3 +28,9 @@ export const nextStatuses = (from: WorkflowStatus) => [from, ...TRANSITIONS[from
 // A part is shown by the status, or as long as it holds data, so nothing filled disappears.
 export const showsPart = (status: WorkflowStatus, part: FormPart, filled = false) =>
   filled || PARTS[status].includes(part);
+
+export const canMove = (from: WorkflowStatus, to: WorkflowStatus) => TRANSITIONS[from].includes(to);
+
+// A move to a status whose parts are still empty opens the form to fill them, instead of saving blind.
+export const needsForm = (to: WorkflowStatus, hasInterview: boolean) =>
+  PARTS[to].includes('interviews') && !hasInterview;

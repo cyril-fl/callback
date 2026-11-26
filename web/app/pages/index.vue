@@ -268,8 +268,11 @@ async function replay(request: () => Promise<BatchResult>) {
 const recordStatus = (ids: string[], status: Status) =>
   record({ undo: () => replay(patch(ids, { undo_status: true })), redo: () => replay(patch(ids, { status })) });
 
+// The status follows the workflow (app/utils/workflow.ts); a step whose parts are empty opens the form.
 async function setStatus(app: Application, status: Status) {
-  if (app.status === status) return;
+  const from = app.status ?? 'applied';
+  if (from === status || !canMove(from, status)) return;
+  if (needsForm(status, !!(app.interviews?.length || app.interview_at))) return openForm(app, status);
   const ids = [app.id];
   if (await write(ids, { status }, patch(ids, { status }))) recordStatus(ids, status);
 }
@@ -286,7 +289,7 @@ async function markFollowedUp(app: Application) {
 }
 
 const statusMenu = (app: Application) =>
-  STATUSES.map((s) => ({
+  nextStatuses(app.status ?? 'applied').map((s) => ({
     label: t(`status.${s}`),
     type: 'checkbox' as const,
     checked: app.status === s,
@@ -304,8 +307,10 @@ function saved(item: Application) {
 
 const slideover = ref(false);
 const editing = ref<Application>();
-function openForm(app?: Application) {
+const editingStatus = ref<Status>();
+function openForm(app?: Application, status?: Status) {
   editing.value = app;
+  editingStatus.value = status;
   slideover.value = true;
 }
 
@@ -336,7 +341,7 @@ async function doDelete() {
 // Only the ones whose status changes: an undo takes back their last change, the others have none of this batch.
 async function setSelectedStatus(status: Status) {
   const ids = (applications.value ?? [])
-    .filter((a) => selected.value.includes(a.id) && a.status !== status)
+    .filter((a) => selected.value.includes(a.id) && canMove(a.status ?? 'applied', status))
     .map((a) => a.id);
   if (ids.length && (await write(ids, { status }, patch(ids, { status })))) recordStatus(ids, status);
 }
@@ -590,7 +595,7 @@ function exportCsv() {
       </div>
     </UContainer>
 
-    <ApplicationSlideover v-model:open="slideover" :application="editing" @saved="saved" />
+    <ApplicationSlideover v-model:open="slideover" :application="editing" :status="editingStatus" @saved="saved" />
     <ConfirmModal
       v-model:open="confirmOpen"
       :title="t('delete.title')"
