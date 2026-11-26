@@ -4,6 +4,7 @@ import { parseDate } from '@internationalized/date';
 import type { Application, StatusChange } from '../app/types/items.ts';
 import {
   addressOf,
+  appliedBounds,
   averageDaysToResponse,
   canFollowUp,
   countBy,
@@ -187,6 +188,14 @@ test('dayBounds turns a day filter into from and to', () => {
     '2026-01-01',
     '2026-01-31',
   ]);
+});
+
+test('appliedBounds moves the strict bounds out by a day', () => {
+  assert.deepEqual(appliedBounds(['2026-03-01', '2026-02-28']), {
+    applied_after: '2026-02-28',
+    applied_before: '2026-03-01',
+  });
+  assert.deepEqual(appliedBounds([undefined, undefined]), { applied_after: undefined, applied_before: undefined });
 });
 
 test('addressOf joins the parts it has', () => {

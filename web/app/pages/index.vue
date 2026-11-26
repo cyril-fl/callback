@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { VNode } from 'vue';
 import type { DropdownMenuItem, TableColumn, TableRow } from '@nuxt/ui';
 import type { Application, BatchResult, Stats, Status } from '~/types/items';
 import { STATUSES } from '~/types/items';
-import { today as todayDate, getLocalTimeZone } from '@internationalized/date';
+import { today as todayDate, getLocalTimeZone, type DateValue } from '@internationalized/date';
 
 const { t } = useI18n();
 const { icons } = useIcons();
@@ -20,6 +21,21 @@ const qDebounced = refDebounced(q, 300);
 const statusFilter = ref<Status[]>([]);
 const sourceFilter = ref<string>('all');
 const locationFilter = ref<string>();
+const today = todayDate(getLocalTimeZone());
+const appliedMode = ref<DayMode>('all');
+const appliedDay = shallowRef(today);
+const appliedRange = shallowRef<{ start: DateValue | undefined; end: DateValue | undefined }>({
+  start: today.subtract({ months: 1 }),
+  end: today,
+});
+const applied = computed(() =>
+  appliedBounds(
+    dayBounds(appliedMode.value, appliedDay.value?.toString(), {
+      start: appliedRange.value?.start?.toString(),
+      end: appliedRange.value?.end?.toString(),
+    }),
+  ),
+);
 // Pro: the applications without news for the follow-up delay, applied or responded.
 const followUp = ref(false);
 const defaultSorting = [{ id: 'applied_at', desc: true }];
@@ -35,6 +51,7 @@ const filtered = computed(
     statusFilter.value.length > 0 ||
     sourceFilter.value !== 'all' ||
     !!locationFilter.value ||
+    appliedMode.value !== 'all' ||
     JSON.stringify(sorting.value) !== JSON.stringify(defaultSorting),
 );
 function reset() {
@@ -43,12 +60,13 @@ function reset() {
   statusFilter.value = [];
   sourceFilter.value = 'all';
   locationFilter.value = undefined;
+  appliedMode.value = 'all';
   sorting.value = [...defaultSorting];
 }
 
 // The day the follow-up delay started: an application without news (status, follow-up) since then is to follow up.
 const followUpSince = computed(() => {
-  const since = todayDate(getLocalTimeZone()).subtract({ days: preferences.value?.follow_up_days ?? 7 });
+  const since = today.subtract({ days: preferences.value?.follow_up_days ?? 7 });
   return since.toString();
 });
 
@@ -76,10 +94,11 @@ const {
         untouched_since: followUp.value ? followUpSince.value : undefined,
         source: sourceFilter.value === 'all' ? undefined : sourceFilter.value,
         location: locationFilter.value,
+        ...applied.value,
         sort: sort.value,
       },
     }),
-  { watch: [qDebounced, followUp, statusFilter, sourceFilter, locationFilter, sort] },
+  { watch: [qDebounced, followUp, statusFilter, sourceFilter, locationFilter, applied, sort] },
 );
 const refresh = () => Promise.all([refreshList(), refreshStats(), sources.refresh(), places.refresh()]);
 
@@ -96,6 +115,7 @@ const statusColor: Record<Status, 'neutral' | 'info' | 'warning' | 'success' | '
 const UButton = resolveComponent('UButton');
 const UCheckbox = resolveComponent('UCheckbox');
 const ColumnHeader = resolveComponent('ColumnHeader');
+const DayFilter = resolveComponent('DayFilter');
 
 // The menu stays open while ticking: preventDefault keeps it from closing on select.
 const keepOpen = (fn: () => void) => (e: Event) => {
@@ -166,14 +186,18 @@ const selectColumn: TableColumn<Application> = {
 // The columns are built once: TanStack renders a header function as a component, a new function is a new component
 // and would close the open menu at every pick.
 const header =
-  (label: string, filter?: () => Record<string, unknown>): TableColumn<Application>['header'] =>
+  (label: string, filter?: () => Record<string, unknown>, slot?: () => VNode): TableColumn<Application>['header'] =>
   ({ column }) =>
-    h(ColumnHeader, {
-      label: t(label),
-      sorted: column.getIsSorted(),
-      onSort: () => column.toggleSorting(column.getIsSorted() === 'asc'),
-      ...filter?.(),
-    });
+    h(
+      ColumnHeader,
+      {
+        label: t(label),
+        sorted: column.getIsSorted(),
+        onSort: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+        ...filter?.(),
+      },
+      slot && { default: slot },
+    );
 const dataColumns: TableColumn<Application>[] = [
   {
     accessorKey: 'company',
@@ -204,7 +228,22 @@ const dataColumns: TableColumn<Application>[] = [
     header: header('table.status', () => ({ menu: statusFilterMenu.value, active: statusFilter.value.length > 0 })),
   },
   { accessorKey: 'rating', header: header('table.rating') },
-  { accessorKey: 'applied_at', header: header('table.appliedAt') },
+  {
+    accessorKey: 'applied_at',
+    header: header(
+      'table.appliedAt',
+      () => ({ active: appliedMode.value !== 'all' }),
+      () =>
+        h(DayFilter, {
+          mode: appliedMode.value,
+          'onUpdate:mode': (v: DayMode) => (appliedMode.value = v),
+          day: appliedDay.value,
+          'onUpdate:day': (v: typeof today) => (appliedDay.value = v),
+          range: appliedRange.value,
+          'onUpdate:range': (v: typeof appliedRange.value) => (appliedRange.value = v),
+        }),
+    ),
+  },
   {
     accessorKey: 'followed_up_at',
     header: header('table.followUp', () => ({ menu: followUpFilterMenu.value, active: followUp.value })),

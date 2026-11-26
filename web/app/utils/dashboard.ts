@@ -152,6 +152,12 @@ export function dayBounds(mode: DayMode, day?: string, range?: { start?: string;
   }[mode];
 }
 
+/** The API's applied_after and applied_before of [from, to]: they are strict, the bounds move out by a day. */
+export const appliedBounds = ([from, to]: (string | undefined)[]) => ({
+  applied_after: from && parseDate(from).subtract({ days: 1 }).toString(),
+  applied_before: to && parseDate(to).add({ days: 1 }).toString(),
+});
+
 /** The address on one line: street, postal code and city, country. */
 export const addressOf = (a: Application, country: string) =>
   [a.street, [a.postal_code, a.location].filter(Boolean).join(' '), country].filter(Boolean).join(', ');
