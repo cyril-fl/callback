@@ -11,9 +11,9 @@ const links = computed(() => [
 </script>
 
 <template>
-  <div class="min-h-dvh">
+  <div class="flex h-dvh flex-col">
     <!-- Three icons fit any width: no burger menu. -->
-    <UHeader :toggle="false">
+    <UHeader :toggle="false" class="shrink-0">
       <template #left>
         <NuxtLink to="/" class="mr-3 font-semibold">{{ t('app.name') }}</NuxtLink>
         <UTooltip v-for="link in links" :key="link.to" :text="link.label">
@@ -32,8 +32,11 @@ const links = computed(() => [
         <div id="header-actions" class="flex items-center gap-2" />
       </template>
     </UHeader>
-    <UContainer class="py-6">
-      <slot />
-    </UContainer>
+    <!-- Only the content scrolls: the header and its toolbar stay put. -->
+    <main class="min-h-0 flex-1 overflow-y-auto">
+      <UContainer class="py-6">
+        <slot />
+      </UContainer>
+    </main>
   </div>
 </template>
