@@ -13,7 +13,7 @@ const links = computed(() => [
 <template>
   <div class="min-h-dvh">
     <!-- Three icons fit any width: no burger menu. -->
-    <UHeader :toggle="false">
+    <UHeader :toggle="false" :ui="{ left: 'shrink-0', right: 'min-w-0' }">
       <template #left>
         <NuxtLink to="/" class="mr-3 font-semibold">{{ t('app.name') }}</NuxtLink>
         <UTooltip v-for="link in links" :key="link.to" :text="link.label">
@@ -29,7 +29,8 @@ const links = computed(() => [
       </template>
       <template #right>
         <!-- A page's own actions, teleported here (the list's view, export and add). -->
-        <div id="header-actions" class="flex items-center gap-2" />
+        <!-- Too wide for a phone: the actions scroll sideways, not the page. -->
+        <div id="header-actions" class="flex min-w-0 items-center gap-2 overflow-x-auto *:shrink-0" />
       </template>
     </UHeader>
     <UContainer class="py-6">
