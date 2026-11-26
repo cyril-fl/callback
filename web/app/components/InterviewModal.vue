@@ -44,23 +44,30 @@ function submit() {
     <template #body>
       <UForm id="interview-form" :schema="schema" :state="state" @submit="submit">
         <div v-if="pro" class="space-y-3">
-          <div v-for="(interview, i) in state.interviews" :key="i" class="space-y-3 rounded-lg p-3 ring-1 ring-default">
-            <div class="flex items-end gap-2">
+          <div
+            v-for="(interview, i) in state.interviews"
+            :key="i"
+            class="relative space-y-3 rounded-lg p-3 ring-1 ring-default"
+          >
+            <!-- Top-aligned: an error under one field grows its own column, the others stay put. -->
+            <div class="grid grid-cols-[1fr_9rem] items-start gap-2" :class="state.interviews.length > 1 && 'pr-8'">
               <UFormField :name="`interviews.${i}.at`" :label="t('form.at')" required class="flex-1">
                 <DateTimeInput v-model="interview.at" class="w-full" />
               </UFormField>
-              <UFormField :name="`interviews.${i}.kind`" :label="t('form.kind')" class="w-36">
+              <UFormField :name="`interviews.${i}.kind`" :label="t('form.kind')">
                 <USelect v-model="interview.kind" :items="kinds" class="w-full" />
               </UFormField>
-              <UButton
-                v-if="state.interviews.length > 1"
-                :icon="icons.delete"
-                color="neutral"
-                variant="ghost"
-                :aria-label="t('common.delete')"
-                @click="state.interviews.splice(i, 1)"
-              />
             </div>
+            <UButton
+              v-if="state.interviews.length > 1"
+              :icon="icons.delete"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="absolute top-2 right-2"
+              :aria-label="t('common.delete')"
+              @click="state.interviews.splice(i, 1)"
+            />
             <UFormField :name="`interviews.${i}.note`" :label="t('form.note')">
               <UTextarea v-model="interview.note" :rows="2" autoresize class="w-full" />
             </UFormField>
