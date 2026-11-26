@@ -67,6 +67,27 @@ func (e DomainInterviewKind) Valid() bool {
 	}
 }
 
+// Defines values for DomainPreferenceChangesColorMode.
+const (
+	DomainPreferenceChangesColorModeDark   DomainPreferenceChangesColorMode = "dark"
+	DomainPreferenceChangesColorModeLight  DomainPreferenceChangesColorMode = "light"
+	DomainPreferenceChangesColorModeSystem DomainPreferenceChangesColorMode = "system"
+)
+
+// Valid indicates whether the value is a known member of the DomainPreferenceChangesColorMode enum.
+func (e DomainPreferenceChangesColorMode) Valid() bool {
+	switch e {
+	case DomainPreferenceChangesColorModeDark:
+		return true
+	case DomainPreferenceChangesColorModeLight:
+		return true
+	case DomainPreferenceChangesColorModeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DomainPreferenceChangesPlan.
 const (
 	DomainPreferenceChangesPlanBase DomainPreferenceChangesPlan = "base"
@@ -85,6 +106,51 @@ func (e DomainPreferenceChangesPlan) Valid() bool {
 	}
 }
 
+// Defines values for DomainPreferenceChangesTheme.
+const (
+	DomainPreferenceChangesThemeBlue  DomainPreferenceChangesTheme = "blue"
+	DomainPreferenceChangesThemeGreen DomainPreferenceChangesTheme = "green"
+	DomainPreferenceChangesThemeLilac DomainPreferenceChangesTheme = "lilac"
+	DomainPreferenceChangesThemePink  DomainPreferenceChangesTheme = "pink"
+)
+
+// Valid indicates whether the value is a known member of the DomainPreferenceChangesTheme enum.
+func (e DomainPreferenceChangesTheme) Valid() bool {
+	switch e {
+	case DomainPreferenceChangesThemeBlue:
+		return true
+	case DomainPreferenceChangesThemeGreen:
+		return true
+	case DomainPreferenceChangesThemeLilac:
+		return true
+	case DomainPreferenceChangesThemePink:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DomainPreferencesColorMode.
+const (
+	DomainPreferencesColorModeDark   DomainPreferencesColorMode = "dark"
+	DomainPreferencesColorModeLight  DomainPreferencesColorMode = "light"
+	DomainPreferencesColorModeSystem DomainPreferencesColorMode = "system"
+)
+
+// Valid indicates whether the value is a known member of the DomainPreferencesColorMode enum.
+func (e DomainPreferencesColorMode) Valid() bool {
+	switch e {
+	case DomainPreferencesColorModeDark:
+		return true
+	case DomainPreferencesColorModeLight:
+		return true
+	case DomainPreferencesColorModeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DomainPreferencesPlan.
 const (
 	DomainPreferencesPlanBase DomainPreferencesPlan = "base"
@@ -97,6 +163,30 @@ func (e DomainPreferencesPlan) Valid() bool {
 	case DomainPreferencesPlanBase:
 		return true
 	case DomainPreferencesPlanPro:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DomainPreferencesTheme.
+const (
+	DomainPreferencesThemeBlue  DomainPreferencesTheme = "blue"
+	DomainPreferencesThemeGreen DomainPreferencesTheme = "green"
+	DomainPreferencesThemeLilac DomainPreferencesTheme = "lilac"
+	DomainPreferencesThemePink  DomainPreferencesTheme = "pink"
+)
+
+// Valid indicates whether the value is a known member of the DomainPreferencesTheme enum.
+func (e DomainPreferencesTheme) Valid() bool {
+	switch e {
+	case DomainPreferencesThemeBlue:
+		return true
+	case DomainPreferencesThemeGreen:
+		return true
+	case DomainPreferencesThemeLilac:
+		return true
+	case DomainPreferencesThemePink:
 		return true
 	default:
 		return false
@@ -499,20 +589,29 @@ type DomainNewApplication struct {
 
 // DomainPreferenceChanges defines model for domain.PreferenceChanges.
 type DomainPreferenceChanges struct {
-	DefaultCountry  *string                      `json:"default_country,omitempty"`
-	DefaultLocation *string                      `json:"default_location,omitempty"`
-	FollowUpDays    *int                         `json:"follow_up_days,omitempty"`
-	NoReplyDays     *int                         `json:"no_reply_days,omitempty"`
-	Plan            *DomainPreferenceChangesPlan `json:"plan,omitempty"`
-	TrashDays       *int                         `json:"trash_days,omitempty"`
+	ColorMode       *DomainPreferenceChangesColorMode `json:"color_mode,omitempty"`
+	DefaultCountry  *string                           `json:"default_country,omitempty"`
+	DefaultLocation *string                           `json:"default_location,omitempty"`
+	FollowUpDays    *int                              `json:"follow_up_days,omitempty"`
+	NoReplyDays     *int                              `json:"no_reply_days,omitempty"`
+	Plan            *DomainPreferenceChangesPlan      `json:"plan,omitempty"`
+	Theme           *DomainPreferenceChangesTheme     `json:"theme,omitempty"`
+	TrashDays       *int                              `json:"trash_days,omitempty"`
 }
+
+// DomainPreferenceChangesColorMode defines model for DomainPreferenceChanges.ColorMode.
+type DomainPreferenceChangesColorMode string
 
 // DomainPreferenceChangesPlan defines model for DomainPreferenceChanges.Plan.
 type DomainPreferenceChangesPlan string
 
+// DomainPreferenceChangesTheme defines model for DomainPreferenceChanges.Theme.
+type DomainPreferenceChangesTheme string
+
 // DomainPreferences defines model for domain.Preferences.
 type DomainPreferences struct {
-	DefaultCountry string `json:"default_country"`
+	ColorMode      DomainPreferencesColorMode `json:"color_mode"`
+	DefaultCountry string                     `json:"default_country"`
 
 	// DefaultLocation DefaultLocation and DefaultCountry (a code of Countries) fill a new application of the web app; both may be empty.
 	DefaultLocation string `json:"default_location"`
@@ -525,12 +624,21 @@ type DomainPreferences struct {
 	NoReplyDays int                   `json:"no_reply_days"`
 	Plan        DomainPreferencesPlan `json:"plan"`
 
+	// Theme Theme and ColorMode are the colors of the web app.
+	Theme DomainPreferencesTheme `json:"theme"`
+
 	// TrashDays TrashDays is how long a deleted application can be restored, before it is gone with its history.
 	TrashDays int `json:"trash_days"`
 }
 
+// DomainPreferencesColorMode defines model for DomainPreferences.ColorMode.
+type DomainPreferencesColorMode string
+
 // DomainPreferencesPlan defines model for DomainPreferences.Plan.
 type DomainPreferencesPlan string
+
+// DomainPreferencesTheme Theme and ColorMode are the colors of the web app.
+type DomainPreferencesTheme string
 
 // DomainServerMode defines model for domain.ServerMode.
 type DomainServerMode struct {

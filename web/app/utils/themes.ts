@@ -1,4 +1,6 @@
-// The themes to pick from: the Nuxt UI colors each sets, palettes of main.css. The choice stays on this device.
+import type { PreferenceChanges } from '~/types/items';
+
+// The themes to pick from: the Nuxt UI colors each sets, palettes of main.css. The choice is a preference of the account.
 const own = (id: string) => ({
   id,
   primary: `callback-${id}`,
@@ -13,4 +15,10 @@ export const themes = [own('lilac'), own('pink'), own('blue'), own('green')];
 
 export type Theme = (typeof themes)[number];
 
-export const useTheme = () => useLocalStorage('callback-theme', themes[0]!.id);
+export function useTheme() {
+  const { preferences, save } = usePreferences();
+  return computed({
+    get: () => preferences.value?.theme ?? themes[0]!.id,
+    set: (theme: string) => save({ theme: theme as NonNullable<PreferenceChanges['theme']> }),
+  });
+}

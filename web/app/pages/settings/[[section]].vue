@@ -46,7 +46,7 @@ const sectionItems = computed(() =>
 const colorMode = useColorMode();
 const mode = computed({
   get: () => colorMode.preference as 'light' | 'dark' | 'system',
-  set: (v: 'light' | 'dark' | 'system') => (colorMode.preference = v),
+  set: (v: 'light' | 'dark' | 'system') => save({ color_mode: v }),
 });
 
 const modes = ['light', 'dark', 'system'] as const;

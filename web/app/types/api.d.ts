@@ -2075,15 +2075,21 @@ export interface components {
             website?: string;
         };
         "domain.PreferenceChanges": {
+            /** @enum {string} */
+            color_mode?: "system" | "light" | "dark";
             default_country?: string;
             default_location?: string;
             follow_up_days?: number;
             no_reply_days?: number;
             /** @enum {string} */
             plan?: "base" | "pro";
+            /** @enum {string} */
+            theme?: "lilac" | "pink" | "blue" | "green";
             trash_days?: number;
         };
         "domain.Preferences": {
+            /** @enum {string} */
+            color_mode: "system" | "light" | "dark";
             default_country: string;
             /** @description DefaultLocation and DefaultCountry (a code of Countries) fill a new application of the web app; both may be empty. */
             default_location: string;
@@ -2096,6 +2102,11 @@ export interface components {
             no_reply_days: number;
             /** @enum {string} */
             plan: "base" | "pro";
+            /**
+             * @description Theme and ColorMode are the colors of the web app.
+             * @enum {string}
+             */
+            theme: "lilac" | "pink" | "blue" | "green";
             /** @description TrashDays is how long a deleted application can be restored, before it is gone with its history. */
             trash_days: number;
         };

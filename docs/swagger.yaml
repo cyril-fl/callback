@@ -477,6 +477,12 @@ components:
       type: object
     domain.PreferenceChanges:
       properties:
+        color_mode:
+          enum:
+          - system
+          - light
+          - dark
+          type: string
         default_country:
           type: string
         default_location:
@@ -490,11 +496,24 @@ components:
           - base
           - pro
           type: string
+        theme:
+          enum:
+          - lilac
+          - pink
+          - blue
+          - green
+          type: string
         trash_days:
           type: integer
       type: object
     domain.Preferences:
       properties:
+        color_mode:
+          enum:
+          - system
+          - light
+          - dark
+          type: string
         default_country:
           type: string
         default_location:
@@ -515,16 +534,26 @@ components:
           - base
           - pro
           type: string
+        theme:
+          description: Theme and ColorMode are the colors of the web app.
+          enum:
+          - lilac
+          - pink
+          - blue
+          - green
+          type: string
         trash_days:
           description: TrashDays is how long a deleted application can be restored,
             before it is gone with its history.
           type: integer
       required:
+      - color_mode
       - default_country
       - default_location
       - follow_up_days
       - no_reply_days
       - plan
+      - theme
       - trash_days
       type: object
     domain.ServerMode:
