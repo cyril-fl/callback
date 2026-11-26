@@ -174,6 +174,7 @@ const day = (v?: string) =>
                 />
               </UDropdownMenu>
             </div>
+            <p v-if="app.title" class="truncate text-xs text-muted">{{ app.title }}</p>
             <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
               <UIcon :name="icons.location" class="size-3 shrink-0" />{{
                 [app.location, countries.label(app.country)].filter(Boolean).join(', ')

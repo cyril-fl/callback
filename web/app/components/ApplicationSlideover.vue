@@ -23,6 +23,7 @@ const schema = computed(() => {
   return z
     .object({
       company: required,
+      title: z.string(),
       location: required,
       street: z.string(),
       postal_code: z.string(),
@@ -50,6 +51,7 @@ const today = () => todayDate(getLocalTimeZone()).toString();
 type State = Required<Omit<NewApplication, 'status'>> & { status: NonNullable<NewApplication['status']> };
 const blank = (): State => ({
   company: '',
+  title: '',
   location: '',
   street: '',
   postal_code: '',
@@ -192,6 +194,9 @@ const phone = useMediaQuery('(max-width: 639px)');
             class="w-full"
             @update:model-value="pickCompany"
           />
+        </UFormField>
+        <UFormField name="title" :label="t('form.title')">
+          <UInput v-model="state.title" class="w-full" />
         </UFormField>
         <UFormField name="website" :label="t('form.website')">
           <UInput v-model="state.website" placeholder="https://" class="w-full" />

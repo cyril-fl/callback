@@ -319,6 +319,9 @@ type DomainApplication struct {
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
 
+	// Title Title is the job title of the post.
+	Title *string `json:"title,omitempty"`
+
 	// Truncated Truncated tells that comment was cut at max_chars.
 	Truncated *bool   `json:"truncated,omitempty"`
 	UpdatedAt *string `json:"updated_at,omitempty"`
@@ -374,6 +377,9 @@ type DomainChanges struct {
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
+
+	// Title Title is cleared by "".
+	Title *string `json:"title,omitempty"`
 
 	// UndoFollowUp UndoFollowUp forgets the last follow-up: followed_up_at goes back to the one before, if any.
 	UndoFollowUp *bool `json:"undo_follow_up,omitempty"`
@@ -431,6 +437,7 @@ type DomainNewApplication struct {
 	SourceDetail *string       `json:"source_detail,omitempty"`
 	Status       *DomainStatus `json:"status,omitempty"`
 	Street       *string       `json:"street,omitempty"`
+	Title        *string       `json:"title,omitempty"`
 	Website      *string       `json:"website,omitempty"`
 }
 

@@ -18,7 +18,7 @@ const pageSize = 50
 const maxRead = 50
 
 // compact is the columns of a list when the agent asks no more; the API always adds id.
-var compact = []string{"company", "status", "applied_at"}
+var compact = []string{"company", "title", "status", "applied_at"}
 
 // addTool adds tool to server, unless readOnly and the tool changes something: its annotations tell it.
 func addTool[In, Out any](server *mcp.Server, readOnly bool, tool *mcp.Tool, handler mcp.ToolHandlerFor[In, Out]) {
@@ -43,7 +43,7 @@ type listArgs struct {
 	Status         []apiclient.GetApiApplicationsParamsStatus `json:"status,omitempty" jsonschema:"any of these"`
 	Source         *string                                    `json:"source,omitempty" jsonschema:"spontaneous, job_post, recruiter or any name"`
 	Location       *string                                    `json:"location,omitempty" jsonschema:"this city"`
-	Q              *string                                    `json:"q,omitempty" jsonschema:"text in company, address, website, source_detail, contact or comment"`
+	Q              *string                                    `json:"q,omitempty" jsonschema:"text in company, title, address, website, source_detail, contact or comment"`
 	AppliedBefore  *string                                    `json:"applied_before,omitempty"`
 	AppliedAfter   *string                                    `json:"applied_after,omitempty"`
 	UntouchedSince *string                                    `json:"untouched_since,omitempty" jsonschema:"no status change nor follow-up since this day"`

@@ -18,10 +18,10 @@ import (
 )
 
 // defaultColumns are the columns of ls when --fields names none; id always comes first.
-var defaultColumns = []string{"company", "status", "applied_at"}
+var defaultColumns = []string{"company", "title", "status", "applied_at"}
 
 // showColumns is the order of show, every field.
-var showColumns = []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "applied_at", "interview_at", "contact_name", "contact_email", "comment", "truncated", "created_at", "updated_at", "followed_up_at"}
+var showColumns = []string{"company", "title", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "applied_at", "interview_at", "contact_name", "contact_email", "comment", "truncated", "created_at", "updated_at", "followed_up_at"}
 
 // Add creates the application of the flags, or the batch of --file, in one request.
 func Add(cobra *cobra.Command, _ []string) error {
@@ -39,6 +39,7 @@ func Add(cobra *cobra.Command, _ []string) error {
 		item.Company, _ = cobra.Flags().GetString("company")
 		item.Location, _ = cobra.Flags().GetString("location")
 		set := changes(cobra)
+		item.Title = set.Title
 		item.Street, item.PostalCode, item.Country = set.Street, set.PostalCode, set.Country
 		item.Website, item.Source, item.SourceDetail, item.Status, item.Rating, item.Comment, item.AppliedAt =
 			set.Website, set.Source, set.SourceDetail, set.Status, set.Rating, set.Comment, set.AppliedAt
@@ -321,7 +322,7 @@ func changes(cobra *cobra.Command) apiclient.DomainChanges {
 		return &value
 	}
 	set := apiclient.DomainChanges{
-		Website: text("website"), Street: text("street"), PostalCode: text("postal-code"), Country: text("country"), Source: (*string)(text("source")), SourceDetail: text("source-detail"),
+		Title: text("title"), Website: text("website"), Street: text("street"), PostalCode: text("postal-code"), Country: text("country"), Source: (*string)(text("source")), SourceDetail: text("source-detail"),
 		Status: (*apiclient.DomainStatus)(text("status")), Comment: text("comment"), AppliedAt: text("applied-at"),
 		InterviewAt: text("interview-at"), ContactName: text("contact-name"), ContactEmail: text("contact-email"),
 	}

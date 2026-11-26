@@ -66,7 +66,7 @@ const (
 var (
 	ErrNoCompany        = Invalid("company is required")
 	ErrNoLocation       = Invalid("location (the city) is required")
-	ErrLong             = Invalid("company, location, street, postal_code, website, source_detail, contact_name and contact_email have at most 200 characters, comment 10000")
+	ErrLong             = Invalid("company, title, location, street, postal_code, website, source_detail, contact_name and contact_email have at most 200 characters, comment 10000")
 	ErrInvalidWebsite   = Invalid("website must be an http(s) URL or an e-mail")
 	ErrInvalidSource    = Invalid("source is spontaneous, job_post, recruiter or a name of at most 60 characters")
 	ErrInvalidDetail    = Invalid("source_detail must be the job post's http(s) URL for job_post, the recruiter's e-mail for recruiter, empty for spontaneous; free for another source")
@@ -88,6 +88,8 @@ type Application struct {
 	// batch sets the same account, so bun never leaves it out.
 	UserID  string `bun:",notnull,default:''" json:"-"`
 	Company string `bun:",notnull" json:"company,omitempty" binding:"optional"`
+	// Title is the job title of the post.
+	Title string `bun:",nullzero" json:"title,omitempty" binding:"optional"`
 	// Location is the city; Street, PostalCode and Country complete the address when known.
 	Location   string `bun:",notnull" json:"location,omitempty" binding:"optional"`
 	Street     string `bun:",nullzero" json:"street,omitempty" binding:"optional"`
@@ -114,11 +116,12 @@ type Application struct {
 }
 
 // Columns are the columns ?fields= may ask for.
-var Columns = []string{"id", "company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at", "followed_up_at"}
+var Columns = []string{"id", "company", "title", "location", "street", "postal_code", "country", "website", "source", "source_detail", "status", "rating", "comment", "applied_at", "interview_at", "contact_name", "contact_email", "created_at", "updated_at", "followed_up_at"}
 
 // Normalize trims the text and fills the defaults: status applied, applied today.
 func (a *Application) Normalize() {
 	a.Company = strings.TrimSpace(a.Company)
+	a.Title = strings.TrimSpace(a.Title)
 	a.Location = strings.TrimSpace(a.Location)
 	a.Street = strings.TrimSpace(a.Street)
 	a.PostalCode = strings.TrimSpace(a.PostalCode)
@@ -148,7 +151,7 @@ func (a *Application) Validate() error {
 	}{
 		{a.Company == "", ErrNoCompany},
 		{a.Location == "", ErrNoLocation},
-		{runes(a.Company) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment, ErrLong},
+		{runes(a.Company) > MaxShort || runes(a.Title) > MaxShort || runes(a.Location) > MaxShort || runes(a.Street) > MaxShort || runes(a.PostalCode) > MaxShort || runes(a.Website) > MaxShort || runes(a.SourceDetail) > MaxShort || runes(a.ContactName) > MaxShort || runes(a.ContactEmail) > MaxShort || runes(a.Comment) > MaxComment, ErrLong},
 		{!IsCountry(a.Country), ErrInvalidCountry},
 		{a.Website != "" && !isURL(a.Website) && !isEmail(a.Website), ErrInvalidWebsite},
 		{runes(string(a.Source)) > MaxSource, ErrInvalidSource},
@@ -239,6 +242,7 @@ func runes(value string) int {
 // NewApplication is an application to create: what is left out gets its default (Normalize).
 type NewApplication struct {
 	Company      string `json:"company"`
+	Title        string `json:"title,omitempty" binding:"optional"`
 	Location     string `json:"location"`
 	Street       string `json:"street,omitempty" binding:"optional"`
 	PostalCode   string `json:"postal_code,omitempty" binding:"optional"`
@@ -257,12 +261,14 @@ type NewApplication struct {
 
 // Application is the new application, not yet stored: no id nor timestamps.
 func (n NewApplication) Application() Application {
-	return Application{Company: n.Company, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt, InterviewAt: n.InterviewAt, ContactName: n.ContactName, ContactEmail: n.ContactEmail}
+	return Application{Company: n.Company, Title: n.Title, Location: n.Location, Street: n.Street, PostalCode: n.PostalCode, Country: n.Country, Website: n.Website, Source: n.Source, SourceDetail: n.SourceDetail, Status: n.Status, Rating: n.Rating, Comment: n.Comment, AppliedAt: n.AppliedAt, InterviewAt: n.InterviewAt, ContactName: n.ContactName, ContactEmail: n.ContactEmail}
 }
 
 // Changes are the fields an update sets; a field left out keeps its value.
 type Changes struct {
-	Company      *string `json:"company,omitempty" binding:"optional"`
+	Company *string `json:"company,omitempty" binding:"optional"`
+	// Title is cleared by "".
+	Title        *string `json:"title,omitempty" binding:"optional"`
 	Location     *string `json:"location,omitempty" binding:"optional"`
 	Street       *string `json:"street,omitempty" binding:"optional"`
 	PostalCode   *string `json:"postal_code,omitempty" binding:"optional"`
@@ -302,6 +308,7 @@ func (c Changes) Empty() bool {
 // Apply writes the changes into a.
 func (c Changes) Apply(a *Application) {
 	set(&a.Company, c.Company)
+	set(&a.Title, c.Title)
 	set(&a.Location, c.Location)
 	set(&a.Street, c.Street)
 	set(&a.PostalCode, c.PostalCode)

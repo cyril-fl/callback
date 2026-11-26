@@ -364,6 +364,7 @@ defineShortcuts({
 // The list as shown, filters and sort included, to a CSV file.
 const csvColumns = [
   'company',
+  'title',
   'location',
   'street',
   'postal_code',
@@ -467,6 +468,7 @@ function exportCsv() {
           {{ row.original.company }}
         </a>
         <span v-else class="font-medium">{{ row.original.company }}</span>
+        <p v-if="row.original.title" class="text-xs text-muted">{{ row.original.title }}</p>
       </template>
       <template #source-cell="{ row }">
         <UBadge

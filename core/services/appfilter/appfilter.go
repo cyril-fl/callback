@@ -32,7 +32,7 @@ func Where(ctx context.Context, filter domain.Filter) func(bun.QueryBuilder) bun
 			// lower() on both sides: LIKE is case-sensitive on Postgres, ASCII-insensitive on SQLite.
 			like := "%" + likeEscaper.Replace(text) + "%"
 			q = q.WhereGroup(" AND ", func(q bun.QueryBuilder) bun.QueryBuilder {
-				for _, column := range []string{"company", "location", "street", "postal_code", "country", "website", "source", "source_detail", "contact_name", "contact_email", "comment"} {
+				for _, column := range []string{"company", "title", "location", "street", "postal_code", "country", "website", "source", "source_detail", "contact_name", "contact_email", "comment"} {
 					q = q.WhereOr("lower(a.?) LIKE lower(?) ESCAPE '\\'", bun.Ident(column), like)
 				}
 				return q

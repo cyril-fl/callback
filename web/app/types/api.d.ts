@@ -1788,6 +1788,8 @@ export interface components {
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
+            /** @description Title is the job title of the post. */
+            title?: string;
             /** @description Truncated tells that comment was cut at max_chars. */
             truncated?: boolean;
             updated_at?: string;
@@ -1838,6 +1840,8 @@ export interface components {
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
+            /** @description Title is cleared by "". */
+            title?: string;
             /** @description UndoFollowUp forgets the last follow-up: followed_up_at goes back to the one before, if any. */
             undo_follow_up?: boolean;
             /**
@@ -1890,6 +1894,7 @@ export interface components {
             source_detail?: string;
             status?: components["schemas"]["domain.Status"];
             street?: string;
+            title?: string;
             website?: string;
         };
         "domain.PreferenceChanges": {

@@ -38,7 +38,7 @@ func AddTools(server *mcp.Server, client *apiclient.ClientWithResponses, readOnl
 	addTool(server, readOnly, &mcp.Tool{
 		Name:        "list_applications",
 		Annotations: reads(),
-		Description: "List the applications matching the filters, compact (id, company, status, applied_at), with the total.",
+		Description: "List the applications matching the filters, compact (id, company, title, status, applied_at), with the total.",
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, args listArgs) (*mcp.CallToolResult, listResult, error) {
 		out, err := list(ctx, client, args)
 		return nil, out, err

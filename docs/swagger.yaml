@@ -166,6 +166,9 @@ components:
           $ref: '#/components/schemas/domain.Status'
         street:
           type: string
+        title:
+          description: Title is the job title of the post.
+          type: string
         truncated:
           description: Truncated tells that comment was cut at max_chars.
           type: boolean
@@ -283,6 +286,9 @@ components:
           $ref: '#/components/schemas/domain.Status'
         street:
           type: string
+        title:
+          description: Title is cleared by "".
+          type: string
         undo_follow_up:
           description: 'UndoFollowUp forgets the last follow-up: followed_up_at goes
             back to the one before, if any.'
@@ -385,6 +391,8 @@ components:
         status:
           $ref: '#/components/schemas/domain.Status'
         street:
+          type: string
+        title:
           type: string
         website:
           type: string
