@@ -106,7 +106,7 @@ func (p *run) countApplications() {
 	if p.HasErr() {
 		return
 	}
-	total, err := p.db.NewSelect().Model((*domain.Application)(nil)).ApplyQueryBuilder(appfilter.Where(p.input.Filter)).Count(p.ctx)
+	total, err := p.db.NewSelect().Model((*domain.Application)(nil)).ApplyQueryBuilder(appfilter.Where(p.ctx, p.input.Filter)).Count(p.ctx)
 	p.cache.result.Total = int(total)
 	p.SetErr(err)
 }
@@ -115,7 +115,7 @@ func (p *run) loadApplications() {
 	if p.HasErr() || p.input.CountOnly {
 		return
 	}
-	query := p.db.NewSelect().Model(&p.cache.result.Applications).ApplyQueryBuilder(appfilter.Where(p.input.Filter))
+	query := p.db.NewSelect().Model(&p.cache.result.Applications).ApplyQueryBuilder(appfilter.Where(p.ctx, p.input.Filter))
 	if len(p.input.Fields) > 0 {
 		query = query.Column(columns(p.input.Fields)...)
 	}

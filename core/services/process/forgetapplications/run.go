@@ -67,6 +67,7 @@ func (p *run) forget() {
 		return
 	}
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		// trash.Forget keeps to the account.
 		picked := tx.NewSelect().Model((*domain.DeletedApplication)(nil)).Column("id")
 		if !p.input.All {
 			picked = picked.Where("id IN (?)", bun.List(p.input.IDs))

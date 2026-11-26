@@ -17,8 +17,8 @@ func ptr[T any](value T) *T { return &value }
 
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris"},
 		domain.NewApplication{Company: "Globex", Location: "Lyon"},
 		domain.NewApplication{Company: "Initech", Location: "Lille", Status: domain.StatusRejected},
@@ -91,8 +91,9 @@ func TestNoOps(t *testing.T) {
 // A q of spaces adds no condition: the op fails instead of changing every application.
 func TestBlankQuery(t *testing.T) {
 	db := testdb.New(t)
-	seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
-	process := updateapplications.Process(context.Background(), db, updateapplications.Input{Ops: []updateapplications.Op{{Filter: domain.Filter{Q: " "}, Set: domain.Changes{Rating: ptr(1)}}}})
+	ctx := testdb.Account(t, db, "test")
+	seed.Applications(t, ctx, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	process := updateapplications.Process(ctx, db, updateapplications.Input{Ops: []updateapplications.Op{{Filter: domain.Filter{Q: " "}, Set: domain.Changes{Rating: ptr(1)}}}})
 	process.Run()
 	if got := process.GetResult(); process.HasErr() || got.Count != 0 || len(got.Failed) != 1 || got.Failed[0].Error != domain.ErrNoFilter.Error() {
 		t.Errorf("result = %+v, %v; want the op refused", got, process.GetErr())
@@ -102,8 +103,8 @@ func TestBlankQuery(t *testing.T) {
 // A follow-up is news: the application leaves untouched_since until the delay passes again.
 func TestFollowUp(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris"},
 		domain.NewApplication{Company: "Globex", Location: "Lyon"},
 	)
@@ -121,7 +122,7 @@ func TestFollowUp(t *testing.T) {
 
 	var quiet []domain.Application
 	since := domain.Filter{UntouchedSince: time.Now().UTC().Format(domain.DateLayout)}
-	if err := db.NewSelect().Model(&quiet).ApplyQueryBuilder(appfilter.Where(since)).Scan(ctx); err != nil {
+	if err := db.NewSelect().Model(&quiet).ApplyQueryBuilder(appfilter.Where(ctx, since)).Scan(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if len(quiet) != 1 || quiet[0].ID != ids[1] {
@@ -139,8 +140,8 @@ func TestFollowUp(t *testing.T) {
 // The filter on source ignores case, a set source reuses the name in use, a status change records the status before.
 func TestSourceCaseAndFrom(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "A", Location: "Paris", Source: "LinkedIn"},
 		domain.NewApplication{Company: "B", Location: "Paris", Source: "Indeed"},
 	)
@@ -164,8 +165,8 @@ func TestSourceCaseAndFrom(t *testing.T) {
 
 func TestUndo(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
 	update := func(set domain.Changes) domain.BatchResult {
 		t.Helper()
 		process := updateapplications.Process(ctx, db, updateapplications.Input{Ops: []updateapplications.Op{{Filter: domain.Filter{IDs: ids}, Set: set}}})

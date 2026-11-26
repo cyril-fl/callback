@@ -20,8 +20,8 @@ func ptr[T any](value T) *T { return &value }
 // The history is written by the create and by a change of status only, and goes with the application.
 func TestHistory(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris"},
 		domain.NewApplication{Company: "Globex", Location: "Lyon", Status: domain.StatusInterview},
 		domain.NewApplication{Company: "Initech", Location: "Lille"},

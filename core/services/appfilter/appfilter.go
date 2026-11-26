@@ -12,9 +12,10 @@ import (
 
 var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
-// Where adds the filter to q. Validate the filter first.
-func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
+// Where adds the filter to q, on the applications of the account of ctx only. Validate the filter first.
+func Where(ctx context.Context, filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 	return func(q bun.QueryBuilder) bun.QueryBuilder {
+		q = q.Where("a.user_id = ?", domain.UserID(ctx))
 		if len(filter.IDs) > 0 {
 			q = q.Where("a.id IN (?)", bun.List(filter.IDs))
 		}
@@ -54,9 +55,18 @@ func Where(filter domain.Filter) func(bun.QueryBuilder) bun.QueryBuilder {
 	}
 }
 
-// KnownSources reads the sources in use, for domain.KnownSources.Match: a write reuses their names whatever the case.
+// History scopes a query on status_changes or follow_ups to the account of ctx, through their application, kept or
+// in the trash: they have no user_id of their own.
+func History(ctx context.Context) func(bun.QueryBuilder) bun.QueryBuilder {
+	return func(q bun.QueryBuilder) bun.QueryBuilder {
+		user := domain.UserID(ctx)
+		return q.Where("application_id IN (SELECT ka.id FROM applications ka WHERE ka.user_id = ? UNION ALL SELECT kd.id FROM deleted_applications kd WHERE kd.user_id = ?)", user, user)
+	}
+}
+
+// KnownSources reads the sources the account of ctx uses, for domain.KnownSources.Match: a write reuses their names whatever the case.
 func KnownSources(ctx context.Context, db bun.IDB) (domain.KnownSources, error) {
 	var sources []domain.Source
-	err := db.NewSelect().Model((*domain.Application)(nil)).Distinct().Column("source").Scan(ctx, &sources)
+	err := db.NewSelect().Model((*domain.Application)(nil)).Distinct().Column("source").Where("user_id = ?", domain.UserID(ctx)).Scan(ctx, &sources)
 	return domain.NewKnownSources(sources), err
 }

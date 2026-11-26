@@ -1,7 +1,6 @@
 package deleteapplications_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -13,8 +12,8 @@ import (
 
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris", Status: domain.StatusRejected},
 		domain.NewApplication{Company: "Globex", Location: "Lyon", Status: domain.StatusRejected},
 		domain.NewApplication{Company: "Initech", Location: "Lille"},
@@ -58,8 +57,9 @@ func TestRun(t *testing.T) {
 // A q of spaces adds no condition: it would match everything, so it is refused like an empty filter.
 func TestBlankQuery(t *testing.T) {
 	db := testdb.New(t)
-	seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
-	process := deleteapplications.Process(context.Background(), db, deleteapplications.Input{Filter: domain.Filter{Q: "  "}})
+	ctx := testdb.Account(t, db, "test")
+	seed.Applications(t, ctx, db, domain.NewApplication{Company: "Acme", Location: "Paris"})
+	process := deleteapplications.Process(ctx, db, deleteapplications.Input{Filter: domain.Filter{Q: "  "}})
 	process.Run()
 	if !errors.Is(process.GetErr(), domain.ErrNoFilter) {
 		t.Errorf("err = %v, want %v", process.GetErr(), domain.ErrNoFilter)

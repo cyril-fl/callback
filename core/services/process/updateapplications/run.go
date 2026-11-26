@@ -119,7 +119,7 @@ func (p *run) runOp(ctx context.Context, tx bun.Tx, index int, op Op, now time.T
 	}
 
 	var applications []domain.Application
-	if err := tx.NewSelect().Model(&applications).ApplyQueryBuilder(appfilter.Where(op.Filter)).Scan(ctx); err != nil {
+	if err := tx.NewSelect().Model(&applications).ApplyQueryBuilder(appfilter.Where(ctx, op.Filter)).Scan(ctx); err != nil {
 		return err
 	}
 	for _, id := range missing(op.IDs, applications) {

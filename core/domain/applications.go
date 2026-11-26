@@ -83,7 +83,10 @@ var (
 type Application struct {
 	bun.BaseModel `bun:"table:applications,alias:a" json:"-"`
 
-	ID      string `bun:",pk" json:"id"`
+	ID string `bun:",pk" json:"id"`
+	// UserID is the account it belongs to. Its default only serves the ALTER TABLE of an older base: every insert of a
+	// batch sets the same account, so bun never leaves it out.
+	UserID  string `bun:",notnull,default:''" json:"-"`
 	Company string `bun:",notnull" json:"company,omitempty" binding:"optional"`
 	// Location is the city; Street, PostalCode and Country complete the address when known.
 	Location   string `bun:",notnull" json:"location,omitempty" binding:"optional"`
@@ -326,7 +329,8 @@ func set[T any](field *T, value *T) {
 type DeletedApplication struct {
 	bun.BaseModel `bun:"table:deleted_applications,alias:da" json:"-"`
 
-	ID string `bun:",pk" json:"id"`
+	ID     string `bun:",pk" json:"id"`
+	UserID string `bun:",notnull,default:''" json:"-"` // apart: Application leaves it out of its JSON
 	// Application is the row as it was, in JSON: a column the applications gain needs nothing here.
 	Application Application `bun:"type:json,notnull" json:"application"`
 	DeletedAt   time.Time   `bun:",notnull" json:"deleted_at"`

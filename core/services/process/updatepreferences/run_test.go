@@ -1,7 +1,6 @@
 package updatepreferences_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -12,8 +11,8 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	ctx := context.Background()
 	db := testdb.New(t)
+	ctx := testdb.Account(t, db, "test")
 	read := func() domain.Preferences {
 		process := readpreferences.Process(ctx, db)
 		process.Run()

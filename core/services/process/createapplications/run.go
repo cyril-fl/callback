@@ -75,6 +75,7 @@ func (p *run) makeApplications() {
 			continue
 		}
 		application.ID = uuid.NewString()
+		application.UserID = domain.UserID(p.ctx)
 		application.CreatedAt, application.UpdatedAt = now, now
 		p.cache.valid = append(p.cache.valid, application)
 		p.cache.result.IDs = append(p.cache.result.IDs, application.ID)

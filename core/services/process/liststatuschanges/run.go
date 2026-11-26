@@ -66,7 +66,7 @@ func (p *run) loadChanges() {
 	}
 
 	q := p.db.NewSelect().Model(&p.cache.result).ColumnExpr("sc.*, a.company").
-		Join("JOIN applications AS a ON a.id = sc.application_id").OrderExpr("sc.at, sc.id")
+		Join("JOIN applications AS a ON a.id = sc.application_id").Where("a.user_id = ?", domain.UserID(p.ctx)).OrderExpr("sc.at, sc.id")
 	if len(p.input.IDs) > 0 {
 		q = q.Where("sc.application_id IN (?)", bun.In(p.input.IDs))
 	}

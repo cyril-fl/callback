@@ -1,7 +1,6 @@
 package listapplications_test
 
 import (
-	"context"
 	"errors"
 	"slices"
 	"testing"
@@ -14,7 +13,8 @@ import (
 
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris", AppliedAt: "2026-01-10", Comment: "Called back 100% sure"},
 		domain.NewApplication{Company: "Globex", Location: "Lyon", AppliedAt: "2026-02-10", Status: domain.StatusInterview, Rating: 4, ContactName: "Jane Doe"},
 		domain.NewApplication{Company: "Initech", Location: "Paris", AppliedAt: "2026-03-10", Status: domain.StatusRejected},
@@ -46,7 +46,7 @@ func TestRun(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			process := listapplications.Process(context.Background(), db, test.input)
+			process := listapplications.Process(ctx, db, test.input)
 			process.Run()
 			if process.HasErr() {
 				t.Fatal(process.GetErr())
@@ -65,9 +65,10 @@ func TestRun(t *testing.T) {
 // fields keeps the columns asked and id; max_chars cuts the comment and says so.
 func TestFieldsAndMaxChars(t *testing.T) {
 	db := testdb.New(t)
-	seed.Applications(t, db, domain.NewApplication{Company: "Acme", Location: "Paris", Comment: "éèàùç and more"})
+	ctx := testdb.Account(t, db, "test")
+	seed.Applications(t, ctx, db, domain.NewApplication{Company: "Acme", Location: "Paris", Comment: "éèàùç and more"})
 
-	process := listapplications.Process(context.Background(), db, listapplications.Input{Fields: []string{"company", "comment"}, MaxChars: 5})
+	process := listapplications.Process(ctx, db, listapplications.Input{Fields: []string{"company", "comment"}, MaxChars: 5})
 	process.Run()
 	if process.HasErr() {
 		t.Fatal(process.GetErr())
@@ -80,6 +81,7 @@ func TestFieldsAndMaxChars(t *testing.T) {
 
 func TestInvalid(t *testing.T) {
 	db := testdb.New(t)
+	ctx := testdb.Account(t, db, "test")
 	for name, input := range map[string]listapplications.Input{
 		"field":  {Fields: []string{"password"}},
 		"sort":   {Sort: "id; DROP TABLE applications"},
@@ -87,7 +89,7 @@ func TestInvalid(t *testing.T) {
 		"status": {Filter: domain.Filter{Status: []domain.Status{"hired"}}},
 		"date":   {Filter: domain.Filter{AppliedBefore: "yesterday"}},
 	} {
-		process := listapplications.Process(context.Background(), db, input)
+		process := listapplications.Process(ctx, db, input)
 		process.Run()
 		if !errors.Is(process.GetErr(), domain.ErrInvalid) {
 			t.Errorf("%s: err = %v, want invalid", name, process.GetErr())
@@ -98,11 +100,12 @@ func TestInvalid(t *testing.T) {
 // status sorts in the pipeline's order: responded comes before interview, though not in the alphabet.
 func TestSortStatus(t *testing.T) {
 	db := testdb.New(t)
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "A", Location: "Paris", Status: domain.StatusInterview},
 		domain.NewApplication{Company: "B", Location: "Paris", Status: domain.StatusResponded},
 	)
-	process := listapplications.Process(context.Background(), db, listapplications.Input{Sort: "status"})
+	process := listapplications.Process(ctx, db, listapplications.Input{Sort: "status"})
 	process.Run()
 	if got := process.GetResult().Applications; process.HasErr() || len(got) != 2 || got[0].ID != ids[1] {
 		t.Errorf("got %+v, %v; want responded first", got, process.GetErr())

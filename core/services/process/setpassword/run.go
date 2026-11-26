@@ -1,4 +1,4 @@
-// Package setpassword sets the password of the one account, and logs out every session: a new password is how a
+// Package setpassword sets the password of an account, and logs out its sessions: a new password is how a
 // lost device is shut out. API tokens and OAuth connections stay: revoke them from the settings.
 package setpassword
 
@@ -15,21 +15,26 @@ import (
 // MinLength is the fewest characters of a password.
 const MinLength = 8
 
-var ErrShortPassword = domain.Invalid("the password has at least 8 characters")
+var (
+	ErrShortPassword = domain.Invalid("the password has at least 8 characters")
+	ErrNoUser        = domain.NotFound("no such account")
+)
 
 type run struct {
 	plumprimitive.Process
 
-	ctx  context.Context
-	db   bun.IDB
-	pass string
+	ctx    context.Context
+	db     bun.IDB
+	userID string
+	pass   string
 }
 
-func Process(ctx context.Context, db bun.IDB, pass string) *run {
+func Process(ctx context.Context, db bun.IDB, userID, pass string) *run {
 	return &run{
-		ctx:  ctx,
-		db:   db,
-		pass: pass,
+		ctx:    ctx,
+		db:     db,
+		userID: userID,
+		pass:   pass,
 	}
 }
 
@@ -49,17 +54,16 @@ func (p *run) savePassword() {
 	if p.HasErr() {
 		return
 	}
-	setting := domain.Setting{Key: domain.SettingPasswordHash, Value: password.Hash(p.pass)}
+	hash := password.Hash(p.pass)
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if _, err := tx.NewInsert().Model(&setting).On("CONFLICT (key) DO UPDATE").Set("value = EXCLUDED.value").Exec(ctx); err != nil {
+		result, err := tx.NewUpdate().Model((*domain.User)(nil)).Set("password_hash = ?", hash).Where("id = ?", p.userID).Exec(ctx)
+		if err != nil {
 			return err
 		}
-		_, err := tx.NewDelete().Model((*domain.Token)(nil)).Where("kind = ?", domain.TokenSession).Exec(ctx)
+		if rows, _ := result.RowsAffected(); rows == 0 {
+			return ErrNoUser
+		}
+		_, err = tx.NewDelete().Model((*domain.Token)(nil)).Where("kind = ? AND user_id = ?", domain.TokenSession, p.userID).Exec(ctx)
 		return err
 	}))
-}
-
-// HasPassword tells whether the base has a password yet.
-func HasPassword(ctx context.Context, db bun.IDB) (bool, error) {
-	return db.NewSelect().Model((*domain.Setting)(nil)).Where("key = ?", domain.SettingPasswordHash).Exists(ctx)
 }

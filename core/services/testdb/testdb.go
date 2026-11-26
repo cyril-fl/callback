@@ -4,9 +4,12 @@ package testdb
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/process/createschema"
 	"github.com/cyril-fl/callback/core/services/sqlite"
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
 
@@ -24,4 +27,15 @@ func New(t testing.TB) *bun.DB {
 		t.Fatalf("create schema: %v", schema.GetErr())
 	}
 	return db
+}
+
+// Account creates the account name in db and returns a ctx acting for it. No real password: hashing one would only
+// slow the tests down; setpassword sets one.
+func Account(t testing.TB, db bun.IDB, name string) context.Context {
+	t.Helper()
+	user := domain.User{ID: uuid.NewString(), Name: name, PasswordHash: "-", CreatedAt: time.Now().UTC()}
+	if _, err := db.NewInsert().Model(&user).Exec(context.Background()); err != nil {
+		t.Fatalf("test account: %v", err)
+	}
+	return domain.WithUser(context.Background(), user.ID)
 }

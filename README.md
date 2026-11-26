@@ -23,6 +23,7 @@ volume. Pushing a `v*` tag builds and publishes it (`:<version>` and `:latest`, 
 1. On the server, copy `compose.prod.yaml` and `.env.example` (as `.env`) into a folder, and fill `.env`:
    - `CALLBACK_PASSWORD`: the password, 8 characters or more. It is read only on the first start, when the base is
      empty; change it later with `docker compose -f compose.prod.yaml exec callback /callback-server --db /data/callback.db reset-password`.
+   - `CALLBACK_USER` (optional, `admin` by default): the name of the account; set it later to rename the account.
    - `CALLBACK_ORIGIN`: the address you open in the browser, e.g. `https://callback.<tailnet>.ts.net`.
 2. If the GitHub package is private: `docker login ghcr.io` with a token that can read packages.
 3. `docker compose -f compose.prod.yaml up -d`. Update: `docker compose -f compose.prod.yaml pull && docker compose -f compose.prod.yaml up -d`.

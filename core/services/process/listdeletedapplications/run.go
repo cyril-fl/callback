@@ -51,5 +51,5 @@ func (p *run) loadDeleted() {
 		return
 	}
 	p.cache.result = []domain.DeletedApplication{}
-	p.SetErr(p.db.NewSelect().Model(&p.cache.result).Where("deleted_at >= ?", since).Order("deleted_at DESC").Scan(p.ctx))
+	p.SetErr(p.db.NewSelect().Model(&p.cache.result).Where("deleted_at >= ? AND user_id = ?", since, domain.UserID(p.ctx)).Order("deleted_at DESC").Scan(p.ctx))
 }

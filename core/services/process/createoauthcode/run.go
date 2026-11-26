@@ -34,7 +34,8 @@ type run struct {
 }
 
 type cache struct {
-	code string
+	userID string
+	code   string
 }
 
 // Process checks the password and gives an authorization code for the client: the consent, without a session
@@ -61,7 +62,9 @@ func (p *run) GetResult() string {
 
 // Methods
 func (p *run) checkPassword() {
-	p.SetErr(createsession.CheckPassword(p.ctx, p.db, p.input.Password))
+	userID, err := createsession.CheckPassword(p.ctx, p.db, p.input.Password)
+	p.cache.userID = userID
+	p.SetErr(err)
 }
 
 func (p *run) saveCode() {
@@ -71,6 +74,7 @@ func (p *run) saveCode() {
 	code := password.Token()
 	row := domain.OAuthCode{
 		CodeHash:      password.TokenHash(code),
+		UserID:        p.cache.userID,
 		ClientID:      p.input.ClientID,
 		RedirectURI:   p.input.RedirectURI,
 		CodeChallenge: p.input.CodeChallenge,

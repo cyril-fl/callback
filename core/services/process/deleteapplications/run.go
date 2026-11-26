@@ -75,7 +75,7 @@ func (p *run) deleteApplications() {
 	}
 	err := p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		// SQLite's DELETE has no alias for the filter's a.: the rows are picked by a SELECT.
-		picked := tx.NewSelect().Model((*domain.Application)(nil)).Column("id").ApplyQueryBuilder(appfilter.Where(p.input.Filter))
+		picked := tx.NewSelect().Model((*domain.Application)(nil)).Column("id").ApplyQueryBuilder(appfilter.Where(ctx, p.input.Filter))
 		now := time.Now().UTC()
 		ids, err := trash.Throw(ctx, tx, picked, now)
 		if err != nil {

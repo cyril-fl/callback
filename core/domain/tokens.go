@@ -19,22 +19,12 @@ const (
 	TokenOAuth TokenKind = "oauth"
 )
 
-// Setting keys.
-const SettingPasswordHash = "password_hash"
-
-// Setting is a value of the one account: its password hash, its preferences.
-type Setting struct {
-	bun.BaseModel `bun:"table:settings,alias:s"`
-
-	Key   string `bun:",pk"`
-	Value string `bun:",notnull"`
-}
-
 // Token lets a client in. The base keeps the SHA-256 of the token, never the token.
 type Token struct {
 	bun.BaseModel `bun:"table:tokens,alias:t" json:"-"`
 
 	ID         string    `bun:",pk" json:"id"`
+	UserID     string    `bun:",notnull,default:''" json:"-"`
 	Kind       TokenKind `bun:",notnull" json:"kind" enums:"session,api,oauth"`
 	Name       string    `bun:",notnull,default:''" json:"name"`
 	Hash       string    `bun:",notnull,unique" json:"-"`
@@ -54,6 +44,7 @@ type OAuthCode struct {
 	bun.BaseModel `bun:"table:oauth_codes,alias:oc"`
 
 	CodeHash      string    `bun:",pk"`
+	UserID        string    `bun:",notnull,default:''"`
 	ClientID      string    `bun:",notnull"`
 	RedirectURI   string    `bun:",notnull"`
 	CodeChallenge string    `bun:",notnull"`

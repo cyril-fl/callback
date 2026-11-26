@@ -113,7 +113,7 @@ func (p *run) saveToken() {
 	now := time.Now().UTC()
 	p.cache.result.Token = Prefix + password.Token()
 	token := &p.cache.result.APIToken
-	*token = domain.Token{ID: uuid.NewString(), Kind: domain.TokenAPI, Name: p.input.Name, Hash: password.TokenHash(p.cache.result.Token), ReadOnly: p.input.ReadOnly, CreatedAt: now}
+	*token = domain.Token{ID: uuid.NewString(), UserID: domain.UserID(p.ctx), Kind: domain.TokenAPI, Name: p.input.Name, Hash: password.TokenHash(p.cache.result.Token), ReadOnly: p.input.ReadOnly, CreatedAt: now}
 	if p.cache.lifetime > 0 {
 		token.ExpiresAt = now.Add(p.cache.lifetime)
 	}

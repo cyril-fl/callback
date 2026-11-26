@@ -63,7 +63,7 @@ func (p *run) markApplications() {
 	}
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		var applications []domain.Application
-		if err := tx.NewSelect().Model(&applications).Column("a.id", "a.status").ApplyQueryBuilder(appfilter.Where(filter)).Scan(ctx); err != nil || len(applications) == 0 {
+		if err := tx.NewSelect().Model(&applications).Column("a.id", "a.status").ApplyQueryBuilder(appfilter.Where(ctx, filter)).Scan(ctx); err != nil || len(applications) == 0 {
 			return err
 		}
 		ids := make([]string, len(applications))

@@ -101,6 +101,7 @@ func init() {
 	}
 	cmdRoot.PersistentFlags().String("db", dbPath, "SQLite file of the base, created when missing ("+config.Env("DB")+")")
 	plumcliutilsargs.Makeflags(cmdServe, cmd.Serve.Flags)
+	plumcliutilsargs.Makeflags(cmdResetPassword, cmd.ResetPassword.Flags)
 	cmdRoot.AddCommand(cmdServe, cmdResetPassword, cmdBackup)
 }
 

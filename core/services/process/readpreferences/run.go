@@ -1,4 +1,4 @@
-// Package readpreferences gives the preferences of the account, the defaults where none was saved.
+// Package readpreferences gives the preferences of the account of ctx, the defaults where none was saved.
 package readpreferences
 
 import (
@@ -43,8 +43,9 @@ func (p *run) GetResult() domain.Preferences {
 // Methods
 func (p *run) loadPreferences() {
 	p.cache.result = domain.DefaultPreferences
-	var setting domain.Setting
-	err := p.db.NewSelect().Model(&setting).Where("key = ?", domain.SettingPreferences).Scan(p.ctx)
+	// The raw JSON, not domain.User: it is read over the defaults.
+	var value string
+	err := p.db.NewSelect().Model((*domain.User)(nil)).Column("preferences").Where("id = ?", domain.UserID(p.ctx)).Scan(p.ctx, &value)
 	if errors.Is(err, sql.ErrNoRows) {
 		return
 	}
@@ -53,5 +54,5 @@ func (p *run) loadPreferences() {
 		return
 	}
 	// Over the defaults: a preference added since keeps its default.
-	p.SetErr(json.Unmarshal([]byte(setting.Value), &p.cache.result))
+	p.SetErr(json.Unmarshal([]byte(value), &p.cache.result))
 }

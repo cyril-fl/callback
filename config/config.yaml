@@ -6,7 +6,7 @@ commands:
   serve:
     use: "serve"
     short: "Serve the API"
-    long: "Serve the API on --addr, the web app of --web next to it, and the MCP over HTTP with its OAuth on --mcp-addr. On an empty base, {NAME}_PASSWORD sets the password."
+    long: "Serve the API on --addr, the web app of --web next to it, and the MCP over HTTP with its OAuth on --mcp-addr. On an empty base, {NAME}_PASSWORD sets the password of the account named {NAME}_USER (admin by default); {NAME}_USER renames the one account of a base."
     example: "{NAME}_PASSWORD=change-me {name}-server serve --db ./data/{name}.db --web ./web/.output/public"
     args:
       - name: "addr"
@@ -42,8 +42,14 @@ commands:
   reset-password:
     use: "reset-password"
     short: "Change the password"
-    long: "Change the password, read from {NAME}_PASSWORD or asked on the terminal. Every session and token stays valid but the sessions: they log out."
+    long: "Change the password of an account, read from {NAME}_PASSWORD or asked on the terminal. Every session and token stays valid but the account's sessions: they log out."
     example: "{NAME}_PASSWORD=new-one {name}-server reset-password"
+    args:
+      - name: "user"
+        shorthand: ""
+        value: ""
+        usage: "Name of the account, needed only when the base has several"
+        type: "string"
   backup:
     use: "backup <file>"
     short: "Copy the base to a file"

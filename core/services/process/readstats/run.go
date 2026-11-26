@@ -70,7 +70,7 @@ func (p *run) count() {
 		Source domain.Source
 		Count  int
 	}
-	err := p.db.NewSelect().Model((*domain.Application)(nil)).Column("status", "source").ColumnExpr("count(*) AS count").Group("status", "source").ApplyQueryBuilder(appfilter.Where(p.filter)).Scan(p.ctx, &rows)
+	err := p.db.NewSelect().Model((*domain.Application)(nil)).Column("status", "source").ColumnExpr("count(*) AS count").Group("status", "source").ApplyQueryBuilder(appfilter.Where(p.ctx, p.filter)).Scan(p.ctx, &rows)
 	if err != nil {
 		p.SetErr(err)
 		return

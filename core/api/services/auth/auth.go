@@ -31,7 +31,7 @@ func Current(ctx context.Context) domain.Token {
 	return token
 }
 
-// New runs next with the request's token in its context: the cookie, or "Authorization: Bearer <token>" for the
+// New runs next with the request's token and its account in its context (domain.UserID): the cookie, or "Authorization: Bearer <token>" for the
 // CLI, scripts and agents. Without a valid one, 401.
 func New(db bun.IDB, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,8 @@ func New(db bun.IDB, next http.Handler) http.Handler {
 				return
 			}
 		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), key{}, token)))
+		ctx := domain.WithUser(context.WithValue(r.Context(), key{}, token), token.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

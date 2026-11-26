@@ -1,7 +1,6 @@
 package createapplications_test
 
 import (
-	"context"
 	"errors"
 	"slices"
 	"strings"
@@ -15,7 +14,7 @@ import (
 // The valid items of a batch are written, the invalid ones listed by index; the defaults fill what is left out.
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
+	ctx := testdb.Account(t, db, "test")
 	items := []domain.NewApplication{
 		{Company: " Acme ", Location: "Paris"},
 		{Company: "", Location: "Lyon"},
@@ -70,8 +69,9 @@ func TestRun(t *testing.T) {
 
 func TestLimits(t *testing.T) {
 	db := testdb.New(t)
+	ctx := testdb.Account(t, db, "test")
 	for _, items := range [][]domain.NewApplication{nil, make([]domain.NewApplication, domain.MaxBatch+1)} {
-		process := createapplications.Process(context.Background(), db, items)
+		process := createapplications.Process(ctx, db, items)
 		process.Run()
 		if !errors.Is(process.GetErr(), domain.ErrInvalid) {
 			t.Errorf("%d items: err = %v, want invalid", len(items), process.GetErr())
@@ -82,7 +82,7 @@ func TestLimits(t *testing.T) {
 // A source written with another case reuses the name in use, in the base and in the batch; an item reports all its errors.
 func TestSourceCaseAndErrors(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
+	ctx := testdb.Account(t, db, "test")
 	first := createapplications.Process(ctx, db, []domain.NewApplication{{Company: "A", Location: "Paris", Source: "LinkedIn"}})
 	first.Run()
 	process := createapplications.Process(ctx, db, []domain.NewApplication{

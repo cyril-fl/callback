@@ -16,6 +16,7 @@ import (
 
 	"github.com/cyril-fl/callback/core/api"
 	"github.com/cyril-fl/callback/core/api/services/guard"
+	"github.com/cyril-fl/callback/core/domain"
 	"github.com/cyril-fl/callback/core/services/process/markunanswered"
 	"github.com/cyril-fl/callback/core/services/process/purgetokens"
 	"github.com/cyril-fl/callback/core/services/process/readpreferences"
@@ -130,8 +131,21 @@ func Serve(cobra *cobra.Command, db *bun.DB) error {
 	return nil
 }
 
-// markUnanswered moves to no_reply the applications the preferences say nobody will answer.
+// markUnanswered moves to no_reply the applications each account's preferences say nobody will answer.
 func markUnanswered(ctx context.Context, db bun.IDB) {
+	var users []string
+	if err := db.NewSelect().Model((*domain.User)(nil)).Column("id").Scan(ctx, &users); err != nil {
+		if ctx.Err() == nil {
+			log.Printf("list users: %v", err)
+		}
+		return
+	}
+	for _, user := range users {
+		markUserUnanswered(domain.WithUser(ctx, user), db)
+	}
+}
+
+func markUserUnanswered(ctx context.Context, db bun.IDB) {
 	preferences := readpreferences.Process(ctx, db)
 	preferences.Run()
 	if preferences.HasErr() {

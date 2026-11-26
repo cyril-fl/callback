@@ -1,8 +1,5 @@
 package domain
 
-// SettingPreferences is the key of the preferences, stored as JSON in the settings.
-const SettingPreferences = "preferences"
-
 // The plans of the web app: base keeps the interface to the list and its form, pro adds the dashboard and the tools.
 const (
 	PlanBase = "base"
@@ -26,7 +23,7 @@ var (
 	ErrLongDefault     = Invalid("default_location and default_country have at most 200 characters")
 )
 
-// Preferences are the settings of the one account that follow it on every device; the theme stays on each device.
+// Preferences are the settings of an account that follow it on every device; the theme stays on each device.
 type Preferences struct {
 	Plan string `json:"plan" enums:"base,pro"`
 	// DefaultLocation and DefaultCountry fill a new application of the web app; both may be empty.
@@ -41,7 +38,7 @@ type Preferences struct {
 	TrashDays int `json:"trash_days"`
 }
 
-// DefaultPreferences are the preferences of a base that never saved any.
+// DefaultPreferences are the preferences of an account that never saved any.
 var DefaultPreferences = Preferences{Plan: PlanBase, FollowUpDays: 7, NoReplyDays: 10, TrashDays: 30}
 
 // Validate checks preferences as they will be stored.

@@ -33,7 +33,7 @@ func (p *run) Run() {
 
 // Methods
 func (p *run) deleteToken() {
-	result, err := p.db.NewDelete().Model((*domain.Token)(nil)).Where("id = ? AND kind != ?", p.id, domain.TokenSession).Exec(p.ctx)
+	result, err := p.db.NewDelete().Model((*domain.Token)(nil)).Where("id = ? AND kind != ? AND user_id = ?", p.id, domain.TokenSession, domain.UserID(p.ctx)).Exec(p.ctx)
 	if err != nil {
 		p.SetErr(err)
 		return

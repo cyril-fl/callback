@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/appfilter"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -44,12 +45,16 @@ func (p *run) GetResult() int {
 
 func (p *run) purge() {
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil), (*domain.DeletedApplication)(nil)} {
-			if _, err := tx.NewDelete().Model(model).Where("1 = 1").Exec(ctx); err != nil {
+		for _, model := range []any{(*domain.StatusChange)(nil), (*domain.FollowUp)(nil)} {
+			if _, err := tx.NewDelete().Model(model).ApplyQueryBuilder(appfilter.History(ctx)).Exec(ctx); err != nil {
 				return err
 			}
 		}
-		result, err := tx.NewDelete().Model((*domain.Application)(nil)).Where("1 = 1").Exec(ctx)
+		user := domain.UserID(ctx)
+		if _, err := tx.NewDelete().Model((*domain.DeletedApplication)(nil)).Where("user_id = ?", user).Exec(ctx); err != nil {
+			return err
+		}
+		result, err := tx.NewDelete().Model((*domain.Application)(nil)).Where("user_id = ?", user).Exec(ctx)
 		if err != nil {
 			return err
 		}

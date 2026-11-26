@@ -25,9 +25,9 @@ import (
 // A connection from the consent to its revocation: a code that serves once and only with its verifier, an access token
 // that reads as an oauth token, a refresh that kills the old tokens, a revocation that kills both.
 func TestOAuthConnection(t *testing.T) {
-	ctx := context.Background()
 	db := testdb.New(t)
-	set := setpassword.Process(ctx, db, "correct horse")
+	ctx := testdb.Account(t, db, "test")
+	set := setpassword.Process(ctx, db, domain.UserID(ctx), "correct horse")
 	set.Run()
 	if set.HasErr() {
 		t.Fatal(set.GetErr())

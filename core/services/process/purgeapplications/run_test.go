@@ -1,7 +1,6 @@
 package purgeapplications_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/cyril-fl/callback/core/domain"
@@ -13,8 +12,8 @@ import (
 // The applications and their history go; the rest of the base stays.
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris"},
 		domain.NewApplication{Company: "Globex", Location: "Lyon"},
 	)

@@ -1,7 +1,6 @@
 package forgetapplications_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -14,8 +13,8 @@ import (
 
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris"},
 		domain.NewApplication{Company: "Globex", Location: "Lyon"},
 		domain.NewApplication{Company: "Initech", Location: "Lille"},

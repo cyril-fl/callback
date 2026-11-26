@@ -1,7 +1,6 @@
 package restoreapplications_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -16,8 +15,8 @@ import (
 
 func TestRun(t *testing.T) {
 	db := testdb.New(t)
-	ctx := context.Background()
-	ids := seed.Applications(t, db,
+	ctx := testdb.Account(t, db, "test")
+	ids := seed.Applications(t, ctx, db,
 		domain.NewApplication{Company: "Acme", Location: "Paris", Status: domain.StatusInterview, Rating: 4},
 		domain.NewApplication{Company: "Globex", Location: "Lyon"},
 	)

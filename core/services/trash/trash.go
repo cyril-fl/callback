@@ -20,16 +20,17 @@ func Since(ctx context.Context, db bun.IDB, now time.Time) (time.Time, error) {
 	return now.AddDate(0, 0, -preferences.GetResult().TrashDays), nil
 }
 
-// Throw moves the applications of picked, a SELECT of their ids, to the trash, and returns their ids.
+// Throw moves the applications of picked, a SELECT of their ids, to the trash, and returns their ids. Like Restore,
+// Empty and Forget, it touches the account of ctx only.
 func Throw(ctx context.Context, tx bun.IDB, picked *bun.SelectQuery, now time.Time) ([]string, error) {
 	var applications []domain.Application
-	if err := tx.NewSelect().Model(&applications).Where("id IN (?)", picked).Scan(ctx); err != nil || len(applications) == 0 {
+	if err := tx.NewSelect().Model(&applications).Where("id IN (?)", picked).Where("user_id = ?", domain.UserID(ctx)).Scan(ctx); err != nil || len(applications) == 0 {
 		return nil, err
 	}
 	deleted := make([]domain.DeletedApplication, len(applications))
 	ids := make([]string, len(applications))
 	for i, application := range applications {
-		deleted[i] = domain.DeletedApplication{ID: application.ID, Application: application, DeletedAt: now}
+		deleted[i] = domain.DeletedApplication{ID: application.ID, UserID: application.UserID, Application: application, DeletedAt: now}
 		ids[i] = application.ID
 	}
 	if _, err := tx.NewInsert().Model(&deleted).Exec(ctx); err != nil {
@@ -42,13 +43,14 @@ func Throw(ctx context.Context, tx bun.IDB, picked *bun.SelectQuery, now time.Ti
 // Restore moves the applications of ids back from the trash, and returns the ids it found.
 func Restore(ctx context.Context, tx bun.IDB, ids []string) ([]string, error) {
 	var deleted []domain.DeletedApplication
-	if err := tx.NewSelect().Model(&deleted).Where("id IN (?)", bun.List(ids)).Scan(ctx); err != nil || len(deleted) == 0 {
+	if err := tx.NewSelect().Model(&deleted).Where("id IN (?)", bun.List(ids)).Where("user_id = ?", domain.UserID(ctx)).Scan(ctx); err != nil || len(deleted) == 0 {
 		return nil, err
 	}
 	applications := make([]domain.Application, len(deleted))
 	restored := make([]string, len(deleted))
 	for i, d := range deleted {
 		applications[i] = d.Application
+		applications[i].UserID = d.UserID
 		restored[i] = d.ID
 	}
 	if _, err := tx.NewInsert().Model(&applications).Exec(ctx); err != nil {
@@ -64,7 +66,7 @@ func Empty(ctx context.Context, tx bun.IDB, now time.Time) error {
 	if err != nil {
 		return err
 	}
-	_, err = Forget(ctx, tx, tx.NewSelect().Model((*domain.DeletedApplication)(nil)).Column("id").Where("deleted_at < ?", before))
+	_, err = Forget(ctx, tx, tx.NewSelect().Model((*domain.DeletedApplication)(nil)).Column("id").Where("deleted_at < ?", before).Where("user_id = ?", domain.UserID(ctx)))
 	return err
 }
 
@@ -72,7 +74,7 @@ func Empty(ctx context.Context, tx bun.IDB, now time.Time) error {
 // returns their ids.
 func Forget(ctx context.Context, tx bun.IDB, picked *bun.SelectQuery) ([]string, error) {
 	var ids []string
-	if err := tx.NewRaw("DELETE FROM deleted_applications WHERE id IN (?) RETURNING id", picked).Scan(ctx, &ids); err != nil || len(ids) == 0 {
+	if err := tx.NewRaw("DELETE FROM deleted_applications WHERE id IN (?) AND user_id = ? RETURNING id", picked, domain.UserID(ctx)).Scan(ctx, &ids); err != nil || len(ids) == 0 {
 		return nil, err
 	}
 	for _, table := range []string{"status_changes", "follow_ups"} {

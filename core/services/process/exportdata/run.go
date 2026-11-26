@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cyril-fl/callback/core/domain"
+	"github.com/cyril-fl/callback/core/services/appfilter"
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
@@ -52,16 +53,17 @@ func (p *run) loadBackup() {
 		FollowUps:     []domain.FollowUp{},
 	}
 	p.SetErr(p.db.RunInTx(p.ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		if err := tx.NewSelect().Model(&backup.Applications).Order("a.created_at", "a.id").Scan(ctx); err != nil {
+		user := domain.UserID(ctx)
+		if err := tx.NewSelect().Model(&backup.Applications).Where("user_id = ?", user).Order("a.created_at", "a.id").Scan(ctx); err != nil {
 			return err
 		}
-		if err := tx.NewSelect().Model(&backup.Deleted).Order("da.deleted_at", "da.id").Scan(ctx); err != nil {
+		if err := tx.NewSelect().Model(&backup.Deleted).Where("user_id = ?", user).Order("da.deleted_at", "da.id").Scan(ctx); err != nil {
 			return err
 		}
-		if err := tx.NewSelect().Model(&backup.StatusChanges).Order("sc.id").Scan(ctx); err != nil {
+		if err := tx.NewSelect().Model(&backup.StatusChanges).ApplyQueryBuilder(appfilter.History(ctx)).Order("sc.id").Scan(ctx); err != nil {
 			return err
 		}
-		return tx.NewSelect().Model(&backup.FollowUps).Order("fu.id").Scan(ctx)
+		return tx.NewSelect().Model(&backup.FollowUps).ApplyQueryBuilder(appfilter.History(ctx)).Order("fu.id").Scan(ctx)
 	}))
 	p.cache.result = backup
 }

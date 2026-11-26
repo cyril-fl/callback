@@ -121,6 +121,7 @@ func (p *run) saveToken() {
 	result, row := NewTokens()
 	row.ID = uuid.NewString()
 	row.Kind = domain.TokenOAuth
+	row.UserID = p.cache.code.UserID
 	row.Name = p.input.ClientName
 	row.ReadOnly = p.cache.code.ReadOnly
 	row.ClientID = p.cache.code.ClientID

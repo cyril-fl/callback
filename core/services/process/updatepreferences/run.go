@@ -1,4 +1,4 @@
-// Package updatepreferences changes the preferences of the account: those left out keep their value.
+// Package updatepreferences changes the preferences of the account of ctx: those left out keep their value.
 package updatepreferences
 
 import (
@@ -10,6 +10,8 @@ import (
 	plumprimitive "github.com/cyril-fl/plum/primitive"
 	"github.com/uptrace/bun"
 )
+
+var ErrNoUser = domain.NotFound("no such account")
 
 type run struct {
 	plumprimitive.Process
@@ -71,7 +73,12 @@ func (p *run) savePreferences() {
 		p.SetErr(err)
 		return
 	}
-	setting := domain.Setting{Key: domain.SettingPreferences, Value: string(value)}
-	_, err = p.db.NewInsert().Model(&setting).On("CONFLICT (key) DO UPDATE").Set("value = EXCLUDED.value").Exec(p.ctx)
-	p.SetErr(err)
+	result, err := p.db.NewUpdate().Model((*domain.User)(nil)).Set("preferences = ?", string(value)).Where("id = ?", domain.UserID(p.ctx)).Exec(p.ctx)
+	if err != nil {
+		p.SetErr(err)
+		return
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		p.SetErr(ErrNoUser)
+	}
 }

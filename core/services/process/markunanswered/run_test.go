@@ -1,7 +1,6 @@
 package markunanswered_test
 
 import (
-	"context"
 	"slices"
 	"testing"
 	"time"
@@ -16,8 +15,8 @@ import (
 // Only the applications waiting without news for the delay move, the last follow-up restarting it, with a change
 // undo_status takes back; 0 moves none.
 func TestRun(t *testing.T) {
-	ctx := context.Background()
 	db := testdb.New(t)
+	ctx := testdb.Account(t, db, "test")
 	now := time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
 	create := createapplications.Process(ctx, db, []domain.NewApplication{
 		{Company: "Old", Location: "Paris", AppliedAt: "2026-01-01"},

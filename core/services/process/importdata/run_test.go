@@ -18,8 +18,8 @@ import (
 // An export restores into an empty base with its history and trash; importing it again changes nothing, and an
 // invalid application is listed without stopping the others.
 func TestRoundTrip(t *testing.T) {
-	ctx := context.Background()
 	from := testdb.New(t)
+	ctx := testdb.Account(t, from, "test")
 	create := createapplications.Process(ctx, from, []domain.NewApplication{{Company: "Acme", Location: "Paris"}, {Company: "Globex", Location: "Lille"}})
 	create.Run()
 	ids := create.GetResult().IDs

@@ -75,10 +75,12 @@ func (p *run) restore() {
 			return err
 		}
 		now := time.Now().UTC()
+		user := domain.UserID(ctx)
 		added := map[string]bool{}
 		// check readies an application as a creation would; a kept one returns true.
 		check := func(application *domain.Application, failure domain.BatchFailure) bool {
 			id := application.ID
+			application.UserID = user
 			application.Normalize()
 			application.Source = known.Match(application.Source)
 			if application.CreatedAt.IsZero() {
@@ -113,6 +115,7 @@ func (p *run) restore() {
 		for _, item := range p.backup.Deleted {
 			// The trash's restore inserts the application as it is: its id must be the item's.
 			item.Application.ID = item.ID
+			item.UserID = user
 			if item.DeletedAt.IsZero() {
 				item.DeletedAt = now
 			}

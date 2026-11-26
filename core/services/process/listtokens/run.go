@@ -39,6 +39,6 @@ func (p *run) GetResult() []domain.Token {
 
 // Methods
 func (p *run) loadTokens() {
-	err := p.db.NewSelect().Model(&p.cache.result).Where("kind != ?", domain.TokenSession).Order("created_at DESC").Scan(p.ctx)
+	err := p.db.NewSelect().Model(&p.cache.result).Where("kind != ? AND user_id = ?", domain.TokenSession, domain.UserID(p.ctx)).Order("created_at DESC").Scan(p.ctx)
 	p.SetErr(err)
 }

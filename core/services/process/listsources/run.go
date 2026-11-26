@@ -46,7 +46,7 @@ func (p *run) GetResult() []Source {
 // Methods
 func (p *run) loadSources() {
 	err := p.db.NewSelect().Model((*domain.Application)(nil)).
-		Column("source").ColumnExpr("count(*) AS count").
+		Column("source").ColumnExpr("count(*) AS count").Where("user_id = ?", domain.UserID(p.ctx)).
 		Group("source").OrderExpr("count DESC, source").
 		Scan(p.ctx, &p.cache.result)
 	p.SetErr(err)
