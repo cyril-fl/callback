@@ -5,6 +5,7 @@ export function useIcons() {
     add: 'i-lucide-plus',
     edit: 'i-lucide-pencil',
     delete: 'i-lucide-trash-2',
+    more: 'i-lucide-ellipsis',
     trash: 'i-lucide-trash-2',
     restore: 'i-lucide-undo-2',
     reset: 'i-lucide-rotate-ccw',

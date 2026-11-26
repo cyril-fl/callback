@@ -441,6 +441,7 @@ function exportCsv() {
       @move="setStatus"
       @follow-up="markFollowedUp"
       @edit="openForm"
+      @remove="askDelete"
     />
     <UTable
       v-if="view === 'table'"

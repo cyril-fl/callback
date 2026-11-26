@@ -11,6 +11,7 @@ const emit = defineEmits<{
   move: [app: Application, status: Status];
   edit: [app: Application];
   followUp: [app: Application];
+  remove: [app: Application];
 }>();
 
 const { t } = useI18n();
@@ -53,6 +54,26 @@ function drop(column: { status: Status; statuses: Status[] }) {
   dragged.value = undefined;
   over.value = undefined;
 }
+
+// The card's actions, on a right click or its "…" button (keyboard, touch): the table's same paths.
+const menu = (app: Application) => [
+  [
+    { label: t('common.edit'), icon: icons.edit, onSelect: () => emit('edit', app) },
+    ...(canFollowUp(app, props.followUpSince)
+      ? [{ label: t('table.markFollowedUp'), icon: icons.followUp, onSelect: () => emit('followUp', app) }]
+      : []),
+    {
+      label: t('table.changeStatus'),
+      children: STATUSES.map((s) => ({
+        label: t(`status.${s}`),
+        type: 'checkbox' as const,
+        checked: app.status === s,
+        onSelect: () => emit('move', app, s),
+      })),
+    },
+  ],
+  [{ label: t('common.delete'), icon: icons.delete, color: 'error' as const, onSelect: () => emit('remove', app) }],
+];
 
 // The card's facts as icons, one group, the detail in a tooltip.
 type Badge = { icon: string; label: string; href?: string };
@@ -118,82 +139,94 @@ const day = (v?: string) =>
       </header>
 
       <div class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 pb-2.5">
-        <div
-          v-for="app in column.items"
-          :key="app.id"
-          role="button"
-          tabindex="0"
-          draggable="true"
-          class="group cursor-pointer rounded-lg bg-default p-4 shadow-xs ring-1 ring-default/50 transition hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
-          :class="dragged?.id === app.id ? 'opacity-40' : ''"
-          :aria-label="`${app.company}, ${app.location}`"
-          @click="emit('edit', app)"
-          @keydown.enter.prevent="emit('edit', app)"
-          @dragstart="dragged = app"
-          @dragend="
-            dragged = undefined;
-            over = undefined;
-          "
-        >
-          <div class="flex items-center gap-2">
-            <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ app.company }}</p>
-            <UInputRating
-              :icon="icons.rating"
-              :empty-icon="icons.ratingEmpty"
-              :model-value="app.rating ?? 0"
-              readonly
-              size="xs"
-              class="shrink-0"
-            />
-          </div>
-          <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
-            <UIcon :name="icons.location" class="size-3 shrink-0" />{{
-              [app.location, countries.label(app.country)].filter(Boolean).join(', ')
-            }}
-          </p>
-          <div class="mt-4 flex items-center gap-2 text-xs text-muted">
-            <span class="flex items-center gap-1.5">
-              <UTooltip
-                v-for="badge in badges(app)"
-                :key="badge.icon"
-                :text="badge.label"
-                :ui="{ content: 'h-auto max-w-72', text: 'line-clamp-6 whitespace-pre-line' }"
-              >
-                <a
-                  v-if="badge.href"
-                  :href="badge.href"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="flex hover:text-highlighted"
-                  :aria-label="badge.label"
+        <UContextMenu v-for="app in column.items" :key="app.id" :items="menu(app)">
+          <div
+            role="button"
+            tabindex="0"
+            draggable="true"
+            class="group cursor-pointer rounded-lg bg-default p-4 shadow-xs ring-1 ring-default/50 transition hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
+            :class="dragged?.id === app.id ? 'opacity-40' : ''"
+            :aria-label="`${app.company}, ${app.location}`"
+            @click="emit('edit', app)"
+            @keydown.enter.prevent="emit('edit', app)"
+            @dragstart="dragged = app"
+            @dragend="
+              dragged = undefined;
+              over = undefined;
+            "
+          >
+            <div class="flex items-center gap-2">
+              <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ app.company }}</p>
+              <UInputRating
+                :icon="icons.rating"
+                :empty-icon="icons.ratingEmpty"
+                :model-value="app.rating ?? 0"
+                readonly
+                size="xs"
+                class="shrink-0"
+              />
+              <UDropdownMenu :items="menu(app)">
+                <UButton
+                  :icon="icons.more"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  class="-my-1 -mr-2"
+                  :aria-label="t('table.actions')"
                   @click.stop
                   @keydown.enter.stop
+                />
+              </UDropdownMenu>
+            </div>
+            <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
+              <UIcon :name="icons.location" class="size-3 shrink-0" />{{
+                [app.location, countries.label(app.country)].filter(Boolean).join(', ')
+              }}
+            </p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-muted">
+              <span class="flex items-center gap-1.5">
+                <UTooltip
+                  v-for="badge in badges(app)"
+                  :key="badge.icon"
+                  :text="badge.label"
+                  :ui="{ content: 'h-auto max-w-72', text: 'line-clamp-6 whitespace-pre-line' }"
                 >
-                  <UIcon :name="badge.icon" class="size-3.5" />
-                </a>
-                <UIcon v-else :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
-              </UTooltip>
-            </span>
-            <UTooltip v-if="interview(app)" :text="t('form.interviewAt')">
-              <span class="flex items-center gap-1 font-medium text-highlighted">
-                <UIcon :name="icons.interview" class="size-3.5" />{{ interview(app) }}
+                  <a
+                    v-if="badge.href"
+                    :href="badge.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex hover:text-highlighted"
+                    :aria-label="badge.label"
+                    @click.stop
+                    @keydown.enter.stop
+                  >
+                    <UIcon :name="badge.icon" class="size-3.5" />
+                  </a>
+                  <UIcon v-else :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
+                </UTooltip>
               </span>
-            </UTooltip>
-            <UTooltip v-if="canFollowUp(app, followUpSince)" :text="t('table.markFollowedUp')">
-              <UButton
-                :icon="icons.followUp"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                class="-my-1"
-                :aria-label="t('table.markFollowedUp')"
-                @click.stop="emit('followUp', app)"
-                @keydown.enter.stop
-              />
-            </UTooltip>
-            <span class="ml-auto shrink-0 tabular-nums">{{ day(app.applied_at) }}</span>
+              <UTooltip v-if="interview(app)" :text="t('form.interviewAt')">
+                <span class="flex items-center gap-1 font-medium text-highlighted">
+                  <UIcon :name="icons.interview" class="size-3.5" />{{ interview(app) }}
+                </span>
+              </UTooltip>
+              <UTooltip v-if="canFollowUp(app, followUpSince)" :text="t('table.markFollowedUp')">
+                <UButton
+                  :icon="icons.followUp"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  class="-my-1"
+                  :aria-label="t('table.markFollowedUp')"
+                  @click.stop="emit('followUp', app)"
+                  @keydown.enter.stop
+                />
+              </UTooltip>
+              <span class="ml-auto shrink-0 tabular-nums">{{ day(app.applied_at) }}</span>
+            </div>
           </div>
-        </div>
+        </UContextMenu>
         <p
           v-if="column.items.length === 0"
           class="rounded-lg border border-dashed border-default p-4 text-center text-xs text-muted"
