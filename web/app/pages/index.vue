@@ -71,6 +71,8 @@ const followUpSince = computed(() => {
 });
 
 const sort = computed(() => {
+  // The kanban keeps the order its cards were dragged in.
+  if (view.value === 'kanban') return 'position';
   const s = sorting.value[0];
   return s ? (s.desc ? '-' : '') + s.id : undefined;
 });
@@ -308,6 +310,15 @@ async function replay(request: () => Promise<BatchResult>) {
 const recordStatus = (ids: string[], status: Status) =>
   record({ undo: () => replay(patch(ids, { undo_status: true })), redo: () => replay(patch(ids, { status })) });
 
+// A drop on the kanban numbers its column again, in one request: the cards show there at once.
+function reorder(ids: string[]) {
+  applications.value = applications.value?.map((a) =>
+    ids.includes(a.id) ? { ...a, position: ids.indexOf(a.id) + 1 } : a,
+  );
+  const ops = ids.map((id, i) => ({ ids: [id], set: { position: i + 1 } }));
+  return write([], {}, () => api<BatchResult>('/api/applications', { method: 'PATCH', body: { ops } }));
+}
+
 // Any status is reachable; a step whose parts are empty (app/utils/workflow.ts) opens the interview modal.
 async function setStatus(app: Application, status: Status) {
   const from = app.status ?? 'applied';
@@ -496,6 +507,7 @@ function exportCsv() {
       :applications="applications ?? []"
       :status-color="statusColor"
       :follow-up-since="followUpSince"
+      @reorder="reorder"
       @move="setStatus"
       @follow-up="markFollowedUp"
       @edit="openForm"
