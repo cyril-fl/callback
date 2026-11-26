@@ -116,6 +116,9 @@ export function lastNews(a: Application, history: Map<string, StatusChange[]>) {
 /** The statuses that wait on the employer: an application in one of them and without news is to follow up. */
 export const FOLLOW_UP_STATUSES: Status[] = ['applied', 'responded', 'interview'];
 
+/** A website is a link; an address without a scheme is an e-mail to write to. */
+export const websiteHref = (v: string) => (v.includes('@') && !v.includes('://') ? `mailto:${v}` : v);
+
 /** Waiting on the employer and without news since limit, as the list's « À relancer »: the oldest news first. */
 export function toFollowUp(applications: Application[], history: Map<string, StatusChange[]>, limit: Date) {
   return applications

@@ -101,7 +101,8 @@
   },
   "kanban": {
     "dropHere": "Déposer ici",
-    "closed": "Sans suite"
+    "closed": "Sans suite",
+    "followedUpOn": "Relancée le {date}"
   },
   "form": {
     "add": "Nouvelle candidature",

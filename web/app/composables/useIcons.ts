@@ -15,6 +15,8 @@ export function useIcons() {
     contact: 'i-lucide-user-plus',
     person: 'i-lucide-contact',
     interview: 'i-lucide-calendar-clock',
+    comment: 'i-lucide-message-square-text',
+    followedUp: 'i-lucide-bell',
     mail: 'i-lucide-mail',
     website: 'i-lucide-external-link',
     calendar: 'i-lucide-calendar',

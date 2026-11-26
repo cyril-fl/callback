@@ -455,11 +455,7 @@ function exportCsv() {
       <template #company-cell="{ row }">
         <a
           v-if="row.original.website"
-          :href="
-            row.original.website.includes('@') && !row.original.website.includes('://')
-              ? `mailto:${row.original.website}`
-              : row.original.website
-          "
+          :href="websiteHref(row.original.website)"
           target="_blank"
           rel="noopener noreferrer"
           class="font-medium text-primary hover:underline"

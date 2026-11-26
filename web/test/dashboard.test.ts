@@ -13,6 +13,7 @@ import {
   statsOf,
   toFollowUp,
   upcomingInterviews,
+  websiteHref,
   weeksOf,
 } from '../app/utils/dashboard.ts';
 
@@ -171,4 +172,9 @@ test('the upcoming interviews are the ones from now on, the nearest first', () =
     upcomingInterviews(apps, new Date('2026-01-01T00:00:00')).map((a) => a.id),
     ['c', 'b'],
   );
+});
+
+test('websiteHref mails an address and links a site', () => {
+  assert.equal(websiteHref('jobs@acme.fr'), 'mailto:jobs@acme.fr');
+  assert.equal(websiteHref('https://acme.fr/@team'), 'https://acme.fr/@team');
 });

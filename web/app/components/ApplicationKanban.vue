@@ -54,7 +54,7 @@ function drop(column: { status: Status; statuses: Status[] }) {
 }
 
 // The card's facts as icons, one group, the detail in a tooltip.
-type Badge = { icon: string; label: string };
+type Badge = { icon: string; label: string; href?: string };
 const badges = (app: Application) =>
   [
     { icon: sourceIcon(app.source), label: sources.label(app.source) },
@@ -66,6 +66,12 @@ const badges = (app: Application) =>
       icon: icons.person,
       label: [app.contact_name, app.contact_email].filter(Boolean).join(' · '),
     },
+    app.website && { icon: icons.website, label: app.website, href: websiteHref(app.website) },
+    app.followed_up_at && {
+      icon: icons.followedUp,
+      label: t('kanban.followedUpOn', { date: day(app.followed_up_at) }),
+    },
+    app.comment && { icon: icons.comment, label: app.comment },
   ].filter((b): b is Badge => !!b);
 
 // "2026-01-31T14:30" is a local time: no timezone shift.
@@ -131,10 +137,9 @@ const day = (v?: string) =>
           <div class="flex items-center gap-2">
             <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ app.company }}</p>
             <UInputRating
-              v-if="app.rating"
               :icon="icons.rating"
               :empty-icon="icons.ratingEmpty"
-              :model-value="app.rating"
+              :model-value="app.rating ?? 0"
               readonly
               size="xs"
               class="shrink-0"
@@ -147,8 +152,25 @@ const day = (v?: string) =>
           </p>
           <div class="mt-4 flex items-center gap-2 text-xs text-muted">
             <span class="flex items-center gap-1.5">
-              <UTooltip v-for="badge in badges(app)" :key="badge.icon" :text="badge.label">
-                <UIcon :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
+              <UTooltip
+                v-for="badge in badges(app)"
+                :key="badge.icon"
+                :text="badge.label"
+                :ui="{ content: 'h-auto max-w-72', text: 'line-clamp-6 whitespace-pre-line' }"
+              >
+                <a
+                  v-if="badge.href"
+                  :href="badge.href"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex hover:text-highlighted"
+                  :aria-label="badge.label"
+                  @click.stop
+                  @keydown.enter.stop
+                >
+                  <UIcon :name="badge.icon" class="size-3.5" />
+                </a>
+                <UIcon v-else :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
               </UTooltip>
             </span>
             <UTooltip v-if="interview(app)" :text="t('form.interviewAt')">
