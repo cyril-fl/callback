@@ -244,143 +244,168 @@ const phone = useMediaQuery('(max-width: 639px)');
     :ui="{ description: 'sr-only', content: phone ? 'max-h-[90dvh] rounded-t-2xl' : pro ? 'sm:max-w-xl' : undefined }"
   >
     <template #body>
-      <UForm id="application-form" :schema="schema" :state="state" class="space-y-4" @submit="submit">
-        <UFormField
-          name="company"
-          :label="t('form.company')"
-          :help="previous?.applied_at ? t('form.appliedBefore', { date: day(previous.applied_at) }) : undefined"
-          required
-        >
-          <SuggestInput
-            :model-value="state.company"
-            :suggestions="places.companies.value"
-            class="w-full"
-            @update:model-value="pickCompany"
-          />
-        </UFormField>
-        <UFormField name="title" :label="t('form.title')">
-          <UInput v-model="state.title" class="w-full" />
-        </UFormField>
-        <UFormField name="website" :label="pro ? t('form.site') : t('form.website')">
-          <UInput v-model="state.website" placeholder="https://" class="w-full" />
-        </UFormField>
-
-        <div class="grid grid-cols-2 gap-3">
-          <UFormField name="location" :label="t('form.city')" required>
+      <UForm id="application-form" :schema="schema" :state="state" class="space-y-8" @submit="submit">
+        <fieldset class="space-y-4">
+          <legend
+            class="mb-3 w-full border-b border-default pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
+          >
+            {{ t('form.sections.company') }}
+          </legend>
+          <UFormField
+            name="company"
+            :label="t('form.company')"
+            :help="previous?.applied_at ? t('form.appliedBefore', { date: day(previous.applied_at) }) : undefined"
+            required
+          >
             <SuggestInput
-              :model-value="state.location"
-              :suggestions="places.cities.value"
+              :model-value="state.company"
+              :suggestions="places.companies.value"
               class="w-full"
-              @update:model-value="pickCity"
+              @update:model-value="pickCompany"
             />
           </UFormField>
-          <UFormField name="country" :label="t('form.country')">
-            <USelectMenu
-              v-model="state.country"
-              :items="countries.items.value"
+          <UFormField name="title" :label="t('form.title')">
+            <UInput v-model="state.title" class="w-full" />
+          </UFormField>
+          <UFormField name="website" :label="pro ? t('form.site') : t('form.website')">
+            <UInput v-model="state.website" placeholder="https://" class="w-full" />
+          </UFormField>
+
+          <div class="grid grid-cols-2 gap-3">
+            <UFormField name="location" :label="t('form.city')" required>
+              <SuggestInput
+                :model-value="state.location"
+                :suggestions="places.cities.value"
+                class="w-full"
+                @update:model-value="pickCity"
+              />
+            </UFormField>
+            <UFormField name="country" :label="t('form.country')">
+              <USelectMenu
+                v-model="state.country"
+                :items="countries.items.value"
+                value-key="value"
+                :placeholder="t('form.country')"
+                clear
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+          <div v-if="fullAddress" class="grid grid-cols-3 gap-3">
+            <UFormField name="street" :label="t('form.street')" class="col-span-2">
+              <UInput v-model="state.street" class="w-full" />
+            </UFormField>
+            <UFormField name="postal_code" :label="t('form.postalCode')">
+              <UInput v-model="state.postal_code" class="w-full" />
+            </UFormField>
+          </div>
+          <UButton
+            v-else
+            variant="link"
+            color="neutral"
+            size="sm"
+            :icon="icons.fullAddress"
+            :label="t('form.fullAddress')"
+            class="-mt-2 px-0"
+            @click="fullAddress = true"
+          />
+        </fieldset>
+        <fieldset class="space-y-4">
+          <legend
+            class="mb-3 w-full border-b border-default pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
+          >
+            {{ t('form.sections.application') }}
+          </legend>
+          <div class="grid grid-cols-2 gap-3">
+            <UFormField name="applied_at" :label="t('form.appliedAt')" required>
+              <UPopover>
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  :icon="icons.calendar"
+                  :label="state.applied_at ? day(state.applied_at) : t('form.pickDate')"
+                  class="w-full"
+                />
+                <template #content>
+                  <UCalendar v-model="appliedAt" class="p-2" />
+                </template>
+              </UPopover>
+            </UFormField>
+            <UFormField name="status" :label="t('form.status')">
+              <USelect v-model="state.status" :items="statusItems" class="w-full" />
+            </UFormField>
+          </div>
+          <UFormField name="source" :label="t('form.source')">
+            <UInputMenu
+              v-model="state.source"
+              v-model:search-term="sourceSearch"
+              :items="sourceItems"
               value-key="value"
-              :placeholder="t('form.country')"
-              clear
+              class="w-full"
+              :ui="{ content: 'has-data-[slot=empty]:hidden!' }"
+              @blur="createSource(sourceSearch)"
+              @keydown.enter="noneHighlighted($event) && createSource(sourceSearch)"
+            />
+          </UFormField>
+          <UFormField v-if="detail" name="source_detail" :label="detail.label" :required="detail.required">
+            <UInput
+              v-model="state.source_detail"
+              :type="detail.type"
+              :placeholder="detail.placeholder"
               class="w-full"
             />
           </UFormField>
-        </div>
-        <div v-if="fullAddress" class="grid grid-cols-3 gap-3">
-          <UFormField name="street" :label="t('form.street')" class="col-span-2">
-            <UInput v-model="state.street" class="w-full" />
+        </fieldset>
+        <fieldset v-if="pro || state.status === 'interview'" class="space-y-4">
+          <legend
+            class="mb-3 w-full border-b border-default pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
+          >
+            {{ t('form.sections.followUp') }}
+          </legend>
+          <UFormField v-if="!pro && state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
+            <DateTimeInput v-model="state.interview_at" class="w-full" />
           </UFormField>
-          <UFormField name="postal_code" :label="t('form.postalCode')">
-            <UInput v-model="state.postal_code" class="w-full" />
+
+          <template v-if="pro">
+            <!-- Like the base plan's field: from the interview status on, or once there is one. -->
+            <ListTable
+              v-if="state.status === 'interview' || state.interviews.length"
+              v-model="state.interviews"
+              name="interviews"
+              :title="t('form.interviews')"
+              :hint="state.interviews.length ? undefined : t('form.interviewsHint')"
+              :columns="interviewColumns"
+              :blank="(): Interview => ({ at: '', kind: 'other', note: '' })"
+              :sort="[{ id: 'at', desc: true }]"
+            />
+            <ListTable
+              v-model="state.contacts"
+              name="contacts"
+              :title="t('form.contacts')"
+              :columns="contactColumns"
+              :blank="(): Contact => ({ name: '', email: '', role: '' })"
+            />
+          </template>
+        </fieldset>
+        <fieldset class="space-y-4">
+          <legend
+            class="mb-3 w-full border-b border-default pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
+          >
+            {{ t('form.sections.notes') }}
+          </legend>
+          <UFormField name="rating" :label="t('form.rating')">
+            <UInputRating
+              v-model="state.rating"
+              :icon="icons.rating"
+              :empty-icon="icons.ratingEmpty"
+              clearable
+              size="lg"
+            />
           </UFormField>
-        </div>
-        <UButton
-          v-else
-          variant="link"
-          color="neutral"
-          size="sm"
-          :icon="icons.fullAddress"
-          :label="t('form.fullAddress')"
-          class="-mt-2 px-0"
-          @click="fullAddress = true"
-        />
-
-        <UFormField name="source" :label="t('form.source')">
-          <UInputMenu
-            v-model="state.source"
-            v-model:search-term="sourceSearch"
-            :items="sourceItems"
-            value-key="value"
-            class="w-full"
-            :ui="{ content: 'has-data-[slot=empty]:hidden!' }"
-            @blur="createSource(sourceSearch)"
-            @keydown.enter="noneHighlighted($event) && createSource(sourceSearch)"
-          />
-        </UFormField>
-        <UFormField v-if="detail" name="source_detail" :label="detail.label" :required="detail.required">
-          <UInput v-model="state.source_detail" :type="detail.type" :placeholder="detail.placeholder" class="w-full" />
-        </UFormField>
-
-        <div class="grid grid-cols-2 gap-3">
-          <UFormField name="status" :label="t('form.status')">
-            <USelect v-model="state.status" :items="statusItems" class="w-full" />
+          <UFormField name="comment" :label="t('form.comment')">
+            <UTextarea v-model="state.comment" :rows="4" autoresize class="w-full" />
           </UFormField>
-          <UFormField name="applied_at" :label="t('form.appliedAt')" required>
-            <UInputDate v-model="appliedAt" class="w-full">
-              <template #trailing>
-                <UPopover>
-                  <UButton
-                    color="neutral"
-                    variant="link"
-                    size="sm"
-                    :icon="icons.calendar"
-                    :aria-label="t('form.pickDate')"
-                    class="px-0"
-                  />
-                  <template #content>
-                    <UCalendar v-model="appliedAt" class="p-2" />
-                  </template>
-                </UPopover>
-              </template>
-            </UInputDate>
-          </UFormField>
-        </div>
-
-        <UFormField v-if="!pro && state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
-          <DateTimeInput v-model="state.interview_at" class="w-full" />
-        </UFormField>
-
-        <template v-if="pro">
-          <!-- Like the base plan's field: from the interview status on, or once there is one. -->
-          <ListTable
-            v-if="state.status === 'interview' || state.interviews.length"
-            v-model="state.interviews"
-            name="interviews"
-            :title="t('form.interviews')"
-            :columns="interviewColumns"
-            :blank="(): Interview => ({ at: '', kind: 'other', note: '' })"
-            :sort="[{ id: 'at', desc: true }]"
-          />
-          <ListTable
-            v-model="state.contacts"
-            name="contacts"
-            :title="t('form.contacts')"
-            :columns="contactColumns"
-            :blank="(): Contact => ({ name: '', email: '', role: '' })"
-          />
-        </template>
-
-        <UFormField name="rating" :label="t('form.rating')">
-          <UInputRating
-            v-model="state.rating"
-            :icon="icons.rating"
-            :empty-icon="icons.ratingEmpty"
-            clearable
-            size="lg"
-          />
-        </UFormField>
-        <UFormField name="comment" :label="t('form.comment')">
-          <UTextarea v-model="state.comment" :rows="4" autoresize class="w-full" />
-        </UFormField>
+        </fieldset>
       </UForm>
     </template>
     <template #footer>

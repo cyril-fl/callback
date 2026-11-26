@@ -9,6 +9,7 @@ import type { SortingState } from '@tanstack/vue-table';
 const props = defineProps<{
   name: string;
   title: string;
+  hint?: string;
   columns: readonly {
     key: keyof Row & string;
     label: string;
@@ -48,6 +49,7 @@ const tableColumns = computed<TableColumn<Row>[]>(() => [
 <template>
   <div class="space-y-1 rounded-md bg-elevated p-2">
     <p class="px-1 text-sm font-medium">{{ title }}</p>
+    <p v-if="hint" class="px-1 text-xs text-muted">{{ hint }}</p>
     <UTable
       v-model:sorting="sorting"
       :data="rows"
