@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { parseDate, today as todayDate, getLocalTimeZone, type CalendarDate } from '@internationalized/date';
 import { z } from 'zod';
-import type { Application, BatchResult, NewApplication } from '~/types/items';
+import type { Application, BatchResult, Contact, Interview, NewApplication } from '~/types/items';
 import { STATUSES } from '~/types/items';
 
 const props = defineProps<{ application?: Application }>();
@@ -28,7 +28,10 @@ const schema = computed(() => {
       street: z.string(),
       postal_code: z.string(),
       country: z.string(),
-      website: z.union([z.literal(''), z.url(), z.email()], { error: t('form.invalidWebsite') }),
+      // In the pro plan an e-mail is a contact: the site is a URL.
+      website: pro.value
+        ? z.union([z.literal(''), z.url()], { error: t('form.invalidUrl') })
+        : z.union([z.literal(''), z.url(), z.email()], { error: t('form.invalidWebsite') }),
       source: z.string().trim().min(1, t('form.required')).max(60),
       source_detail: z.string(),
       status: z.enum(['applied', 'responded', 'interview', 'offer', 'rejected', 'no_reply']),
@@ -38,17 +41,31 @@ const schema = computed(() => {
       interview_at: z.string(),
       contact_name: z.string(),
       contact_email: z.union([z.literal(''), z.email()], { error: t('form.invalidEmail') }),
+      interviews: z.array(
+        z.object({ at: z.string().min(1, t('form.required')), kind: z.string(), note: z.string().optional() }),
+      ),
+      contacts: z.array(
+        z
+          .object({
+            name: z.string().optional(),
+            email: z.union([z.literal(''), z.email()], { error: t('form.invalidEmail') }).optional(),
+            role: z.string().optional(),
+          })
+          .refine((c) => c.name?.trim() || c.email?.trim(), { message: t('form.contactRequired'), path: ['name'] }),
+      ),
     })
     .superRefine((v, ctx) => {
       if (v.source === 'job_post' && !z.url().safeParse(v.source_detail).success)
         ctx.addIssue({ code: 'custom', path: ['source_detail'], message: t('form.invalidUrl') });
-      if (v.source === 'recruiter' && !z.email().safeParse(v.source_detail).success)
+      if (v.source === 'recruiter' && pro.value && !recruiterEmail(v.contacts))
+        ctx.addIssue({ code: 'custom', path: ['contacts'], message: t('form.recruiterMissing') });
+      if (v.source === 'recruiter' && !pro.value && !z.email().safeParse(v.source_detail).success)
         ctx.addIssue({ code: 'custom', path: ['source_detail'], message: t('form.invalidEmail') });
     });
 });
 
 const today = () => todayDate(getLocalTimeZone()).toString();
-type State = Required<Omit<NewApplication, 'status' | 'interviews' | 'contacts'>> & { status: NonNullable<NewApplication['status']> };
+type State = Required<Omit<NewApplication, 'status'>> & { status: NonNullable<NewApplication['status']> };
 const blank = (): State => ({
   company: '',
   title: '',
@@ -66,11 +83,12 @@ const blank = (): State => ({
   interview_at: '',
   contact_name: '',
   contact_email: '',
+  interviews: [],
+  contacts: [],
 });
 const state = reactive(blank());
-// The street and postal code, and the contact, stay folded until asked for, or filled.
+// The street and postal code stay folded until asked for, or filled.
 const fullAddress = ref(false);
-const contact = ref(false);
 
 // Reload the form each time the slideover opens, from the edited row or empty.
 watch(open, (isOpen) => {
@@ -85,9 +103,19 @@ watch(open, (isOpen) => {
         country: preferences.value?.default_country ?? '',
       };
   if (a) for (const key of Object.keys(next) as (keyof State)[]) Object.assign(next, { [key]: a[key] ?? next[key] });
+  // Copies: the rows edited here are not the list's until saved.
+  next.interviews = next.interviews.map((i) => ({ ...i }));
+  next.contacts = next.contacts.map((c) => ({ ...c }));
+  // The pro plan keeps the e-mails as contacts: the recruiter's, and the one written as the site.
+  if (pro.value) {
+    if (next.source === 'recruiter') next.contacts = withContact(next.contacts, next.source_detail, RECRUITER_ROLE);
+    if (next.website && !next.website.includes('://') && next.website.includes('@')) {
+      next.contacts = withContact(next.contacts, next.website);
+      next.website = '';
+    }
+  }
   Object.assign(state, next);
   fullAddress.value = !!(state.street || state.postal_code);
-  contact.value = !!(state.contact_name || state.contact_email);
   sources.refresh();
   places.refresh();
 });
@@ -127,6 +155,14 @@ function pickCity(city: string) {
   state.country ||= places.countryOf(state.location) ?? '';
 }
 
+// Picking the recruiter source in the pro plan asks for the recruiter among the contacts.
+watch(
+  () => state.source,
+  (source) => {
+    if (pro.value && source === 'recruiter') state.contacts = withRecruiterRow(state.contacts);
+  },
+);
+
 const detail = computed(() => {
   switch (state.source) {
     case 'spontaneous':
@@ -134,6 +170,7 @@ const detail = computed(() => {
     case 'job_post':
       return { label: t('form.sourceUrl'), type: 'url', required: true, placeholder: 'https://' };
     case 'recruiter':
+      if (pro.value) return undefined;
       return { label: t('form.sourceEmail'), type: 'email', required: true, placeholder: '' };
     default:
       return { label: t('form.sourceOther'), type: 'text', required: false, placeholder: t('form.sourceOtherHint') };
@@ -142,12 +179,38 @@ const detail = computed(() => {
 
 const day = (v: string) => new Date(`${v}T00:00:00`).toLocaleDateString('fr-FR');
 
+const interviewColumns = [
+  { key: 'at', label: t('form.at'), type: 'datetime-local' },
+  {
+    key: 'kind',
+    label: t('form.kind'),
+    items: (['hr', 'manager', 'tech', 'other'] as const).map((value) => ({ value, label: t(`form.kinds.${value}`) })),
+  },
+  { key: 'note', label: t('form.note') },
+] as const;
+const contactColumns = [
+  { key: 'name', label: t('form.name') },
+  { key: 'email', label: t('form.email'), type: 'email' },
+  { key: 'role', label: t('form.role') },
+] as const;
+
 const statusItems = STATUSES.map((value) => ({ value, label: t(`status.${value}`) }));
 
 async function submit() {
   loading.value = true;
   try {
-    const item = { ...state, source_detail: state.source === 'spontaneous' ? '' : state.source_detail };
+    // The pro plan writes the lists, the base plan the one interview it shows: interview_at edits the last one.
+    const { interviews, contacts, interview_at, contact_name, contact_email, ...rest } = state;
+    const item = {
+      ...rest,
+      ...(pro.value ? { interviews, contacts } : { interview_at, contact_name, contact_email }),
+      source_detail:
+        state.source === 'spontaneous'
+          ? ''
+          : pro.value && state.source === 'recruiter'
+            ? (recruiterEmail(contacts) ?? '')
+            : state.source_detail,
+    };
     const result = props.application?.id
       ? await api<BatchResult>('/api/applications', {
           method: 'PATCH',
@@ -178,7 +241,7 @@ const phone = useMediaQuery('(max-width: 639px)');
     :title="application ? t('form.edit') : t('form.add')"
     :description="application ? t('form.edit') : t('form.add')"
     :side="phone ? 'bottom' : 'right'"
-    :ui="{ description: 'sr-only', content: phone ? 'max-h-[90dvh] rounded-t-2xl' : undefined }"
+    :ui="{ description: 'sr-only', content: phone ? 'max-h-[90dvh] rounded-t-2xl' : pro ? 'sm:max-w-xl' : undefined }"
   >
     <template #body>
       <UForm id="application-form" :schema="schema" :state="state" class="space-y-4" @submit="submit">
@@ -198,7 +261,7 @@ const phone = useMediaQuery('(max-width: 639px)');
         <UFormField name="title" :label="t('form.title')">
           <UInput v-model="state.title" class="w-full" />
         </UFormField>
-        <UFormField name="website" :label="t('form.website')">
+        <UFormField name="website" :label="pro ? t('form.site') : t('form.website')">
           <UInput v-model="state.website" placeholder="https://" class="w-full" />
         </UFormField>
 
@@ -282,28 +345,27 @@ const phone = useMediaQuery('(max-width: 639px)');
           </UFormField>
         </div>
 
-        <UFormField v-if="state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
+        <UFormField v-if="!pro && state.status === 'interview'" name="interview_at" :label="t('form.interviewAt')">
           <UInput v-model="state.interview_at" type="datetime-local" class="w-full" />
         </UFormField>
 
         <template v-if="pro">
-          <div v-if="contact" class="grid grid-cols-2 gap-3">
-            <UFormField name="contact_name" :label="t('form.contactName')">
-              <UInput v-model="state.contact_name" class="w-full" />
-            </UFormField>
-            <UFormField name="contact_email" :label="t('form.contactEmail')">
-              <UInput v-model="state.contact_email" type="email" class="w-full" />
-            </UFormField>
-          </div>
-          <UButton
-            v-else
-            variant="link"
-            color="neutral"
-            size="sm"
-            :icon="icons.contact"
-            :label="t('form.contact')"
-            class="-mt-2 px-0"
-            @click="contact = true"
+          <!-- Like the base plan's field: from the interview status on, or once there is one. -->
+          <ListTable
+            v-if="state.status === 'interview' || state.interviews.length"
+            v-model="state.interviews"
+            name="interviews"
+            :title="t('form.interviews')"
+            :columns="interviewColumns"
+            :blank="(): Interview => ({ at: '', kind: 'other', note: '' })"
+            :sort="[{ id: 'at', desc: true }]"
+          />
+          <ListTable
+            v-model="state.contacts"
+            name="contacts"
+            :title="t('form.contacts')"
+            :columns="contactColumns"
+            :blank="(): Contact => ({ name: '', email: '', role: '' })"
           />
         </template>
 
