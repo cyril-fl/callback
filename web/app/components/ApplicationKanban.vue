@@ -53,6 +53,32 @@ function drop(column: { status: Status; statuses: Status[] }) {
   over.value = undefined;
 }
 
+// The card's facts as icons, one group, the detail in a tooltip.
+type Badge = { icon: string; label: string };
+const badges = (app: Application) =>
+  [
+    { icon: sourceIcon(app.source), label: sources.label(app.source) },
+    CLOSED.includes(app.status ?? 'applied') && {
+      icon: app.status === 'no_reply' ? icons.noReply : icons.rejected,
+      label: t(`status.${app.status}`),
+    },
+    (app.contact_name || app.contact_email) && {
+      icon: icons.person,
+      label: [app.contact_name, app.contact_email].filter(Boolean).join(' · '),
+    },
+  ].filter((b): b is Badge => !!b);
+
+// "2026-01-31T14:30" is a local time: no timezone shift.
+const interview = (app: Application) =>
+  app.status === 'interview' && app.interview_at
+    ? new Date(app.interview_at).toLocaleString('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
+
 const label = (key: string) => (key === 'closed' ? t('kanban.closed') : t(`status.${key}`));
 
 // "2026-01-31" is a day, not an instant: no timezone shift.
@@ -103,24 +129,7 @@ const day = (v?: string) =>
           "
         >
           <div class="flex items-center gap-2">
-            <p class="truncate text-sm font-medium">{{ app.company }}</p>
-            <UTooltip v-if="column.key === 'closed'" :text="t(`status.${app.status}`)">
-              <UIcon
-                :name="app.status === 'no_reply' ? icons.noReply : icons.rejected"
-                class="ml-auto size-3.5 shrink-0 text-muted"
-                :aria-label="t(`status.${app.status}`)"
-              />
-            </UTooltip>
-          </div>
-          <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
-            <UIcon :name="icons.location" class="size-3 shrink-0" />{{
-              [app.location, app.country].filter(Boolean).join(', ')
-            }}
-          </p>
-          <div class="mt-3 flex items-center gap-2 text-xs text-muted">
-            <UTooltip :text="sources.label(app.source)">
-              <UIcon :name="sourceIcon(app.source)" class="size-3.5" :aria-label="sources.label(app.source)" />
-            </UTooltip>
+            <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ app.company }}</p>
             <UInputRating
               v-if="app.rating"
               :icon="icons.rating"
@@ -128,7 +137,25 @@ const day = (v?: string) =>
               :model-value="app.rating"
               readonly
               size="xs"
+              class="shrink-0"
             />
+          </div>
+          <p class="mt-0.5 flex items-center gap-1 truncate text-xs text-muted">
+            <UIcon :name="icons.location" class="size-3 shrink-0" />{{
+              [app.location, app.country].filter(Boolean).join(', ')
+            }}
+          </p>
+          <div class="mt-3 flex items-center gap-2 text-xs text-muted">
+            <span class="flex items-center gap-1.5">
+              <UTooltip v-for="badge in badges(app)" :key="badge.icon" :text="badge.label">
+                <UIcon :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
+              </UTooltip>
+            </span>
+            <UTooltip v-if="interview(app)" :text="t('form.interviewAt')">
+              <span class="flex items-center gap-1 font-medium text-highlighted">
+                <UIcon :name="icons.interview" class="size-3.5" />{{ interview(app) }}
+              </span>
+            </UTooltip>
             <UTooltip v-if="canFollowUp(app, followUpSince)" :text="t('table.markFollowedUp')">
               <UButton
                 :icon="icons.followUp"
@@ -141,7 +168,7 @@ const day = (v?: string) =>
                 @keydown.enter.stop
               />
             </UTooltip>
-            <span class="ml-auto tabular-nums">{{ day(app.applied_at) }}</span>
+            <span class="ml-auto shrink-0 tabular-nums">{{ day(app.applied_at) }}</span>
           </div>
         </div>
         <p

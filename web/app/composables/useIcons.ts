@@ -13,6 +13,8 @@ export function useIcons() {
     location: 'i-lucide-map-pin',
     fullAddress: 'i-lucide-map-pin-plus',
     contact: 'i-lucide-user-plus',
+    person: 'i-lucide-contact',
+    interview: 'i-lucide-calendar-clock',
     mail: 'i-lucide-mail',
     website: 'i-lucide-external-link',
     calendar: 'i-lucide-calendar',
