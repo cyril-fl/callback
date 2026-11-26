@@ -307,3 +307,25 @@
   --color-callback-green-error-900: #4e271a;
   --color-callback-green-error-950: #371b12;
 }
+
+@layer base {
+  /* An app, not a page: Ctrl+A and drags select only what is typed, not the buttons and lists around it. */
+  body {
+    @apply select-none;
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'] {
+    @apply select-text;
+  }
+
+  /* No scrollbar anywhere: the browser draws them outside the themes; wheel, touch and keys still scroll. */
+  * {
+    scrollbar-width: none;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
