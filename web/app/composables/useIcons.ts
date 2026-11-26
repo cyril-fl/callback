@@ -54,6 +54,9 @@ export function useIcons() {
     export: 'i-lucide-download',
     import: 'i-lucide-upload',
     logout: 'i-lucide-log-out',
+    accounts: 'i-lucide-users',
+    resetPassword: 'i-lucide-rotate-ccw-key',
+    invite: 'i-lucide-mail-plus',
   };
 
   return { icons };

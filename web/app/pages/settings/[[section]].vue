@@ -5,11 +5,15 @@ import type {
   Backup,
   DeletedApplication,
   ImportResult,
+  Invite,
+  InviteResult,
   Me,
+  PasswordReset,
   PurgeResult,
   Token,
   TokenInput,
   TokenResult,
+  User,
 } from '~/types/items';
 
 const { t } = useI18n();
@@ -25,15 +29,19 @@ const me = useNuxtData<Me>('me').data;
 const planItems = (['base', 'pro'] as const).map((value) => ({ value, label: t(`settings.plans.${value}`) }));
 // /settings opens the first section; an unknown one goes back to it.
 const route = useRoute();
+const admin = computed(() => me.value?.mode === 'multi' && me.value.admin);
+const sections = computed(() => settingsSections.filter(({ id }) => id !== 'accounts' || admin.value));
 const section = computed({
-  get: () => settingsSections.find(({ id }) => id === route.params.section)?.id ?? 'general',
+  get: () => sections.value.find(({ id }) => id === route.params.section)?.id ?? 'general',
   set: (id: SettingsSection) => navigateTo(`/settings/${id}`, { replace: true }),
 });
-const sectionItems = settingsSections.map(({ id, icon }) => ({
-  value: id,
-  label: t(`settings.sections.${id}`),
-  icon: icons[icon],
-}));
+const sectionItems = computed(() =>
+  sections.value.map(({ id, icon }) => ({
+    value: id,
+    label: t(`settings.sections.${id}`),
+    icon: icons[icon],
+  })),
+);
 
 const colorMode = useColorMode();
 const mode = computed({
@@ -166,10 +174,76 @@ async function create() {
 }
 
 const { copy } = useClipboard();
-async function copyToken() {
-  if (!created.value) return;
-  await copy(created.value);
+async function copyText(text?: string) {
+  if (!text) return;
+  await copy(text);
   toast.add({ title: t('settings.copied'), color: 'success' });
+}
+
+// Accounts: an admin's, in the multi mode only.
+const { data: users, refresh: refreshUsers } = await useAsyncData('users', () =>
+  admin.value ? api<User[]>('/api/users') : Promise.resolve(null),
+);
+const { data: invites, refresh: refreshInvites } = await useAsyncData('invites', () =>
+  admin.value ? api<Invite[]>('/api/invites') : Promise.resolve(null),
+);
+// A generated password or an invitation link, shown once.
+const shown = ref<{ label: string; value: string }>();
+const inviting = ref(false);
+async function createInvite() {
+  inviting.value = true;
+  try {
+    const { token } = await api<InviteResult>('/api/invites', { method: 'POST' });
+    shown.value = { label: t('settings.inviteLink'), value: `${location.origin}/signup?invite=${token}` };
+    await refreshInvites();
+  } catch {
+    // useApi already toasted.
+  } finally {
+    inviting.value = false;
+  }
+}
+// The account to delete or whose password to reset, or the invitation to revoke, behind a confirmation.
+const accountAction = ref<
+  { kind: 'delete'; user: User } | { kind: 'reset'; user: User } | { kind: 'revokeInvite'; invite: Invite }
+>();
+const accountOpen = ref(false);
+function askAccount(action: NonNullable<typeof accountAction.value>) {
+  accountAction.value = action;
+  accountOpen.value = true;
+}
+const accountConfirm = computed(() => {
+  const action = accountAction.value;
+  if (action?.kind === 'delete')
+    return {
+      title: t('settings.deleteUser'),
+      message: t('settings.deleteUserMessage', { name: action.user.name }),
+      label: t('common.delete'),
+    };
+  if (action?.kind === 'reset')
+    return {
+      title: t('settings.resetPassword'),
+      message: t('settings.resetPasswordMessage', { name: action.user.name }),
+      label: t('settings.resetPassword'),
+    };
+  return { title: t('settings.revokeInvite'), message: t('settings.revokeInviteMessage'), label: t('settings.revoke') };
+});
+async function confirmAccount() {
+  const action = accountAction.value;
+  if (!action) return;
+  try {
+    if (action.kind === 'delete') {
+      await api(`/api/users/${action.user.id}`, { method: 'DELETE' });
+    } else if (action.kind === 'reset') {
+      const { password } = await api<PasswordReset>(`/api/users/${action.user.id}/password`, { method: 'POST' });
+      shown.value = { label: t('settings.newPassword', { name: action.user.name }), value: password };
+    } else {
+      await api(`/api/invites/${action.invite.id}`, { method: 'DELETE' });
+    }
+  } catch {
+    // useApi already toasted.
+  } finally {
+    await Promise.all([refreshUsers(), refreshInvites()]);
+  }
 }
 
 const confirmOpen = ref(false);
@@ -337,6 +411,10 @@ async function revoke() {
       <section>
         <h2 class="mb-3 text-sm font-semibold">{{ t('settings.account') }}</h2>
         <ul class="divide-y divide-default rounded-lg border border-default">
+          <li v-if="me?.mode === 'multi'" class="flex flex-wrap items-center gap-4 px-4 py-3">
+            <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.accountName') }}</p>
+            <span class="text-sm">{{ me.user }}</span>
+          </li>
           <li v-if="me?.version" class="flex flex-wrap items-center gap-4 px-4 py-3">
             <p class="min-w-0 flex-1 text-sm text-muted">{{ t('settings.version') }}</p>
             <span class="font-mono text-xs text-muted">{{ me.version }}</span>
@@ -521,7 +599,7 @@ async function revoke() {
         </div>
       </section>
     </div>
-    <div v-else>
+    <div v-else-if="section === 'tokens'">
       <section>
         <form class="flex flex-wrap items-end gap-4" @submit.prevent="create">
           <UFormField :label="t('settings.name')">
@@ -558,7 +636,7 @@ async function revoke() {
                 color="neutral"
                 variant="link"
                 size="sm"
-                @click="copyToken"
+                @click="copyText(created)"
               />
             </template>
           </UInput>
@@ -597,6 +675,102 @@ async function revoke() {
         <p v-else-if="tokens" class="mt-3 text-xs text-muted">{{ t('settings.noTokens') }}</p>
       </section>
     </div>
+    <div v-else class="space-y-10">
+      <div v-if="shown" class="flex flex-wrap items-center gap-3 rounded-lg border border-default px-4 py-2">
+        <span class="text-xs text-muted">{{ shown.label }} · {{ t('settings.tokenOnce') }}</span>
+        <UInput
+          :model-value="shown.value"
+          readonly
+          size="sm"
+          class="min-w-0 flex-1 basis-64 font-mono"
+          :aria-label="shown.label"
+        >
+          <template #trailing>
+            <UButton
+              :icon="icons.copy"
+              :aria-label="t('settings.copy')"
+              color="neutral"
+              variant="link"
+              size="sm"
+              @click="copyText(shown.value)"
+            />
+          </template>
+        </UInput>
+      </div>
+
+      <section>
+        <h2 class="mb-3 text-sm font-semibold">{{ t('settings.users') }}</h2>
+        <ul class="divide-y divide-default rounded-lg border border-default">
+          <li v-for="user in users" :key="user.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
+            <UIcon :name="icons.recruiter" class="size-4 shrink-0 text-muted" />
+            <div class="min-w-0 flex-1 basis-48">
+              <p class="flex min-w-0 items-center gap-2 text-sm">
+                <span class="truncate">{{ user.name }}</span>
+                <UBadge v-if="user.admin" :label="t('settings.admin')" size="sm" color="neutral" variant="soft" />
+                <UBadge
+                  v-if="user.name === me?.user"
+                  :label="t('settings.you')"
+                  size="sm"
+                  color="primary"
+                  variant="soft"
+                />
+              </p>
+              <p class="text-xs text-muted">{{ t('settings.createdAt') }} {{ when(user.created_at) }}</p>
+            </div>
+            <template v-if="user.name !== me?.user">
+              <UButton
+                :icon="icons.resetPassword"
+                :label="t('settings.resetPassword')"
+                :ui="{ label: 'max-sm:sr-only' }"
+                color="neutral"
+                variant="ghost"
+                @click="askAccount({ kind: 'reset', user })"
+              />
+              <UButton
+                :icon="icons.delete"
+                :aria-label="t('settings.deleteUser')"
+                color="error"
+                variant="ghost"
+                @click="askAccount({ kind: 'delete', user })"
+              />
+            </template>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <div class="mb-3 flex items-center justify-between gap-4">
+          <h2 class="text-sm font-semibold">{{ t('settings.invites') }}</h2>
+          <UButton
+            :icon="icons.invite"
+            :label="t('settings.createInvite')"
+            color="neutral"
+            variant="outline"
+            size="sm"
+            :loading="inviting"
+            @click="createInvite"
+          />
+        </div>
+        <ul v-if="invites?.length" class="divide-y divide-default rounded-lg border border-default">
+          <li v-for="invite in invites" :key="invite.id" class="flex flex-wrap items-center gap-3 px-4 py-2">
+            <UIcon :name="icons.invite" class="size-4 shrink-0 text-muted" />
+            <p class="min-w-0 flex-1 basis-48 text-xs text-muted">
+              {{ t('settings.createdAt') }} {{ when(invite.created_at) }} · {{ t('settings.expiresAt') }}
+              {{ when(invite.expires_at) }}
+            </p>
+            <UButton
+              :icon="icons.delete"
+              :label="t('settings.revoke')"
+              :ui="{ label: 'max-sm:sr-only' }"
+              color="neutral"
+              variant="ghost"
+              @click="askAccount({ kind: 'revokeInvite', invite })"
+            />
+          </li>
+        </ul>
+        <p v-else-if="invites" class="text-xs text-muted">{{ t('settings.noInvites') }}</p>
+      </section>
+    </div>
 
     <ConfirmModal
       v-model:open="forgetOpen"
@@ -619,6 +793,13 @@ async function revoke() {
       :message="t('settings.revokeMessage', { name: revoking?.name ?? '' })"
       :confirm-label="t('settings.revoke')"
       @confirm="revoke"
+    />
+    <ConfirmModal
+      v-model:open="accountOpen"
+      :title="accountConfirm.title"
+      :message="accountConfirm.message"
+      :confirm-label="accountConfirm.label"
+      @confirm="confirmAccount"
     />
   </div>
 </template>

@@ -20,6 +20,11 @@ export type SourceCount = S['listsources.Source'];
 export type Country = S['domain.Country'];
 export type StatusChange = S['domain.StatusChange'];
 export type Me = S['login.MeResult'];
+export type ServerMode = S['domain.ServerMode'];
+export type User = S['domain.User'];
+export type Invite = S['domain.Invite'];
+export type InviteResult = S['createinvite.Result'];
+export type PasswordReset = S['users.Reset'];
 
 export const STATUSES: Status[] = ['applied', 'responded', 'interview', 'offer', 'rejected', 'no_reply'];
 /** The employer replied: any status but applied and no_reply, as the server's response rate. */

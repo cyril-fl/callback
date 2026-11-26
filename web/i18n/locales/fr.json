@@ -27,7 +27,9 @@
   "login": {
     "title": "Connexion",
     "password": "Mot de passe",
-    "submit": "Se connecter"
+    "submit": "Se connecter",
+    "name": "Nom",
+    "noAccount": "Pas encore de compte ?"
   },
   "status": {
     "applied": "Envoyée",
@@ -153,7 +155,9 @@
       "data": "Données",
       "dataDescription": "Les valeurs, la sauvegarde, la corbeille, et tout effacer.",
       "tokens": "Jetons d'accès",
-      "tokensDescription": "Pour le CLI et le MCP."
+      "tokensDescription": "Pour le CLI et le MCP.",
+      "accounts": "Comptes",
+      "accountsDescription": "Les comptes de ce serveur et les invitations."
     },
     "account": "Compte",
     "plan": "Formule",
@@ -244,7 +248,22 @@
     "valuesEmpty": "Aucune valeur",
     "renamed": "« {from} » devient « {to} » dans {count} candidature | « {from} » devient « {to} » dans {count} candidatures",
     "values": "Valeurs",
-    "valuesHelp": "Les entreprises, villes et pays que les candidatures nomment. Corriger une valeur la change dans toutes ses candidatures ; la renommer comme une autre les réunit."
+    "valuesHelp": "Les entreprises, villes et pays que les candidatures nomment. Corriger une valeur la change dans toutes ses candidatures ; la renommer comme une autre les réunit.",
+    "accountName": "Connecté en tant que",
+    "users": "Comptes",
+    "admin": "Admin",
+    "you": "Vous",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetPasswordMessage": "Un nouveau mot de passe sera généré pour {name} : l'ancien ne marchera plus.",
+    "newPassword": "Nouveau mot de passe de {name}",
+    "deleteUser": "Supprimer le compte",
+    "deleteUserMessage": "Le compte {name} sera supprimé définitivement, avec ses candidatures, sa corbeille et ses jetons.",
+    "invites": "Invitations",
+    "createInvite": "Inviter",
+    "inviteLink": "Lien d'invitation",
+    "revokeInvite": "Révoquer l'invitation",
+    "revokeInviteMessage": "Ce lien ne permettra plus de créer un compte.",
+    "noInvites": "Aucune invitation en attente."
   },
   "countries": {
     "AD": "Andorre",
@@ -496,5 +515,13 @@
     "ZA": "Afrique du Sud",
     "ZM": "Zambie",
     "ZW": "Zimbabwe"
+  },
+  "signup": {
+    "title": "Créer un compte",
+    "submit": "Créer le compte",
+    "passwordHelp": "Au moins 8 caractères.",
+    "haveAccount": "Déjà un compte ?",
+    "single": "Ce serveur n'a qu'un compte : l'inscription est fermée.",
+    "inviteNeeded": "L'inscription se fait sur invitation : demandez un lien à l'administrateur."
   }
 }
