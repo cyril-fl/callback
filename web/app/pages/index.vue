@@ -269,10 +269,10 @@ async function replay(request: () => Promise<BatchResult>) {
 const recordStatus = (ids: string[], status: Status) =>
   record({ undo: () => replay(patch(ids, { undo_status: true })), redo: () => replay(patch(ids, { status })) });
 
-// The status follows the workflow (app/utils/workflow.ts); a step whose parts are empty opens the form.
+// Any status is reachable; a step whose parts are empty (app/utils/workflow.ts) opens the interview modal.
 async function setStatus(app: Application, status: Status) {
   const from = app.status ?? 'applied';
-  if (from === status || !canMove(from, status)) return;
+  if (from === status) return;
   if (needsForm(status, !!(app.interviews?.length || app.interview_at))) return askInterview(app, status);
   const ids = [app.id];
   if (await write(ids, { status }, patch(ids, { status }))) recordStatus(ids, status);
@@ -304,7 +304,7 @@ async function markFollowedUp(app: Application) {
 }
 
 const statusMenu = (app: Application) =>
-  nextStatuses(app.status ?? 'applied').map((s) => ({
+  STATUSES.map((s) => ({
     label: t(`status.${s}`),
     type: 'checkbox' as const,
     checked: app.status === s,
@@ -354,7 +354,7 @@ async function doDelete() {
 // Only the ones whose status changes: an undo takes back their last change, the others have none of this batch.
 async function setSelectedStatus(status: Status) {
   const ids = (applications.value ?? [])
-    .filter((a) => selected.value.includes(a.id) && canMove(a.status ?? 'applied', status))
+    .filter((a) => selected.value.includes(a.id) && a.status !== status)
     .map((a) => a.id);
   if (ids.length && (await write(ids, { status }, patch(ids, { status })))) recordStatus(ids, status);
 }

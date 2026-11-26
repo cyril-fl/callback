@@ -1,16 +1,6 @@
-// The application's status as a state machine, and the form's parts each status shows.
+// The form's parts each status shows; any status can follow any other.
 export type WorkflowStatus = 'applied' | 'responded' | 'interview' | 'offer' | 'rejected' | 'no_reply';
 export type FormPart = 'interviews' | 'contacts';
-
-// The statuses reachable from each one; going back one step stays possible to fix a mistake.
-export const TRANSITIONS: Record<WorkflowStatus, WorkflowStatus[]> = {
-  applied: ['responded', 'interview', 'rejected', 'no_reply'],
-  no_reply: ['applied', 'responded', 'interview', 'rejected'],
-  responded: ['applied', 'interview', 'rejected'],
-  interview: ['responded', 'offer', 'rejected'],
-  offer: ['interview', 'rejected'],
-  rejected: ['applied', 'responded', 'interview', 'offer'],
-};
 
 // The parts of the follow-up section each status shows: the interviews from the interview step on.
 export const PARTS: Record<WorkflowStatus, FormPart[]> = {
@@ -22,14 +12,9 @@ export const PARTS: Record<WorkflowStatus, FormPart[]> = {
   rejected: ['contacts'],
 };
 
-// The statuses the select offers: the current one, then where it can go.
-export const nextStatuses = (from: WorkflowStatus) => [from, ...TRANSITIONS[from]];
-
 // A part is shown by the status, or as long as it holds data, so nothing filled disappears.
 export const showsPart = (status: WorkflowStatus, part: FormPart, filled = false) =>
   filled || PARTS[status].includes(part);
-
-export const canMove = (from: WorkflowStatus, to: WorkflowStatus) => TRANSITIONS[from].includes(to);
 
 // A move to a status whose parts are still empty opens the form to fill them, instead of saving blind.
 export const needsForm = (to: WorkflowStatus, hasInterview: boolean) =>

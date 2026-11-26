@@ -191,9 +191,8 @@ const contactColumns = [
   { key: 'role', label: t('form.role') },
 ] as const;
 
-// A new application may start at any status; an edited one follows the workflow from its saved status.
 const statusItems = computed(() =>
-  (props.application?.status ? nextStatuses(props.application.status) : STATUSES).map((value) => ({
+  STATUSES.map((value) => ({
     value,
     label: t(`status.${value}`),
   })),
