@@ -5,8 +5,8 @@ Track job applications from a web app, a CLI and an MCP server for AI agents. On
 
 - **`callback-server`**: the HTTP API (Go, SQLite), the web app it serves, and the MCP over HTTP with its OAuth sign-in.
 - **`callback`**: the CLI and the stdio MCP server, a client of the API only.
-- **`web/`**: Nuxt 4 + Nuxt UI: a dashboard with a sortable, filterable table or a kanban by status, the add/edit
-  form, API tokens, four themes and dark mode.
+- **`web/`**: Nuxt 4 + Nuxt UI: a dashboard with a sortable, filterable table or a kanban by status (cards ordered
+  by drag, `sort=position` in the API), the interviews in a table beside a calendar, the add/edit form, API tokens, four themes and dark mode.
 
 Each application has a company, an address (location is the city, plus an optional street, postal code and country:
 an ISO code from the list built into the server, `core/domain/countries.yaml`, shown translated in the web app),
