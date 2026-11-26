@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import type { DropdownMenuItem, TableColumn, TableRow } from '@nuxt/ui';
 import type { Application, BatchResult, Stats, Status } from '~/types/items';
 import { STATUSES } from '~/types/items';
 import { today as todayDate, getLocalTimeZone } from '@internationalized/date';
@@ -472,6 +472,8 @@ function exportCsv() {
       :columns="columns"
       :loading="loadStatus === 'pending'"
       :sorting-options="{ manualSorting: true }"
+      :ui="{ tr: 'data-[selectable=true]:cursor-pointer' }"
+      @select="(_: Event, row: TableRow<Application>) => openForm(row.original)"
     >
       <template #empty><UEmpty :icon="icons.empty" :title="t('common.empty')" variant="naked" /></template>
       <template #company-cell="{ row }">
@@ -562,13 +564,6 @@ function exportCsv() {
       </template>
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
-          <UButton
-            :icon="icons.edit"
-            color="neutral"
-            variant="ghost"
-            :aria-label="t('common.edit')"
-            @click="openForm(row.original)"
-          />
           <UButton
             :icon="icons.delete"
             color="error"

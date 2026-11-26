@@ -3,7 +3,6 @@ export function useIcons() {
   const icons = {
     // Applications
     add: 'i-lucide-plus',
-    edit: 'i-lucide-pencil',
     delete: 'i-lucide-trash-2',
     more: 'i-lucide-ellipsis',
     trash: 'i-lucide-trash-2',
