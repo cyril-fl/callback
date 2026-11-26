@@ -145,7 +145,17 @@
   },
   "settings": {
     "title": "Réglages",
-    "general": "Général",
+    "sections": {
+      "general": "Général",
+      "generalDescription": "La formule, les valeurs par défaut et les délais, le compte.",
+      "appearance": "Apparence",
+      "appearanceDescription": "Les couleurs et le mode de l'interface.",
+      "data": "Données",
+      "dataDescription": "La sauvegarde, la corbeille, et tout effacer.",
+      "tokens": "Jetons d'accès",
+      "tokensDescription": "Pour le CLI et le MCP."
+    },
+    "account": "Compte",
     "plan": "Formule",
     "plans": {
       "base": "Base",
@@ -155,7 +165,6 @@
       "base": "Les statistiques au-dessus de la liste.",
       "pro": "Un tableau de bord à part de la liste."
     },
-    "appearance": "Apparence",
     "colorMode": "Mode",
     "theme": "Thème",
     "themes": {
@@ -167,8 +176,6 @@
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système",
-    "tokens": "Jetons d'accès",
-    "tokensHelp": "Pour le CLI et le MCP.",
     "name": "Nom",
     "kinds": {
       "session": "Session",

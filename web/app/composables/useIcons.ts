@@ -46,6 +46,8 @@ export function useIcons() {
     // Settings
     lightMode: 'i-lucide-sun',
     darkMode: 'i-lucide-moon',
+    appearance: 'i-lucide-palette',
+    data: 'i-lucide-database',
     systemMode: 'i-lucide-monitor',
     apiToken: 'i-lucide-key-round',
     copy: 'i-lucide-copy',
