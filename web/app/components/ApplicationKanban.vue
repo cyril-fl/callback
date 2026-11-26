@@ -110,14 +110,14 @@ const day = (v?: string) =>
         />
       </header>
 
-      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
+      <div class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-2.5 pb-2.5">
         <div
           v-for="app in column.items"
           :key="app.id"
           role="button"
           tabindex="0"
           draggable="true"
-          class="group cursor-pointer rounded-lg border border-default bg-default p-3 shadow-xs transition hover:border-accented hover:shadow-sm focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
+          class="group cursor-pointer rounded-xl bg-default p-4 shadow-xs ring-1 ring-default/50 transition hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
           :class="dragged?.id === app.id ? 'opacity-40' : ''"
           :aria-label="`${app.company}, ${app.location}`"
           @click="emit('edit', app)"
@@ -145,7 +145,7 @@ const day = (v?: string) =>
               [app.location, app.country].filter(Boolean).join(', ')
             }}
           </p>
-          <div class="mt-3 flex items-center gap-2 text-xs text-muted">
+          <div class="mt-4 flex items-center gap-2 text-xs text-muted">
             <span class="flex items-center gap-1.5">
               <UTooltip v-for="badge in badges(app)" :key="badge.icon" :text="badge.label">
                 <UIcon :name="badge.icon" class="size-3.5" :aria-label="badge.label" />
@@ -173,7 +173,7 @@ const day = (v?: string) =>
         </div>
         <p
           v-if="column.items.length === 0"
-          class="rounded-lg border border-dashed border-default p-4 text-center text-xs text-muted"
+          class="rounded-xl border border-dashed border-default p-4 text-center text-xs text-muted"
         >
           {{ t('kanban.dropHere') }}
         </p>
